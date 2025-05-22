@@ -30,3 +30,5 @@
 1. A função `syncCampaigns` é executada via GitHub Actions.
 2. Ela consulta a API da Meta (Lead Ads).
 3. Os dados são gravados no banco do Supabase.
+
+<!-- trigger redeploy -->
