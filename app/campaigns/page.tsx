@@ -17,9 +17,9 @@ export default function CampaignsPage() {
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('id, name, status, daily_budget, amount_spent')
+     const { data, error } = await supabase
+  .from('campaigns')
+  .select('id,name,status,objective,created_at')
         .order('name')
 
       if (!error && data) {
