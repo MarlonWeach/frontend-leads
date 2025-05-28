@@ -1,0 +1,25 @@
+name: Sincronizar Dados e Gerar Alertas
+
+on:
+  schedule:
+    # Executar a cada hora
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  sync-and-alert:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+      
+      - name: Gerar Alertas Automáticos
+        run: |
+          curl -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/generate-alerts" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+      
+      - name: Log de Sucesso
+        run: echo "✅ Alertas verificados em $(date)"
