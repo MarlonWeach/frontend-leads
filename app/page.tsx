@@ -1,10 +1,19 @@
-export default function Home() {
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirecionar para o dashboard
+    router.push('/dashboard');
+  }, [router]);
+
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold">Bem-vindo ao painel de leads</h1>
-      <p className="mt-4 text-sm text-gray-500">
-        Acesse <code>/campaigns</code> para ver suas campanhas.
-      </p>
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
   );
 }
