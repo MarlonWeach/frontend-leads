@@ -3,7 +3,7 @@ name: Sincronizar Dados e Gerar Alertas
 on:
   schedule:
     # Executar a cada 2 horas
-    - cron: '0 */2 * * *'
+    - cron: "0 */2 * * *"
   workflow_dispatch: # Permite executar manualmente
 
 jobs:
