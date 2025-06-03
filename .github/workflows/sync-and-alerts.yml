@@ -1,5 +1,3 @@
-# Atualizar o arquivo do workflow
-cat > .github/workflows/sync-and-alerts.yml << 'EOF'
 name: Sincronizar Dados e Gerar Alertas
 
 on:
@@ -41,19 +39,3 @@ jobs:
       
       - name: 4. Log de Sucesso
         run: echo "✅ Sincronização e alertas concluídos em $(date)"
-
-  # Job separado para executar apenas alertas (útil para debug)
-  alerts-only:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: Gerar Apenas Alertas
-        run: |
-          echo "🔔 Executando apenas geração de alertas..."
-          curl -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/generate-alerts" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
-            --fail-with-body
-EOF
