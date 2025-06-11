@@ -1,0 +1,16 @@
+name: Sync Ads from Meta to Supabase
+
+on:
+  schedule:
+    - cron: '15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync_ads:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Supabase Edge Function
+        run: |
+          curl -X POST https://egkdymmoseddpurfynzi.functions.supabase.co/syncAds \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
