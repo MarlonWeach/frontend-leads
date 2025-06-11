@@ -1,23 +1,51 @@
 import { supabase } from '../lib/supabaseClient';
 
+// Função auxiliar para validar datas
+function validateDates(dateFrom, dateTo) {
+  if (!dateFrom || !dateTo) return false;
+  const from = new Date(dateFrom);
+  const to = new Date(dateTo);
+  return !isNaN(from.getTime()) && !isNaN(to.getTime()) && from <= to;
+}
+
+// Função auxiliar para formatar data para ISO
+function formatDate(date) {
+  return new Date(date).toISOString();
+}
+
 export async function fetchPerformanceMetrics(filters = {}) {
   try {
-    console.log('📊 Buscando métricas de performance...');
+    console.log('📊 Iniciando busca de métricas...', { filters });
     
-    // Buscar campanhas
+    // Validar datas
+    if (filters.date_from && filters.date_to && !validateDates(filters.date_from, filters.date_to)) {
+      throw new Error('Datas inválidas ou período incorreto');
+    }
+
+    // Formatar datas para ISO
+    const formattedFilters = {
+      ...filters,
+      date_from: filters.date_from ? formatDate(filters.date_from) : undefined,
+      date_to: filters.date_to ? formatDate(filters.date_to) : undefined
+    };
+
+    // Buscar campanhas SEM filtro de data
     let campaignsQuery = supabase
       .from('campaigns')
-      .select('*');
+      .select(`
+        *,
+        adsets (
+          *,
+          ads (*)
+        )
+      `);
 
-    // Aplicar filtros
     if (filters.campaign_id) {
       campaignsQuery = campaignsQuery.eq('id', filters.campaign_id);
     }
-    
     if (filters.status) {
       campaignsQuery = campaignsQuery.eq('status', filters.status);
     }
-    
     if (filters.objective) {
       campaignsQuery = campaignsQuery.eq('objective', filters.objective);
     }
@@ -26,78 +54,40 @@ export async function fetchPerformanceMetrics(filters = {}) {
 
     if (campaignsError) {
       console.error('❌ Erro ao buscar campanhas:', campaignsError);
+      throw new Error(`Erro ao buscar campanhas: ${campaignsError.message}`);
+    }
+
+    if (!campaigns || campaigns.length === 0) {
+      console.log('ℹ️ Nenhuma campanha encontrada para os filtros:', formattedFilters);
       return {
         campaigns: [],
         metrics: getEmptyMetrics()
       };
     }
 
-    // Buscar todos os adsets de uma vez
-    const campaignIds = campaigns?.map(c => c.id) || [];
-    let adsetsData = [];
-    let adsData = [];
-
-    if (campaignIds.length > 0) {
-      // Buscar adsets
-      const { data: adsets, error: adsetsError } = await supabase
-        .from('adsets')
-        .select('*')
-        .in('campaign_id', campaignIds);
-
-      if (!adsetsError && adsets) {
-        adsetsData = adsets;
-        
-        // Buscar ads
-        const adsetIds = adsets.map(a => a.id);
-        if (adsetIds.length > 0) {
-          const { data: ads, error: adsError } = await supabase
-            .from('ads')
-            .select('*')
-            .in('adset_id', adsetIds);
-          
-          if (!adsError && ads) {
-            adsData = ads;
-          }
-        }
-      }
-    }
-
-    // Montar estrutura completa
-    const campaignsWithDetails = (campaigns || []).map(campaign => {
-      // Filtrar adsets desta campanha
-      const campaignAdsets = adsetsData.filter(adset => adset.campaign_id === campaign.id);
-      
-      // Para cada adset, adicionar seus ads
-      const adsetsWithAds = campaignAdsets.map(adset => {
-        const adsetAds = adsData.filter(ad => ad.adset_id === adset.id);
-        return {
-          ...adset,
-          ads: adsetAds
-        };
-      });
-
-      return {
-        ...campaign,
-        adsets: adsetsWithAds
-      };
-    });
-
-    // Calcular métricas
-    const metrics = calculateDetailedMetrics(campaignsWithDetails);
+    // Calcular métricas com validação de dados
+    const metrics = calculateDetailedMetrics(campaigns);
     
-    console.log('✅ Dados carregados:', {
-      campanhas: campaigns?.length || 0,
-      adsets: adsetsData.length,
-      ads: adsData.length
+    console.log('✅ Dados carregados com sucesso:', {
+      campanhas: campaigns.length,
+      adsets: campaigns.reduce((sum, c) => sum + (c.adsets?.length || 0), 0),
+      ads: campaigns.reduce((sum, c) => 
+        sum + c.adsets?.reduce((s, a) => s + (a.ads?.length || 0), 0) || 0, 0)
     });
     
     return {
-      campaigns: campaignsWithDetails,
+      campaigns,
       metrics
     };
   } catch (error) {
-    console.error('❌ Erro geral:', error);
+    console.error('❌ Erro ao buscar métricas:', error);
+    // Retornar erro estruturado
     return {
+      error: {
+        message: error.message || 'Erro desconhecido ao buscar métricas',
+        code: error.code || 'UNKNOWN_ERROR',
+        details: error.details || {}
+      },
       campaigns: [],
       metrics: getEmptyMetrics()
     };
@@ -117,7 +107,28 @@ function getEmptyMetrics() {
   };
 }
 
+// Função auxiliar para validar métricas
+function validateMetrics(metrics) {
+  const requiredFields = [
+    'totalCampaigns',
+    'activeCampaigns',
+    'totalBudget',
+    'totalAdsets',
+    'totalAds'
+  ];
+
+  return requiredFields.every(field => 
+    typeof metrics[field] !== 'undefined' && 
+    !isNaN(metrics[field])
+  );
+}
+
 function calculateDetailedMetrics(campaigns) {
+  if (!Array.isArray(campaigns)) {
+    console.error('❌ Dados de campanhas inválidos');
+    return getEmptyMetrics();
+  }
+
   const metrics = {
     totalCampaigns: campaigns.length,
     activeCampaigns: 0,
@@ -129,57 +140,77 @@ function calculateDetailedMetrics(campaigns) {
     budgetByStatus: {}
   };
 
-  campaigns.forEach(campaign => {
-    // Contar campanhas ativas
-    if (campaign.status === 'ACTIVE') {
-      metrics.activeCampaigns++;
-    }
+  try {
+    campaigns.forEach(campaign => {
+      if (!campaign) return;
 
-    // Agrupar por status
-    if (!metrics.campaignsByStatus[campaign.status]) {
-      metrics.campaignsByStatus[campaign.status] = 0;
-      metrics.budgetByStatus[campaign.status] = 0;
-    }
-    metrics.campaignsByStatus[campaign.status]++;
-
-    // Agrupar por objetivo
-    if (campaign.objective) {
-      if (!metrics.campaignsByObjective[campaign.objective]) {
-        metrics.campaignsByObjective[campaign.objective] = 0;
+      // Contar campanhas ativas
+      if (campaign.status === 'ACTIVE') {
+        metrics.activeCampaigns++;
       }
-      metrics.campaignsByObjective[campaign.objective]++;
+
+      // Agrupar por status com validação
+      const status = campaign.status || 'UNKNOWN';
+      if (!metrics.campaignsByStatus[status]) {
+        metrics.campaignsByStatus[status] = 0;
+        metrics.budgetByStatus[status] = 0;
+      }
+      metrics.campaignsByStatus[status]++;
+
+      // Agrupar por objetivo com validação
+      const objective = campaign.objective || 'UNKNOWN';
+      if (!metrics.campaignsByObjective[objective]) {
+        metrics.campaignsByObjective[objective] = 0;
+      }
+      metrics.campaignsByObjective[objective]++;
+
+      // Processar adsets e calcular budgets com validação
+      if (campaign.adsets && Array.isArray(campaign.adsets)) {
+        metrics.totalAdsets += campaign.adsets.length;
+        
+        campaign.adsets.forEach(adset => {
+          if (!adset) return;
+
+          // Validar e converter budgets
+          const dailyBudget = parseFloat(adset.daily_budget || 0);
+          const lifetimeBudget = parseFloat(adset.lifetime_budget || 0);
+          
+          if (isNaN(dailyBudget) || isNaN(lifetimeBudget)) {
+            console.warn('⚠️ Budget inválido para adset:', adset.id);
+            return;
+          }
+
+          // Usar o maior valor entre daily e lifetime
+          const budget = Math.max(dailyBudget, lifetimeBudget) / 100;
+          
+          metrics.totalBudget += budget;
+          metrics.budgetByStatus[status] += budget;
+          
+          // Contar ads com validação
+          if (adset.ads && Array.isArray(adset.ads)) {
+            metrics.totalAds += adset.ads.length;
+          }
+        });
+      }
+    });
+
+    // Validar métricas calculadas
+    if (!validateMetrics(metrics)) {
+      console.error('❌ Métricas inválidas calculadas');
+      return getEmptyMetrics();
     }
 
-    // Processar adsets e calcular budgets
-    if (campaign.adsets && Array.isArray(campaign.adsets)) {
-      metrics.totalAdsets += campaign.adsets.length;
-      
-      campaign.adsets.forEach(adset => {
-        // Somar budgets (considerando que podem estar em centavos)
-        const dailyBudget = parseFloat(adset.daily_budget || 0);
-        const lifetimeBudget = parseFloat(adset.lifetime_budget || 0);
-        
-        // Usar o maior valor entre daily e lifetime
-        const budget = Math.max(dailyBudget, lifetimeBudget) / 100; // Dividir por 100 se estiver em centavos
-        
-        metrics.totalBudget += budget;
-        metrics.budgetByStatus[campaign.status] += budget;
-        
-        // Contar ads
-        if (adset.ads && Array.isArray(adset.ads)) {
-          metrics.totalAds += adset.ads.length;
-        }
-      });
-    }
-  });
+    // Formatar valores monetários
+    metrics.totalBudget = Number(metrics.totalBudget.toFixed(2));
+    Object.keys(metrics.budgetByStatus).forEach(status => {
+      metrics.budgetByStatus[status] = Number(metrics.budgetByStatus[status].toFixed(2));
+    });
 
-  // Formatar valores monetários
-  metrics.totalBudget = metrics.totalBudget.toFixed(2);
-  Object.keys(metrics.budgetByStatus).forEach(status => {
-    metrics.budgetByStatus[status] = metrics.budgetByStatus[status].toFixed(2);
-  });
-
-  return metrics;
+    return metrics;
+  } catch (error) {
+    console.error('❌ Erro ao calcular métricas:', error);
+    return getEmptyMetrics();
+  }
 }
 
 // Função para exportar dados completos

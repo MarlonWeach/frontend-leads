@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import NotificationCenter from './NotificationCenter';
 import Link from 'next/link';
 import { 
   BarChart3, Users, Building2, TrendingUp, Settings, Menu, X, 
-  Home, ChevronRight, Bell, Search, User, LogOut, HelpCircle,
+  Home, ChevronRight, Search, User, LogOut, HelpCircle,
   PieChart, Target, Mail, Calendar, FileText, Download
 } from 'lucide-react';
 
@@ -257,7 +256,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
               </div>
 
               {/* Notifications */}
-              <NotificationCenter />
+              {/* <NotificationCenter /> */}
 
               {/* Quick Actions */}
               <div className="relative">
