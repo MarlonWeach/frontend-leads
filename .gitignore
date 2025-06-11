@@ -127,4 +127,20 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.*
+.pnp.*.DS_Store
+
+# Arquivos específicos do projeto
+.DS_Store
+.env*
+!.env.example
+package-lock 2.json
+supabase-sync-cron/.env
+supabase-sync-cron/node_modules/
+supabase-sync-cron/.next/
+supabase-sync-cron/out/
+supabase-sync-cron/.cache/
+supabase-sync-cron/coverage/
+supabase-sync-cron/.nyc_output/
+supabase-sync-cron/logs/
+supabase-sync-cron/*.log
+supabase-sync-cron/.DS_Store
