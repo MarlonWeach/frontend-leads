@@ -1,0 +1,41 @@
+name: Sincronizar Dados e Gerar Alertas
+
+on:
+  schedule:
+    # Executar a cada 2 horas
+    - cron: "0 */2 * * *"
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  sync-and-alerts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+      
+      - name: 1. Sincronizar Campanhas Meta
+        run: |
+          echo "🚀 Iniciando sincronização de campanhas..."
+          curl -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/syncCampaigns" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --fail-with-body \
+            --max-time 300
+      
+      - name: 2. Aguardar processamento
+        run: sleep 30
+      
+      - name: 3. Gerar Alertas Automáticos
+        run: |
+          echo "🔔 Gerando alertas automáticos..."
+          curl -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/generate-alerts" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --fail-with-body \
+            --max-time 120
+      
+      - name: 4. Log de Sucesso
+        run: echo "✅ Sincronização e alertas concluídos em $(date)"
