@@ -75,8 +75,17 @@
 
 ### 6. Filtros de Data Inoperantes
 - **Status**: Em Progresso
-- **Descrição**: Os parâmetros de data estão sendo enviados para a API, mas os dados de leads (total, novos, convertidos) e de performance ainda não refletem a tabela `meta_leads` de forma precisa para os períodos filtrados. É necessário garantir que todas as agregações na API de overview (`src/app/api/dashboard/overview/route.jsx`) sejam feitas corretamente a partir da tabela `meta_leads` e que os valores sejam atualizados com base nos filtros de data.
-- **Impacto**: Usuário não consegue visualizar dados de períodos específicos.
+- **Descrição**: 
+  - Os parâmetros de data estão sendo enviados para a API, mas os dados de leads (total, novos, convertidos) e de performance ainda não refletem a tabela `meta_leads` de forma precisa para os períodos filtrados
+  - A filtragem atual não considera adequadamente o status dos anúncios, resultando em dados potencialmente incorretos
+  - É necessário garantir que:
+    1. Todas as agregações na API de overview (`src/app/api/dashboard/overview/route.jsx`) sejam feitas corretamente a partir da tabela `meta_leads`
+    2. Os valores sejam atualizados com base nos filtros de data
+    3. A filtragem considere apenas anúncios ativos, obtidos automaticamente da Meta API
+- **Impacto**: 
+  - Usuário não consegue visualizar dados de períodos específicos
+  - Dados podem incluir anúncios inativos
+  - Necessidade de intervenção manual para atualização
 
 ### 7. Dados de Leads Incorretos
 - **Status**: Em Progresso
@@ -119,6 +128,24 @@
 - **Impacto**: Dados de dashboard incorretos devido à inclusão de entidades inativas.
 - **Implementações**:
   - Filtro `.eq('status', 'ACTIVE')` adicionado na API de overview (`app/api/dashboard/overview/route.jsx`) para a tabela `ads`.
+
+### 15. Filtragem Automática de Anúncios Ativos
+- **Status**: Em Progresso
+- **Descrição**: A solução atual para filtrar anúncios ativos requer intervenção manual (inserção de IDs) e não é sustentável, pois:
+  1. O status dos anúncios muda frequentemente (campanhas são pausadas, reativadas, etc.)
+  2. Requer conhecimento técnico para atualizar manualmente
+  3. Não reflete automaticamente as mudanças de status da Meta API
+  4. Não é escalável com o crescimento do número de anúncios
+- **Impacto**: 
+  - Dados incorretos no dashboard
+  - Necessidade de intervenção manual frequente
+  - Risco de dados desatualizados
+  - Experiência do usuário prejudicada
+- **Solução Necessária**: 
+  - Implementar integração direta com a Meta API para obter anúncios ativos
+  - Criar sistema automático de atualização de status
+  - Desenvolver lógica de sincronização que mantenha os dados atualizados
+  - Implementar cache inteligente para reduzir chamadas à API
 
 ## Próximos Passos
 
@@ -194,5 +221,4 @@
 
 ## Status do Token Meta
 - **Status**: Confirmado
-- **Descrição**: O token de acesso do Meta (`META_ACCESS_TOKEN`) possui todas as permissões necessárias para acessar os dados de campanhas, anúncios e métricas de conversão. Especificamente, o token tem acesso às permissões: `ads_read`, `ads_management`, `read_insights`, `business_management` e `pages_read_engagement`.
-- **Impacto**: A não detecção anterior das permissões corretas do token gerou confusão na depuração dos dados retornados pela API. A partir de agora, esta informação deve ser considerada como um fato. 
+- **Descrição**: O token de acesso do Meta (`META_ACCESS_TOKEN`) possui todas as permissões necessárias para acessar os dados de campanhas, anúncios e métricas de conversão. Especificamente, o token tem acesso às permissões: `ads_read`, `ads_management`, `
