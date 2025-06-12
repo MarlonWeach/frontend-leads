@@ -1,4 +1,53 @@
 {
+<<<<<<< HEAD
+  "name": "frontend-leads",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@sentry/nextjs": "^9.28.0",
+    "@supabase/ssr": "^0.1.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "@tanstack/react-query": "^5.80.6",
+    "@tanstack/react-query-devtools": "^5.80.6",
+    "@tanstack/react-virtual": "^3.13.10",
+    "dotenv": "^16.5.0",
+    "lucide-react": "^0.511.0",
+    "next": "14.2.29",
+    "node-fetch": "^3.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.15.3"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-typescript": "^7.27.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.29",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "node-mocks-http": "^1.17.2",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.8.3"
+  }
+}
+=======
   "name": "supabase-sync-cron",
   "version": "1.0.0",
   "description": "Script para sincronizar leads do Meta com Supabase",
@@ -12,3 +61,4 @@
     "dotenv": "^16.3.1"
   }
 } 
+>>>>>>> 947ce58 (Primeiro commit)
