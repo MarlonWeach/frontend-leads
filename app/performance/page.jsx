@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '../../src/components/MainLayout';
 import { fetchPerformanceMetrics } from '../../src/services/performanceService';
 import { testConnection, supabase } from '../../src/lib/supabaseClient';
+import { calculateMetrics } from '../../src/lib/metrics';
 
 // Componente de erro
 const ErrorMessage = ({ error, onRetry }) => (
@@ -44,24 +45,14 @@ export default function PerformancePage() {
   const searchParams = useSearchParams();
   
   // Estados
-  const [metrics, setMetrics] = useState({
-    results: 0,
-    costPerResult: 0,
-    amountSpent: 0,
-    impressions: 0,
-    clicks: 0,
-    ctr: 0,
-    cpm: 0,
-    conversionRate: 0
-  });
-  
+  const [metrics, setMetrics] = useState(null);
   const [campaignsData, setCampaignsData] = useState({
     campaigns: [],
     totalCampaigns: 0,
     activeCampaigns: 0
   });
   
-  const [loading, setLoading] = useState(true); // Começa como true para testar conexão
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
@@ -197,16 +188,7 @@ export default function PerformancePage() {
       });
       
       // Resetar métricas em caso de erro
-      setMetrics({
-        results: 0,
-        costPerResult: 0,
-        amountSpent: 0,
-        impressions: 0,
-        clicks: 0,
-        ctr: 0,
-        cpm: 0,
-        conversionRate: 0
-      });
+      setMetrics(null);
     } finally {
       setLoading(false);
     }
@@ -251,65 +233,11 @@ export default function PerformancePage() {
     return new Intl.NumberFormat('pt-BR').format(Math.round(value || 0));
   };
 
-  // Função para calcular métricas
-  const calculateMetrics = useCallback((campaigns, period, dateFrom, dateTo, metaMetrics) => {
-    // Se não há campanhas, mas há leads, ainda mostra o resultado de leads
-    if (!campaigns || campaigns.length === 0) {
-      return {
-        results: metaMetrics.leads || 0,
-        costPerResult: metaMetrics.leads > 0 ? metaMetrics.spend / metaMetrics.leads : 0,
-        amountSpent: metaMetrics.spend,
-        impressions: metaMetrics.impressions,
-        clicks: metaMetrics.clicks,
-        ctr: metaMetrics.impressions > 0 ? (metaMetrics.clicks / metaMetrics.impressions) * 100 : 0,
-        cpm: metaMetrics.impressions > 0 ? (metaMetrics.spend / metaMetrics.impressions) * 1000 : 0,
-        conversionRate: metaMetrics.clicks > 0 ? (metaMetrics.leads / metaMetrics.clicks) * 100 : 0
-      };
-    }
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage error={error} onRetry={loadData} />;
+  if (!metrics) return <div>Nenhuma métrica disponível</div>;
 
-    try {
-      // Use as métricas agregadas do Meta diretamente
-      const totalSpend = metaMetrics.spend;
-      const totalImpressions = metaMetrics.impressions;
-      const totalClicks = metaMetrics.clicks;
-      const leadsCount = metaMetrics.leads;
-
-      // Calcule médias se necessário
-      // Não precisamos mais iterar sobre adsets e ads para spend, impressions, clicks
-      // totalCPC, totalCPM e totalCTR podem ser calculados a partir dos totais ou removidos se não forem mais relevantes.
-      // No entanto, para manter a consistência, vamos recalculá-los a partir dos totais
-      const avgCPC = totalClicks > 0 ? totalSpend / totalClicks : 0;
-      const avgCPM = totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0;
-      const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-      
-      // Calcular métricas de conversão usando o lead_count
-      const conversionRate = totalClicks > 0 ? (leadsCount / totalClicks) * 100 : 0;
-      const costPerLead = leadsCount > 0 ? totalSpend / leadsCount : 0;
-
-      return {
-        results: leadsCount,
-        costPerResult: costPerLead,
-        amountSpent: totalSpend,
-        impressions: totalImpressions,
-        clicks: totalClicks,
-        ctr: avgCTR,
-        cpm: avgCPM,
-        conversionRate: conversionRate
-      };
-    } catch (error) {
-      console.error('❌ Erro ao calcular métricas:', error);
-      return {
-        results: metaMetrics.leads || 0,
-        costPerResult: metaMetrics.leads > 0 ? metaMetrics.spend / metaMetrics.leads : 0,
-        amountSpent: metaMetrics.spend,
-        impressions: metaMetrics.impressions,
-        clicks: metaMetrics.clicks,
-        ctr: metaMetrics.impressions > 0 ? (metaMetrics.clicks / metaMetrics.impressions) * 100 : 0,
-        cpm: metaMetrics.impressions > 0 ? (metaMetrics.spend / metaMetrics.impressions) * 1000 : 0,
-        conversionRate: metaMetrics.clicks > 0 ? (metaMetrics.leads / metaMetrics.clicks) * 100 : 0
-      };
-    }
-  }, []);
+  const { ctr, cpm, cpl, totalLeads, totalSpend, totalImpressions, totalClicks } = metrics;
 
   return (
     <MainLayout title="Dashboard de Performance" breadcrumbs={breadcrumbs}>
@@ -365,9 +293,6 @@ export default function PerformancePage() {
           />
         )}
 
-        {/* Loading */}
-        {loading && <LoadingState />}
-
         {/* Conteúdo principal */}
         {connectionStatus === 'connected' && (
           <>
@@ -377,7 +302,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Leads</p>
-                    <p className="text-3xl font-bold text-gray-900">{formatNumber(metrics.results)}</p>
+                    <p className="text-3xl font-bold text-gray-900">{formatNumber(totalLeads)}</p>
                     <p className="text-xs text-gray-500 mt-1">Estimativa para {currentPeriod}</p>
                   </div>
                 </div>
@@ -387,7 +312,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Custo por Lead</p>
-                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.costPerResult)}</p>
+                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(cpl)}</p>
                     <p className="text-xs text-gray-500 mt-1">Média do período</p>
                   </div>
                 </div>
@@ -397,7 +322,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Valor Investido</p>
-                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.amountSpent)}</p>
+                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalSpend)}</p>
                     <p className="text-xs text-gray-500 mt-1">Projeção para {currentPeriod}</p>
                   </div>
                 </div>
@@ -407,7 +332,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Taxa de Conversão</p>
-                    <p className="text-3xl font-bold text-gray-900">{metrics.conversionRate.toFixed(2)}%</p>
+                    <p className="text-3xl font-bold text-gray-900">{ctr.toFixed(2)}%</p>
                     <p className="text-xs text-gray-500 mt-1">Cliques para leads</p>
                   </div>
                 </div>
@@ -420,7 +345,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Impressões</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatNumber(metrics.impressions)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatNumber(totalImpressions)}</p>
                   </div>
                 </div>
               </div>
@@ -429,7 +354,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Cliques</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatNumber(metrics.clicks)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatNumber(totalClicks)}</p>
                   </div>
                 </div>
               </div>
@@ -438,7 +363,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">CTR</p>
-                    <p className="text-2xl font-bold text-gray-900">{metrics.ctr.toFixed(2)}%</p>
+                    <p className="text-2xl font-bold text-gray-900">{ctr.toFixed(2)}%</p>
                   </div>
                 </div>
               </div>
@@ -447,7 +372,7 @@ export default function PerformancePage() {
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">CPM</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.cpm)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(cpm)}</p>
                   </div>
                 </div>
               </div>
