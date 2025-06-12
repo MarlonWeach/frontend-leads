@@ -5,15 +5,11 @@
   ],
   "parserOptions": {
     "ecmaVersion": 2020,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "jsx": true
-    }
+    "sourceType": "module"
   },
   "env": {
     "browser": true,
     "node": true,
-    "es6": true,
     "jest": true
   },
   "rules": {
@@ -25,18 +21,14 @@
       "ignoreRestSiblings": true
     }],
     "react-hooks/exhaustive-deps": "warn",
-    "react/no-unescaped-entities": "off",
-    "no-undef": "error",
-    "@next/next/no-img-element": "off"
+    "@next/next/no-img-element": "off",
+    "react/no-unescaped-entities": "off"
   },
   "overrides": [
     {
       "files": ["**/*.test.js", "**/*.test.jsx"],
-      "env": {
-        "jest": true
-      },
       "rules": {
-        "no-undef": "off"
+        "no-unused-vars": "off"
       }
     }
   ]

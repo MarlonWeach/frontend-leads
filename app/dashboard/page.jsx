@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '../../src/components/MainLayout';
+import { supabase } from '../../src/lib/supabaseClient';
 
 // Componente de erro
 const ErrorMessage = ({ error, onRetry }) => (
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [data, setData] = useState(null);
 
   const breadcrumbs = [
     { name: 'Dashboard', href: '/dashboard' }
@@ -124,14 +126,15 @@ export default function DashboardPage() {
 
       // Buscar dados do dashboard
       const response = await fetch(`/api/dashboard/overview?date_from=${startDate.toISOString()}&date_to=${endDate.toISOString()}`);
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao buscar dados do dashboard');
+        throw new Error(result.error || 'Erro ao buscar dados do dashboard');
       }
 
-      setMetrics(data.metrics);
+      setMetrics(result.metrics);
       setLastUpdate(new Date());
+      setData(result);
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
       setError({
@@ -181,6 +184,10 @@ export default function DashboardPage() {
   const formatNumber = (value) => {
     return new Intl.NumberFormat('pt-BR').format(Math.round(value || 0));
   };
+
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage error={error} onRetry={checkConnection} />;
+  if (!data) return <div>Nenhum dado disponível</div>;
 
   return (
     <MainLayout title="Dashboard" breadcrumbs={breadcrumbs}>
@@ -235,9 +242,6 @@ export default function DashboardPage() {
             onRetry={checkConnection}
           />
         )}
-
-        {/* Loading */}
-        {loading && <LoadingState />}
 
         {/* Conteúdo principal */}
         {connectionStatus === 'connected' && (
