@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '../../src/components/MainLayout';
-import { supabase } from '../../src/lib/supabaseClient';
+import { supabase, testConnection } from '../../src/lib/supabaseClient';
 
 // Componente de erro
 const ErrorMessage = ({ error, onRetry }) => (

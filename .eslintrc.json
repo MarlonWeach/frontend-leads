@@ -5,13 +5,16 @@
   ],
   "parserOptions": {
     "ecmaVersion": 2020,
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
   },
   "env": {
     "browser": true,
     "node": true,
     "jest": true,
-    "es2020": true
+    "es6": true
   },
   "globals": {
     "Promise": "readonly",
@@ -22,37 +25,26 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
-    "no-unused-vars": ["warn", { 
+    "no-unused-vars": ["warn", {
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_",
-      "ignoreRestSiblings": true
+      "caughtErrorsIgnorePattern": "^_",
+      "destructuredArrayIgnorePattern": "^_"
     }],
-    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": "(useMyCustomHook|useMyOtherHook)"
+    }],
     "@next/next/no-img-element": "off",
     "react/no-unescaped-entities": "off",
     "no-undef": "error"
   },
   "overrides": [
     {
-      "files": ["**/*.test.js", "**/*.test.jsx", "**/__tests__/**/*"],
-      "env": {
-        "jest": true
-      },
-      "globals": {
-        "Promise": "readonly",
-        "Set": "readonly",
-        "Map": "readonly",
-        "fireEvent": "readonly",
-        "describe": "readonly",
-        "it": "readonly",
-        "expect": "readonly",
-        "beforeEach": "readonly",
-        "afterEach": "readonly",
-        "jest": "readonly"
-      },
+      "files": ["**/*.test.js", "**/*.test.jsx", "**/*.test.ts", "**/*.test.tsx"],
       "rules": {
-        "no-undef": "off",
-        "no-unused-vars": "off"
+        "no-unused-vars": "off",
+        "react-hooks/exhaustive-deps": "off"
       }
     }
   ]
