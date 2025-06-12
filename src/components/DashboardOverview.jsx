@@ -168,48 +168,6 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Alertas */}
-      {alerts.length > 0 && (
-        <div className="space-y-4">
-          {alerts.map((alert, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg ${
-                alert.type === 'warning'
-                  ? 'bg-yellow-50 border border-yellow-200'
-                  : 'bg-blue-50 border border-blue-200'
-              }`}
-            >
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  {alert.type === 'warning' ? (
-                    <AlertCircle className="h-5 w-5 text-yellow-400" />
-                  ) : (
-                    <Info className="h-5 w-5 text-blue-400" />
-                  )}
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-gray-900">{alert.title}</h3>
-                  <div className="mt-2 text-sm text-gray-700">
-                    <p>{alert.message}</p>
-                  </div>
-                  {alert.action && (
-                    <div className="mt-4">
-                      <a
-                        href={alert.href}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                      >
-                        {alert.action} <ArrowRight className="inline h-4 w-4 ml-1" />
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Métricas principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -293,6 +251,48 @@ export default function DashboardOverview() {
         </div>
       </div>
 
+      {/* Alertas */}
+      {alerts.length > 0 && (
+        <div className="space-y-4">
+          {alerts.map((alert, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-lg ${
+                alert.type === 'warning'
+                  ? 'bg-yellow-50 border border-yellow-200'
+                  : 'bg-blue-50 border border-blue-200'
+              }`}
+            >
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  {alert.type === 'warning' ? (
+                    <AlertCircle className="h-5 w-5 text-yellow-400" />
+                  ) : (
+                    <Info className="h-5 w-5 text-blue-400" />
+                  )}
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-gray-900">{alert.title}</h3>
+                  <div className="mt-2 text-sm text-gray-700">
+                    <p>{alert.message}</p>
+                  </div>
+                  {alert.action && (
+                    <div className="mt-4">
+                      <a
+                        href={alert.href}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                      >
+                        {alert.action} <ArrowRight className="inline h-4 w-4 ml-1" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Atividade Recente */}
       {recentActivity.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -336,6 +336,24 @@ export default function DashboardOverview() {
           </div>
         </div>
       )}
+
+      {/* Gráfico de performance rápida */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Performance Geral</h3>
+          <div className="flex items-center space-x-2">
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+              7 dias
+            </button>
+            <button className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md">
+              30 dias
+            </button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+              90 dias
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
