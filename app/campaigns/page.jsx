@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/src/lib/supabaseClient';
+import { supabase } from '../../src/lib/supabaseClient';
 
 // Função para buscar métricas de campanhas
 const fetchCampaignMetrics = async (dateFrom, dateTo) => {
