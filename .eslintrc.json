@@ -10,7 +10,14 @@
   "env": {
     "browser": true,
     "node": true,
-    "jest": true
+    "jest": true,
+    "es2020": true
+  },
+  "globals": {
+    "Promise": "readonly",
+    "Set": "readonly",
+    "Map": "readonly",
+    "fireEvent": "readonly"
   },
   "rules": {
     "react/react-in-jsx-scope": "off",
@@ -22,12 +29,29 @@
     }],
     "react-hooks/exhaustive-deps": "warn",
     "@next/next/no-img-element": "off",
-    "react/no-unescaped-entities": "off"
+    "react/no-unescaped-entities": "off",
+    "no-undef": "error"
   },
   "overrides": [
     {
-      "files": ["**/*.test.js", "**/*.test.jsx"],
+      "files": ["**/*.test.js", "**/*.test.jsx", "**/__tests__/**/*"],
+      "env": {
+        "jest": true
+      },
+      "globals": {
+        "Promise": "readonly",
+        "Set": "readonly",
+        "Map": "readonly",
+        "fireEvent": "readonly",
+        "describe": "readonly",
+        "it": "readonly",
+        "expect": "readonly",
+        "beforeEach": "readonly",
+        "afterEach": "readonly",
+        "jest": "readonly"
+      },
       "rules": {
+        "no-undef": "off",
         "no-unused-vars": "off"
       }
     }
