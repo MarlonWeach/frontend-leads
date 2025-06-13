@@ -16,7 +16,7 @@ export function QueryProvider({
       queries: {
         // Configurações padrão para todas as consultas
         staleTime: 5 * 60 * 1000, // 5 minutos
-        cacheTime: 30 * 60 * 1000, // 30 minutos
+        gcTime: 30 * 60 * 1000, // 30 minutos
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         retry: 2,

@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { MetaAdsService } from '@/services/meta/ads';
 import { logger } from '@/utils/logger';
 import {
@@ -42,18 +42,20 @@ export async function syncAdsStatus(
 ): Promise<SyncResult> {
   const startTime = new Date();
   const opts = { ...DEFAULT_SYNC_OPTIONS, ...options };
-  let retryCount = 0;
+  const retryCount = opts.retryCount ?? DEFAULT_SYNC_OPTIONS.retryCount ?? 3;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_SYNC_OPTIONS.timeoutMs ?? 30000;
+  let currentRetryCount = 0;
   let lastError: SyncError | null = null;
   const supabase = injectedClient || getSupabaseClient();
 
   logger.info({ options: opts }, 'Iniciando sincronização de status dos anúncios');
 
-  while (retryCount < opts.retryCount!) {
+  while (currentRetryCount < retryCount) {
     try {
       // Buscar anúncios ativos da Meta API com timeout
       const activeAds = await withTimeout(
         metaAdsService.getActiveAds(),
-        opts.timeoutMs!
+        timeoutMs
       );
       logger.info({ count: activeAds.length }, 'Anúncios ativos obtidos da Meta API');
 
@@ -66,15 +68,18 @@ export async function syncAdsStatus(
       }));
 
       // Atualizar status no Supabase
-      const { error: upsertError } = await withTimeout(
-        supabase
+      const upsertResult: PostgrestSingleResponse<any> = await withTimeout(
+        (async () => await supabase
           .from('ads')
           .upsert(adsToUpdate, {
             onConflict: 'id',
             ignoreDuplicates: false,
-          }),
-        opts.timeoutMs!
+          })
+          .select()
+        )(),
+        timeoutMs
       );
+      const upsertError = upsertResult.error;
 
       if (upsertError) {
         throw {
@@ -86,13 +91,16 @@ export async function syncAdsStatus(
       }
 
       // Marcar anúncios inativos
-      const { error: updateError } = await withTimeout(
-        supabase
+      const updateResult: PostgrestSingleResponse<any> = await withTimeout(
+        (async () => await supabase
           .from('ads')
           .update({ status: 'INACTIVE', updated_at: new Date().toISOString() })
-          .not('id', 'in', activeAds.map(ad => ad.id)),
-        opts.timeoutMs!
+          .not('id', 'in', activeAds.map(ad => ad.id))
+          .select()
+        )(),
+        timeoutMs
       );
+      const updateError = updateResult.error;
 
       if (updateError) {
         throw {
@@ -113,12 +121,12 @@ export async function syncAdsStatus(
           startTime: startTime.toISOString(),
           endTime: endTime.toISOString(),
           durationMs: endTime.getTime() - startTime.getTime(),
-          retryCount,
+          retryCount: currentRetryCount,
         },
       };
 
       logger.info(
-        { status, retryCount },
+        { status, retryCount: currentRetryCount },
         'Sincronização de status dos anúncios concluída com sucesso'
       );
 
@@ -132,22 +140,22 @@ export async function syncAdsStatus(
         break;
       }
 
-      retryCount++;
+      currentRetryCount++;
 
-      if (!lastError.retryable || retryCount >= opts.retryCount!) {
+      if (!lastError.retryable || currentRetryCount >= retryCount) {
         logger.error(
-          { error: lastError, retryCount },
+          { error: lastError, retryCount: currentRetryCount },
           'Erro na sincronização de status dos anúncios'
         );
         break;
       }
 
       logger.warn(
-        { error: lastError, retryCount, nextRetryIn: Math.pow(2, retryCount) * 1000 },
+        { error: lastError, retryCount: currentRetryCount, nextRetryIn: Math.pow(2, currentRetryCount) * 1000 },
         'Tentativa de sincronização falhou, aguardando próxima tentativa'
       );
 
-      await exponentialBackoff(retryCount);
+      await exponentialBackoff(currentRetryCount);
     }
   }
 
@@ -162,7 +170,7 @@ export async function syncAdsStatus(
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
       durationMs: endTime.getTime() - startTime.getTime(),
-      retryCount,
+      retryCount: currentRetryCount,
     },
   };
 

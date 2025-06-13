@@ -14,6 +14,8 @@ export interface UseQueryWithCacheOptions<TData, TError>
   refetchOnReconnect?: boolean;
   // Se deve mostrar um indicador de "última atualização"
   showLastUpdated?: boolean;
+  // Callback chamado quando a query tem sucesso
+  onSuccess?: (data: TData) => void;
 }
 
 // Hook personalizado para usar o React Query com cache
@@ -43,26 +45,20 @@ export function useQueryWithCache<TData, TError = Error>(
   const queryResult = useQuery<TData, TError, TData>({
     queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
     queryFn,
-    ...queryOptions,
-    onSuccess: (data) => {
-      // Atualizar a data da última atualização quando os dados são atualizados
-      if (showLastUpdated) {
-        setLastUpdated(new Date());
-      }
-      
-      // Chamar o callback onSuccess fornecido, se existir
-      if (options.onSuccess) {
-        options.onSuccess(data);
-      }
-    }
+    ...queryOptions
   });
 
-  // Efeito para atualizar a data da última atualização quando os dados são carregados inicialmente
+  // Efeito para atualizar a data da última atualização quando os dados são carregados ou atualizados
   useEffect(() => {
-    if (queryResult.isSuccess && !lastUpdated && showLastUpdated) {
+    if (queryResult.isSuccess && showLastUpdated) {
       setLastUpdated(new Date());
+      // Chamar o callback onSuccess fornecido, se existir
+      if (options.onSuccess) {
+        options.onSuccess(queryResult.data!);
+      }
     }
-  }, [queryResult.isSuccess, lastUpdated, showLastUpdated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryResult.data, queryResult.isSuccess, showLastUpdated]);
 
   // Retornar o resultado da consulta junto com a data da última atualização
   return {

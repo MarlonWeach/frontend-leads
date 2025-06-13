@@ -1,3 +1,5 @@
+'use client';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ReactNode, useState } from 'react';
@@ -16,7 +18,7 @@ export function QueryProvider({
       queries: {
         // Configurações padrão para todas as consultas
         staleTime: 5 * 60 * 1000, // 5 minutos
-        cacheTime: 30 * 60 * 1000, // 30 minutos
+        gcTime: 30 * 60 * 1000, // 30 minutos (renomeado de cacheTime)
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         retry: 2,

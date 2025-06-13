@@ -14,11 +14,13 @@ export interface UseQueryWithCacheOptions<TData, TError>
   refetchOnReconnect?: boolean;
   // Se deve mostrar um indicador de "última atualização"
   showLastUpdated?: boolean;
+  // Callback chamado quando a consulta é bem-sucedida
+  onSuccess?: (data: TData) => void;
 }
 
 // Hook personalizado para usar o React Query com cache
-export function useQueryWithCache<TData, TError = Error>(
-  queryKey: string | string[],
+export function useQueryWithCache<TData, TError = Error, TQueryKey = unknown>(
+  queryKey: TQueryKey | TQueryKey[],
   queryFn: () => Promise<TData>,
   options: UseQueryWithCacheOptions<TData, TError> = {}
 ): UseQueryResult<TData, TError> & { lastUpdated: Date | null } {
@@ -34,7 +36,7 @@ export function useQueryWithCache<TData, TError = Error>(
 
   // Mesclar opções padrão com as fornecidas
   const mergedOptions = { ...defaultOptions, ...options };
-  const { showLastUpdated, ...queryOptions } = mergedOptions;
+  const { showLastUpdated, onSuccess, ...queryOptions } = mergedOptions;
 
   // Estado para armazenar a data da última atualização
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -44,25 +46,20 @@ export function useQueryWithCache<TData, TError = Error>(
     queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
     queryFn,
     ...queryOptions,
-    onSuccess: (data) => {
-      // Atualizar a data da última atualização quando os dados são atualizados
+  });
+
+  // Efeito para atualizar a data da última atualização quando os dados são carregados
+  useEffect(() => {
+    if (queryResult.isSuccess) {
       if (showLastUpdated) {
         setLastUpdated(new Date());
       }
-      
-      // Chamar o callback onSuccess fornecido, se existir
-      if (options.onSuccess) {
-        options.onSuccess(data);
+      if (onSuccess && queryResult.data) {
+        onSuccess(queryResult.data);
       }
     }
-  });
-
-  // Efeito para atualizar a data da última atualização quando os dados são carregados inicialmente
-  useEffect(() => {
-    if (queryResult.isSuccess && !lastUpdated && showLastUpdated) {
-      setLastUpdated(new Date());
-    }
-  }, [queryResult.isSuccess, lastUpdated, showLastUpdated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryResult.isSuccess, queryResult.data]);
 
   // Retornar o resultado da consulta junto com a data da última atualização
   return {

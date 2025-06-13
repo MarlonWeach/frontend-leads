@@ -8,17 +8,34 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('leads')
-      .select('source')
-      .not('source', 'is', null);
-
-    if (error) throw error;
-
-    // Agrupa os leads por fonte
-    const searchData = data.reduce((acc, lead) => {
-      const source = lead.source || 'outros';
-      acc[source] = (acc[source] || 0) + 1;
+    // Primeiro, buscar anúncios ativos
+    const { data: activeAds, error: adsError } = await supabase
+      .from('ads')
+      .select('id')
+      .eq('status', 'ACTIVE');
+    
+    if (adsError) throw adsError;
+    
+    const activeAdIds = (activeAds || []).map(ad => ad.id).filter(Boolean);
+    
+    // Se não houver anúncios ativos, retornar dados vazios
+    if (activeAdIds.length === 0) {
+      return NextResponse.json([]);
+    }
+    
+    // Buscar leads associados a anúncios ativos
+    const { data: metaLeads, error: metaLeadsError } = await supabase
+      .from('meta_leads')
+      .select('campaign_name, lead_count')
+      .in('ad_id', activeAdIds);
+    
+    if (metaLeadsError) throw metaLeadsError;
+    
+    // Agrupa os leads por fonte (usando campaign_name como fonte)
+    const searchData = metaLeads.reduce((acc, lead) => {
+      const source = lead.campaign_name || 'outros';
+      const count = lead.lead_count || 1;
+      acc[source] = (acc[source] || 0) + count;
       return acc;
     }, {});
 

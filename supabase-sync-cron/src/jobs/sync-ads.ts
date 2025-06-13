@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { MetaAdsService } from '@/services/meta/ads';
 import { logger } from '@/utils/logger';
 import {
@@ -66,13 +66,13 @@ export async function syncAdsStatus(
       }));
 
       // Atualizar status no Supabase
-      const { error: upsertError } = await withTimeout(
-        supabase
-          .from('ads')
-          .upsert(adsToUpdate, {
-            onConflict: 'id',
-            ignoreDuplicates: false,
-          }),
+      const { error: upsertError } = await withTimeout<PostgrestSingleResponse<any[]>>(
+        Promise.resolve(
+          supabase
+            .from('ads')
+            .upsert(adsToUpdate, { onConflict: 'id', ignoreDuplicates: false })
+            .select()
+        ),
         opts.timeoutMs!
       );
 
@@ -86,11 +86,15 @@ export async function syncAdsStatus(
       }
 
       // Marcar anúncios inativos
-      const { error: updateError } = await withTimeout(
-        supabase
-          .from('ads')
-          .update({ status: 'INACTIVE', updated_at: new Date().toISOString() })
-          .not('id', 'in', activeAds.map(ad => ad.id)),
+      const inactiveAdIds = activeAds.map(ad => ad.id);
+      const { error: updateError } = await withTimeout<PostgrestSingleResponse<any[]>>(
+        Promise.resolve(
+          supabase
+            .from('ads')
+            .update({ status: 'INACTIVE' })
+            .in('id', inactiveAdIds)
+            .select()
+        ),
         opts.timeoutMs!
       );
 

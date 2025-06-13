@@ -1,30 +1,28 @@
 {
-<<<<<<< HEAD
-  "name": "frontend-leads",
+  "name": "supabase-sync-cron",
   "version": "1.0.0",
+  "description": "Script para sincronizar leads do Meta com Supabase",
+  "main": "scripts/import-meta-leads.js",
   "scripts": {
+    "start": "node scripts/import-meta-leads.js",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "next lint"
   },
   "dependencies": {
-    "@sentry/nextjs": "^9.28.0",
-    "@supabase/ssr": "^0.1.0",
-    "@supabase/supabase-js": "^2.50.0",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-query-devtools": "^5.80.6",
-    "@tanstack/react-virtual": "^3.13.10",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.3.1",
     "lucide-react": "^0.511.0",
     "next": "14.2.29",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "recharts": "^2.15.3"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.27.2",
@@ -47,18 +45,3 @@
     "typescript": "^5.8.3"
   }
 }
-=======
-  "name": "supabase-sync-cron",
-  "version": "1.0.0",
-  "description": "Script para sincronizar leads do Meta com Supabase",
-  "main": "scripts/import-meta-leads.js",
-  "scripts": {
-    "start": "node scripts/import-meta-leads.js"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "node-fetch": "^2.7.0",
-    "dotenv": "^16.3.1"
-  }
-} 
->>>>>>> 947ce58 (Primeiro commit)

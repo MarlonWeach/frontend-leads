@@ -8,26 +8,60 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('leads')
-      .select('status');
+    const { data: metrics, error: metricsError } = await supabase
+      .from('meta_leads')
+      .select(`
+        lead_count,
+        spend,
+        impressions,
+        clicks,
+        ad_id,
+        ads!inner (
+          id,
+          status
+        )
+      `)
+      .eq('ads.status', 'ACTIVE');
 
-    if (error) throw error;
+    if (metricsError) {
+      console.error('Erro ao buscar métricas:', metricsError);
+      throw metricsError;
+    }
 
-    // Agrupa os leads por status
-    const activityData = data.reduce((acc, lead) => {
-      const status = lead.status || 'pendente';
-      acc[status] = (acc[status] || 0) + 1;
+    // Agregação dos dados
+    const aggregatedMetrics = metrics.reduce((acc, metric) => {
+      acc.totalLeads += metric.lead_count || 0;
+      acc.totalSpend += metric.spend || 0;
+      acc.totalImpressions += metric.impressions || 0;
+      acc.totalClicks += metric.clicks || 0;
       return acc;
-    }, {});
+    }, {
+      totalLeads: 0,
+      totalSpend: 0,
+      totalImpressions: 0,
+      totalClicks: 0
+    });
 
-    // Converte para o formato esperado pelo componente Activity
-    const formattedData = Object.entries(activityData).map(([status, total]) => ({
-      status,
-      total
-    }));
+    // Cálculo de métricas derivadas
+    const ctr = aggregatedMetrics.totalImpressions > 0 
+      ? (aggregatedMetrics.totalClicks / aggregatedMetrics.totalImpressions) * 100 
+      : 0;
+    
+    const cpl = aggregatedMetrics.totalLeads > 0 
+      ? aggregatedMetrics.totalSpend / aggregatedMetrics.totalLeads 
+      : 0;
 
-    return NextResponse.json(formattedData);
+    return NextResponse.json({
+      metrics: {
+        leads: aggregatedMetrics.totalLeads,
+        spend: aggregatedMetrics.totalSpend,
+        impressions: aggregatedMetrics.totalImpressions,
+        clicks: aggregatedMetrics.totalClicks,
+        ctr: parseFloat(ctr.toFixed(2)),
+        cpl: parseFloat(cpl.toFixed(2))
+      }
+    });
+
   } catch (error) {
     console.error('Erro ao buscar dados de atividade:', error);
     return NextResponse.json(

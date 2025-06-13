@@ -88,20 +88,17 @@ export interface DashboardSearchItem {
 export function useDashboardOverview(dateFrom?: string, dateTo?: string) {
   const queryClient = useQueryClient();
   
-  const queryKey = ['dashboard', 'overview', { dateFrom, dateTo }];
+  const queryKey = ['dashboard', 'overview', dateFrom && dateTo ? `${dateFrom}_${dateTo}` : 'all'];
   
   const fetchOverview = async (): Promise<DashboardOverviewResponse> => {
     const params = new URLSearchParams();
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
+    if (dateFrom) params.append('dateFrom', dateFrom);
+    if (dateTo) params.append('dateTo', dateTo);
     
-    const url = `/api/dashboard/overview${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await fetch(url);
-    
+    const response = await fetch(`/api/dashboard/overview?${params.toString()}`);
     if (!response.ok) {
-      throw new Error(`Erro ao buscar dados do dashboard: ${response.statusText}`);
+      throw new Error('Erro ao buscar dados do dashboard');
     }
-    
     return response.json();
   };
   
