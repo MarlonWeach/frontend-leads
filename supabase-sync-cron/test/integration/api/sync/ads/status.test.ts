@@ -44,13 +44,15 @@ jest.mock('@/jobs/sync-ads', () => ({
   syncAdsStatus: jest.fn(),
 }));
 
-jest.mock('@/utils/logger', () => ({
-  logger: {
+// Mock do logger antes de qualquer importação
+const mockLogger = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-  },
-}));
+  debug: jest.fn()
+};
+
+jest.mock('@/utils/logger', () => mockLogger);
 
 // Mock do NextRequest
 jest.mock('next/server', () => ({

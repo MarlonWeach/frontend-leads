@@ -1,17 +1,17 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import LoadingState from '../LoadingState';
+import LoadingState from '../ui/LoadingState';
 
 describe('LoadingState', () => {
   it('deve renderizar o texto padrão de carregamento e o spinner', () => {
     render(<LoadingState />);
 
     expect(screen.getByText('Carregando...')).toBeInTheDocument();
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument(); // Assumindo que o spinner tem um data-testid="loading-spinner"
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
-  it('deve renderizar um texto de carregamento customizado', () => {
-    const customMessage = 'Buscando dados...';
+  it('deve renderizar uma mensagem personalizada quando fornecida', () => {
+    const customMessage = 'Processando dados...';
     render(<LoadingState message={customMessage} />);
 
     expect(screen.getByText(customMessage)).toBeInTheDocument();

@@ -1,17 +1,19 @@
 import { syncAdsStatus } from '@/jobs/sync-ads';
 import { MetaAdsService } from '@/services/meta/ads';
-import { logger } from '@/utils/logger';
 import { MetaAd } from '@/types/meta';
 import { DEFAULT_SYNC_OPTIONS } from '@/types/sync';
 
-jest.mock('@/services/meta/ads');
-jest.mock('@/utils/logger', () => ({
-  logger: {
+// Mock do logger antes de qualquer importação
+const mockLogger = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-  },
-}));
+  debug: jest.fn()
+};
+
+jest.mock('@/utils/logger', () => mockLogger);
+
+jest.mock('@/services/meta/ads');
 
 // Mock da cadeia do Supabase
 function createSupabaseMock({ notError = null } = {}) {
@@ -78,7 +80,7 @@ describe('syncAdsStatus', () => {
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBeTruthy();
     
-    expect(logger.error).toHaveBeenCalledWith(
+    expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.anything(),
         retryCount: 1
@@ -93,7 +95,7 @@ describe('syncAdsStatus', () => {
     const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase as any);
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBe('Database Error');
-    expect(logger.error).toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalled();
   });
 
   it('deve tentar novamente em caso de erro retryable', async () => {
@@ -107,7 +109,7 @@ describe('syncAdsStatus', () => {
     const result = await resultPromise;
     
     expect(result.status.success).toBe(true);
-    expect(logger.warn).toHaveBeenCalled();
+    expect(mockLogger.warn).toHaveBeenCalled();
   });
 
   describe('timeout', () => {
@@ -134,15 +136,15 @@ describe('syncAdsStatus', () => {
       expect(result.status.error).toBe('Timeout');
       
       // Verifica se o logger.error foi chamado pelo menos duas vezes
-      expect(logger.error).toHaveBeenCalledTimes(2);
+      expect(mockLogger.error).toHaveBeenCalledTimes(2);
       
       // Verificamos apenas que o logger.error foi chamado com os textos corretos
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(mockLogger.error).toHaveBeenCalledWith(
         expect.anything(),
         'Timeout ao executar operação'
       );
       
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(mockLogger.error).toHaveBeenCalledWith(
         expect.anything(),
         'Timeout na sincronização'
       );
@@ -169,7 +171,7 @@ describe('syncAdsStatus', () => {
       expect(result.status.success).toBe(true);
       expect(result.status.totalAds).toBe(1);
       expect(result.status.activeAds).toBe(1);
-      expect(logger.error).not.toHaveBeenCalled();
+      expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });
 }); 

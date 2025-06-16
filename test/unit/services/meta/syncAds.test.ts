@@ -1,3 +1,4 @@
+// Mock do logger antes de qualquer importação
 const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
@@ -5,7 +6,8 @@ const mockLogger = {
   debug: jest.fn()
 };
 
-jest.mock('../../../../src/utils/logger', () => ({ logger: mockLogger }));
+// CORRIGIDO: exportar como named export
+jest.mock('@/utils/logger', () => ({ logger: mockLogger }));
 
 jest.mock('../../../../src/services/meta/ads', () => ({
   MetaAdsService: jest.fn().mockImplementation(() => ({

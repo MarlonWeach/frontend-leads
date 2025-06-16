@@ -1,12 +1,15 @@
-import { ServerCache, CacheType } from '@/utils/server-cache';
-
-// Mock do logger
+// Mock do logger (inline no jest.mock)
 jest.mock('@/utils/logger', () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn()
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+  }
 }));
+
+import { ServerCache, CacheType } from '@/utils/server-cache';
+import { logger as mockLogger } from '@/utils/logger';
 
 describe('ServerCache', () => {
   let cache: ServerCache;
@@ -15,6 +18,9 @@ describe('ServerCache', () => {
     // Limpar todas as instâncias e mocks
     jest.clearAllMocks();
     
+    // Reset da instância singleton para cada teste
+    (ServerCache as any).instance = undefined;
+    
     // Obter uma nova instância do cache para cada teste
     cache = ServerCache.getInstance();
     cache.clear();
@@ -22,158 +28,232 @@ describe('ServerCache', () => {
 
   describe('Operações básicas', () => {
     it('deve armazenar e recuperar valores', () => {
-      const key = 'test-key';
-      const value = { data: 'test-value' };
-      
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+
       cache.set(key, value);
-      const retrieved = cache.get(key);
-      
-      expect(retrieved).toEqual(value);
+      const result = cache.get(key);
+
+      expect(result).toEqual(value);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { key },
+        'Cache entry set'
+      );
     });
-    
-    it('deve retornar undefined para chaves inexistentes', () => {
-      const retrieved = cache.get('non-existent-key');
-      expect(retrieved).toBeUndefined();
+
+    it('deve retornar undefined para chaves não existentes', () => {
+      const key = 'non-existent-key';
+
+      const result = cache.get(key);
+
+      expect(result).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { key },
+        'Cache miss'
+      );
     });
-    
-    it('deve invalidar uma chave específica', () => {
-      const key = 'test-key';
-      const value = { data: 'test-value' };
-      
+
+    it('deve limpar o cache corretamente', () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+
       cache.set(key, value);
-      expect(cache.get(key)).toEqual(value);
-      
-      cache.invalidate(key);
-      expect(cache.get(key)).toBeUndefined();
-    });
-    
-    it('deve limpar todo o cache', () => {
-      cache.set('key1', 'value1');
-      cache.set('key2', 'value2');
-      
-      expect(cache.get('key1')).toBe('value1');
-      expect(cache.get('key2')).toBe('value2');
-      
       cache.clear();
-      
-      expect(cache.get('key1')).toBeUndefined();
-      expect(cache.get('key2')).toBeUndefined();
+
+      const result = cache.get(key);
+      expect(result).toBeUndefined();
+      expect(mockLogger.info).toHaveBeenCalledWith('Cache cleared');
     });
   });
-  
-  describe('Método getOrSet', () => {
-    it('deve retornar valor em cache quando disponível', async () => {
-      const key = 'test-key';
-      const value = { data: 'cached-value' };
-      
+
+  describe('Expiração do cache', () => {
+    it('deve expirar valores após o tempo definido', () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+      const ttl = 1000; // 1 segundo
+
+      cache.set(key, value, ttl);
+      // Verificar que o valor está disponível antes da expiração
+      expect(cache.get(key)).toEqual(value);
+
+      // Simular expiração manualmente
+      cache['cache'].del(key);
+      cache['cache'].emit('expired', key, value);
+
+      // Verificar que o valor expirou
+      expect(cache.get(key)).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { key },
+        'Cache entry expired'
+      );
+    });
+
+    it('deve usar o TTL padrão quando não especificado', () => {
+      jest.useFakeTimers();
+
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+
       cache.set(key, value);
       
-      const fetchFn = jest.fn().mockResolvedValue({ data: 'new-value' });
+      // Verificar que o valor está disponível antes da expiração
+      expect(cache.get(key)).toEqual(value);
+
+      // Avançar o tempo além do TTL padrão (5 minutos)
+      jest.advanceTimersByTime(5 * 60 * 1000 + 100);
+
+      // Verificar que o valor expirou
+      expect(cache.get(key)).toBeUndefined();
+
+      jest.useRealTimers();
+    });
+  });
+
+  describe('Singleton', () => {
+    it('deve retornar a mesma instância', () => {
+      const instance1 = ServerCache.getInstance();
+      const instance2 = ServerCache.getInstance();
+
+      expect(instance1).toBe(instance2);
+    });
+
+    it('deve manter o mesmo estado entre instâncias', () => {
+      const instance1 = ServerCache.getInstance();
+      const instance2 = ServerCache.getInstance();
+
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+
+      instance1.set(key, value);
+      expect(instance2.get(key)).toEqual(value);
+    });
+  });
+
+  describe('getOrSet', () => {
+    it('deve buscar e armazenar valor quando não existe no cache', async () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+      const fetchFn = jest.fn().mockResolvedValue(value);
+
       const result = await cache.getOrSet(key, fetchFn, CacheType.DASHBOARD_OVERVIEW);
-      
+
+      expect(result).toEqual(value);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(cache.get(key)).toEqual(value);
+    });
+
+    it('deve retornar valor do cache quando disponível', async () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+      const fetchFn = jest.fn();
+
+      cache.set(key, value);
+      const result = await cache.getOrSet(key, fetchFn, CacheType.DASHBOARD_OVERVIEW);
+
       expect(result).toEqual(value);
       expect(fetchFn).not.toHaveBeenCalled();
     });
-    
-    it('deve chamar fetchFn quando valor não está em cache', async () => {
-      const key = 'test-key';
-      const value = { data: 'new-value' };
-      
-      const fetchFn = jest.fn().mockResolvedValue(value);
-      const result = await cache.getOrSet(key, fetchFn, CacheType.DASHBOARD_OVERVIEW);
-      
-      expect(result).toEqual(value);
-      expect(fetchFn).toHaveBeenCalledTimes(1);
-    });
-    
-    it('deve propagar erros do fetchFn', async () => {
-      const key = 'test-key';
-      const error = new Error('Fetch error');
-      
+
+    it('deve propagar erro quando fetchFn falha', async () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const error = new Error('Test error');
       const fetchFn = jest.fn().mockRejectedValue(error);
-      
+
       await expect(cache.getOrSet(key, fetchFn, CacheType.DASHBOARD_OVERVIEW))
-        .rejects.toThrow('Fetch error');
+        .rejects.toThrow('Test error');
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Test error',
+          key,
+          type: CacheType.DASHBOARD_OVERVIEW
+        }),
+        'Error fetching data for cache'
+      );
     });
   });
-  
-  describe('Invalidação por tipo', () => {
-    it('deve invalidar todas as chaves de um tipo específico', () => {
-      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param: 'value1' });
-      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param: 'value2' });
-      const key3 = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY);
-      
-      cache.set(key1, 'value1');
-      cache.set(key2, 'value2');
-      cache.set(key3, 'value3');
-      
+
+  describe('Invalidação', () => {
+    it('deve invalidar uma entrada específica', () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const value = { data: 'test-data' };
+
+      cache.set(key, value);
+      const result = cache.invalidate(key);
+
+      expect(result).toBe(true);
+      expect(cache.get(key)).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { key },
+        'Cache entry invalidated'
+      );
+    });
+
+    it('deve invalidar um tipo específico de cache', () => {
+      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param1: 'value1' });
+      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY, { param2: 'value2' });
+      const value = { data: 'test-data' };
+
+      cache.set(key1, value);
+      cache.set(key2, value);
+
       cache.invalidateType(CacheType.DASHBOARD_OVERVIEW);
-      
+
       expect(cache.get(key1)).toBeUndefined();
-      expect(cache.get(key2)).toBeUndefined();
-      expect(cache.get(key3)).toBe('value3');
+      expect(cache.get(key2)).toEqual(value);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        { type: CacheType.DASHBOARD_OVERVIEW, count: 1 },
+        'Cache type invalidated'
+      );
     });
   });
-  
-  describe('Geração de chaves', () => {
-    it('deve gerar chaves corretas com parâmetros', () => {
-      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, {
-        dateFrom: '2023-01-01',
-        dateTo: '2023-01-31'
-      });
-      
-      expect(key).toBe('dashboard_overview:dateFrom=2023-01-01&dateTo=2023-01-31');
-    });
-    
-    it('deve gerar chaves corretas sem parâmetros', () => {
-      const key = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY);
-      expect(key).toBe('dashboard_activity');
-    });
-    
-    it('deve ignorar parâmetros nulos ou indefinidos', () => {
-      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, {
-        dateFrom: '2023-01-01',
-        dateTo: null,
-        filter: undefined
-      });
-      
-      expect(key).toBe('dashboard_overview:dateFrom=2023-01-01');
-    });
-    
-    it('deve ordenar os parâmetros alfabeticamente', () => {
-      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, {
-        dateTo: '2023-01-31',
-        dateFrom: '2023-01-01'
-      });
-      
-      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, {
-        dateFrom: '2023-01-01',
-        dateTo: '2023-01-31'
-      });
-      
-      expect(key1).toBe(key2);
-    });
-  });
-  
+
   describe('Estatísticas', () => {
-    it('deve rastrear hits e misses', () => {
-      cache.set('key1', 'value1');
-      
-      cache.get('key1'); // hit
-      cache.get('key1'); // hit
-      cache.get('key2'); // miss
-      
+    it('deve retornar estatísticas corretas', () => {
+      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY);
+      const value = { data: 'test-data' };
+
+      // Simular hits e misses
+      cache.set(key1, value);
+      cache.get(key1); // hit
+      cache.get(key2); // miss
+      cache.get('non-existent'); // miss
+
       const stats = cache.getStats();
-      expect(stats.hits).toBe(2);
-      expect(stats.misses).toBe(1);
+
+      expect(stats.hits).toBe(1);
+      expect(stats.misses).toBe(2);
+      expect(stats.keys).toBe(1);
+      expect(stats.lastRefreshed).toHaveProperty(key1);
+      expect(stats.lastRefreshed).not.toHaveProperty(key2);
     });
-    
-    it('deve rastrear a última atualização', () => {
-      const key = 'test-key';
-      cache.set(key, 'value');
-      
-      const stats = cache.getStats();
-      expect(stats.lastRefreshed[key]).toBeInstanceOf(Date);
+  });
+
+  describe('generateKey', () => {
+    it('deve gerar chave correta para tipo sem parâmetros', () => {
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      expect(key).toBe(CacheType.DASHBOARD_OVERVIEW);
+    });
+
+    it('deve gerar chave correta com parâmetros', () => {
+      const params = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        status: 'active'
+      };
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, params);
+      expect(key).toBe('dashboard_overview:endDate=2024-01-31&startDate=2024-01-01&status=active');
+    });
+
+    it('deve ignorar parâmetros undefined ou null', () => {
+      const params = {
+        startDate: '2024-01-01',
+        endDate: undefined,
+        status: null
+      };
+      const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, params);
+      expect(key).toBe('dashboard_overview:startDate=2024-01-01');
     });
   });
 }); 

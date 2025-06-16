@@ -1,6 +1,32 @@
 // Configurações globais para os testes
 import '@testing-library/jest-dom';
 
+// Configurar variáveis de ambiente para testes
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_URL = 'https://test.supabase.co';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+
+// Mock global do Supabase
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+        eq: jest.fn(() => ({
+          select: jest.fn(() => Promise.resolve({ count: 0, error: null })),
+          eq: jest.fn(() => ({
+            select: jest.fn(() => Promise.resolve({ count: 0, error: null }))
+          })),
+          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+          order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+          limit: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      }))
+    }))
+  }))
+}));
+
 // Mock do fetch global
 global.fetch = jest.fn();
 
@@ -21,4 +47,9 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
 // Limpar mocks após cada teste
 afterEach(() => {
   jest.clearAllMocks();
-}); 
+});
+
+// Polyfill para setImmediate (necessário para pino/logger em ambiente de teste)
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (cb, ...args) => setTimeout(cb, 0, ...args);
+} 

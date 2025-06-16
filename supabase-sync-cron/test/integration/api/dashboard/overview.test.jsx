@@ -1,3 +1,13 @@
+// Mock do logger antes de qualquer importação
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn()
+};
+
+jest.mock('@/utils/logger', () => mockLogger);
+
 import { createMocks } from 'node-mocks-http';
 import { GET } from '@/app/api/dashboard/overview/route';
 import { createClient } from '@supabase/supabase-js';
@@ -30,14 +40,6 @@ jest.mock('@supabase/supabase-js', () => {
     }))
   };
 });
-
-// Mock do logger
-jest.mock('@/utils/logger', () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn()
-}));
 
 describe('API de Overview do Dashboard', () => {
   let mockSupabase;

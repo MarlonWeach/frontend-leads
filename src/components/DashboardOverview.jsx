@@ -8,7 +8,7 @@ import {
   BarChart3, PieChart, Calendar, Download, Info
 } from 'lucide-react';
 import { Tooltip } from './Tooltip';
-import { useDashboardData } from '../hooks/useDashboardData';
+import { useDashboardOverview } from '../hooks/useDashboardData';
 
 function LoadingState() {
   return (
@@ -88,7 +88,7 @@ export default function DashboardOverview() {
     applyDateFilter(preset);
   }, [router, applyDateFilter]);
 
-  const { data, isLoading, error, refetch } = useDashboardData(dateFrom, dateTo);
+  const { data, isLoading, error, refetch } = useDashboardOverview(dateFrom, dateTo);
 
   if (error) {
     return <ErrorState error={error} refetch={refetch} />;

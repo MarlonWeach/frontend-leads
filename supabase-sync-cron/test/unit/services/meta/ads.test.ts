@@ -1,16 +1,15 @@
+// Mock do logger antes de qualquer importação
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn()
+};
+
+jest.mock('../../../../src/utils/logger', () => mockLogger);
+
 import { MetaAdsService } from '../../../../src/services/meta/ads';
 import { MetaAd, MetaAdsResponse, MetaAPIError } from '../../../../src/types/meta';
-import { logger } from '../../../../src/utils/logger';
-
-// Mock do logger
-jest.mock('../../../../src/utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn()
-  }
-}));
 
 // Mock do fetch
 const mockFetch = jest.fn();
@@ -72,7 +71,7 @@ describe('MetaAdsService', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining(`${config.baseUrl}/${config.accountId}/ads`)
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Buscando anúncios ativos',
           accountId: config.accountId
@@ -142,7 +141,7 @@ describe('MetaAdsService', () => {
 
       expect(result).toEqual(mockAds);
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(logger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Erro temporário na Meta API, tentando novamente',
           attempt: 1
@@ -166,7 +165,7 @@ describe('MetaAdsService', () => {
       });
 
       await expect(service.getActiveAds()).rejects.toThrow(MetaAPIError);
-      expect(logger.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('deve incluir parâmetros corretos na requisição', async () => {
@@ -208,7 +207,7 @@ describe('MetaAdsService', () => {
 
       expect(result).toEqual(mockAds);
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(logger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Erro temporário do provedor do modelo',
           attempt: 1,
@@ -243,8 +242,8 @@ describe('MetaAdsService', () => {
 
       await expect(service.getActiveAds()).rejects.toThrow('Erro de conexão com o provedor do modelo');
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(logger.warn).toHaveBeenCalledTimes(2);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+      expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Erro ao buscar anúncios ativos',
           error: expect.objectContaining({

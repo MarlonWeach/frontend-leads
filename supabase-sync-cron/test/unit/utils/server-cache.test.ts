@@ -1,12 +1,14 @@
-import { ServerCache, CacheType } from '@/utils/server-cache';
-
-// Mock do logger
-jest.mock('@/utils/logger', () => ({
+// Mock do logger antes de qualquer importação
+const mockLogger = {
   info: jest.fn(),
-  warn: jest.fn(),
   error: jest.fn(),
+  warn: jest.fn(),
   debug: jest.fn()
-}));
+};
+
+jest.mock('@/utils/logger', () => mockLogger);
+
+import { ServerCache, CacheType } from '@/utils/server-cache';
 
 describe('ServerCache', () => {
   let cache: ServerCache;

@@ -16,6 +16,7 @@ export interface SyncStatus {
 
 export interface SyncOptions {
   force?: boolean;
+  dryRun?: boolean;
   retryCount?: number;
   timeoutMs?: number;
 }

@@ -11,7 +11,7 @@ export function useVirtualizedList({
   initialPage = 1
 }) {
   const [page, setPage] = useState(initialPage);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(items.length > 0);
   const parentRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -65,6 +65,11 @@ export function useVirtualizedList({
     scrollElement.addEventListener('scroll', handleScroll);
     return () => scrollElement.removeEventListener('scroll', handleScroll);
   }, [loadMore, isLoadingMore, hasMore]);
+
+  // Atualizar hasMore quando items mudar
+  useEffect(() => {
+    setHasMore(items.length > page * pageSize);
+  }, [items, page, pageSize]);
 
   return {
     virtualItems: rowVirtualizer.getVirtualItems(),

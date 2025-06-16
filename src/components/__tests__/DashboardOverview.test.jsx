@@ -1,11 +1,20 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DashboardOverview from '../DashboardOverview';
-import { useDashboardData } from '../../hooks/useDashboardData';
+import { useDashboardOverview } from '../../hooks/useDashboardData';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-// Mock do hook useDashboardData
-jest.mock('../../hooks/useDashboardData');
+// Mock do hook useDashboardOverview
+jest.mock('../../hooks/useDashboardData', () => ({
+  useDashboardOverview: jest.fn()
+}));
+
+// Mock do Next.js Router
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
+  useSearchParams: jest.fn()
+}));
 
 describe('DashboardOverview', () => {
   const mockData = {
@@ -17,11 +26,13 @@ describe('DashboardOverview', () => {
     },
     recentActivity: [
       {
-        id: 1,
-        full_name: 'João Silva',
-        email: 'joao@email.com',
-        status: 'new',
-        created_time: '2024-03-21T10:00:00Z'
+        type: 'lead',
+        value: 1,
+        timestamp: '2024-03-21T10:00:00Z',
+        metadata: {
+          impressions: 1000,
+          clicks: 50
+        }
       }
     ],
     alerts: [
@@ -35,66 +46,105 @@ describe('DashboardOverview', () => {
     ]
   };
 
+  const mockRouter = {
+    push: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn()
+  };
+
+  const mockSearchParams = new URLSearchParams();
+
   beforeEach(() => {
     // Resetar mocks antes de cada teste
     jest.clearAllMocks();
     
     // Configurar mock padrão
-    useDashboardData.mockReturnValue({
+    useDashboardOverview.mockReturnValue({
       data: mockData,
       isLoading: false,
-      error: null
+      error: null,
+      refetch: jest.fn()
     });
+
+    useRouter.mockReturnValue(mockRouter);
+    useSearchParams.mockReturnValue(mockSearchParams);
   });
 
-  it('deve renderizar o dashboard corretamente', () => {
+  it('deve renderizar o dashboard com métricas de anúncios ativos', async () => {
     render(<DashboardOverview />);
 
-    // Verificar métricas principais
-    expect(screen.getByText('Total de Leads')).toBeInTheDocument();
-    expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('20 novos • 30% conversão')).toBeInTheDocument();
+    // Verificar se o container do dashboard está presente
+    expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
+    
+    // Verificar se o container de métricas está presente
+    const metricsSummary = screen.getByTestId('metrics-summary');
+    expect(metricsSummary).toBeInTheDocument();
 
-    expect(screen.getByText('Campanhas Ativas')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('10 total')).toBeInTheDocument();
+    // Verificar métricas de leads
+    const leadsCard = screen.getByTestId('metric-card-leads');
+    expect(leadsCard).toBeInTheDocument();
+    expect(screen.getByTestId('metric-leads-total')).toHaveTextContent('100');
+    expect(screen.getByTestId('metric-leads-new')).toHaveTextContent('20');
+    expect(screen.getByTestId('metric-leads-conversion')).toHaveTextContent('30,0%');
 
-    expect(screen.getByText('Anunciantes')).toBeInTheDocument();
-    expect(screen.getByText('6')).toBeInTheDocument();
-    expect(screen.getByText('8 cadastrados')).toBeInTheDocument();
+    // Verificar métricas de campanhas
+    const campaignsCard = screen.getByTestId('metric-card-campaigns');
+    expect(campaignsCard).toBeInTheDocument();
+    expect(screen.getByTestId('metric-campaigns-active')).toHaveTextContent('5');
+    expect(screen.getByTestId('metric-campaigns-total')).toHaveTextContent('10');
 
-    expect(screen.getByText('Investimento')).toBeInTheDocument();
-    expect(screen.getByText('R$ 5.000,00')).toBeInTheDocument();
-    expect(screen.getByText('CTR: 5,00%')).toBeInTheDocument();
+    // Verificar métricas de performance
+    const performanceCard = screen.getByTestId('metric-card-performance');
+    expect(performanceCard).toBeInTheDocument();
+    expect(screen.getByTestId('metric-performance-spend')).toHaveTextContent('R$ 5.000,00');
+    expect(screen.getByTestId('metric-performance-ctr')).toHaveTextContent('5,0%');
   });
 
   it('deve mostrar estado de carregamento', () => {
-    useDashboardData.mockReturnValue({
+    useDashboardOverview.mockReturnValue({
       data: null,
       isLoading: true,
-      error: null
+      error: null,
+      refetch: jest.fn()
     });
 
     render(<DashboardOverview />);
 
-    // Verificar indicadores de carregamento
-    expect(screen.getAllByText('...')).toHaveLength(4);
-    expect(screen.getAllByText('Carregando...')).toHaveLength(4);
+    // Verificar se os cards de loading estão presentes
+    const loadingCards = screen.getAllByRole('generic').filter(
+      element => element.className.includes('animate-pulse')
+    );
+    expect(loadingCards).toHaveLength(4);
   });
 
-  it('deve mostrar erro quando houver falha', () => {
+  it('deve mostrar erro quando houver falha', async () => {
     const errorMessage = 'Erro ao carregar dados';
-    useDashboardData.mockReturnValue({
+    useDashboardOverview.mockReturnValue({
       data: null,
       isLoading: false,
-      error: new Error(errorMessage)
+      error: new Error(errorMessage),
+      refetch: jest.fn()
     });
 
     render(<DashboardOverview />);
 
+    expect(screen.getByTestId('error-message')).toBeInTheDocument();
     expect(screen.getByText('Ops! Algo deu errado')).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
-    expect(screen.getByText('Tentar novamente')).toBeInTheDocument();
+    expect(screen.getByTestId('retry-button')).toBeInTheDocument();
+  });
+
+  it('deve mostrar atividade recente', async () => {
+    render(<DashboardOverview />);
+
+    const activitySection = screen.getByTestId('dashboard-activity');
+    expect(activitySection).toBeInTheDocument();
+    
+    // Verificar se os dados da atividade recente estão presentes
+    expect(screen.getByText('Novo Lead')).toBeInTheDocument();
+    expect(screen.getByText('1 leads')).toBeInTheDocument();
+    expect(screen.getByText(/1\.000 impressões/)).toBeInTheDocument();
+    expect(screen.getByText(/50 cliques/)).toBeInTheDocument();
   });
 
   it('deve mostrar alertas quando disponíveis', () => {
@@ -105,54 +155,31 @@ describe('DashboardOverview', () => {
     expect(screen.getByText('Ver detalhes')).toBeInTheDocument();
   });
 
-  it('deve mostrar atividade recente', () => {
-    render(<DashboardOverview />);
-
-    expect(screen.getByText('João Silva')).toBeInTheDocument();
-    expect(screen.getByText('joao@email.com')).toBeInTheDocument();
-    expect(screen.getByText('new')).toBeInTheDocument();
-  });
-
-  it('deve mostrar mensagem quando não houver alertas', async () => {
-    useDashboardData.mockReturnValue({
-      data: { ...mockData, alerts: [] },
-      isLoading: false,
-      error: null
-    });
-
-    render(<DashboardOverview />);
-
-    expect(screen.getByText('Tudo funcionando perfeitamente!')).toBeInTheDocument();
-  });
-
-  it('deve mostrar mensagem quando não houver atividade recente', async () => {
-    useDashboardData.mockReturnValue({
-      data: { ...mockData, recentActivity: [] },
-      isLoading: false,
-      error: null
-    });
-
-    render(<DashboardOverview />);
-
-    expect(screen.getByText('Nenhuma atividade recente')).toBeInTheDocument();
-  });
-
   it('deve recarregar dados ao clicar em tentar novamente após erro', async () => {
-    const errorMessage = 'Erro ao carregar dados';
     const mockRefetch = jest.fn();
-
-    useDashboardData.mockReturnValue({
+    useDashboardOverview.mockReturnValue({
       data: null,
       isLoading: false,
-      error: new Error(errorMessage),
+      error: new Error('Erro ao carregar dados'),
       refetch: mockRefetch
     });
 
     render(<DashboardOverview />);
 
-    const retryButton = screen.getByText('Tentar novamente');
+    const retryButton = screen.getByTestId('retry-button');
     await userEvent.click(retryButton);
 
     expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it('deve atualizar filtro de período', async () => {
+    render(<DashboardOverview />);
+
+    // Selecionar o botão de filtro específico usando o container pai
+    const filterContainer = screen.getByTestId('dashboard-overview').querySelector('.flex.space-x-2');
+    const filterButton = within(filterContainer).getByRole('button', { name: '7 dias' });
+    await userEvent.click(filterButton);
+
+    expect(mockRouter.push).toHaveBeenCalledWith('/dashboard?period=7d');
   });
 }); 

@@ -85,21 +85,30 @@ export interface DashboardSearchItem {
 }
 
 // Hook para buscar dados do overview do dashboard
-export function useDashboardOverview(dateFrom?: string, dateTo?: string) {
+export function useDashboardOverview(dateFrom?: string, dateTo?: string, optionsOverride: any = {}) {
   const queryClient = useQueryClient();
   
   const queryKey = ['dashboard', 'overview', dateFrom && dateTo ? `${dateFrom}_${dateTo}` : 'all'];
   
   const fetchOverview = async (): Promise<DashboardOverviewResponse> => {
     const params = new URLSearchParams();
-    if (dateFrom) params.append('dateFrom', dateFrom);
-    if (dateTo) params.append('dateTo', dateTo);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
     
-    const response = await fetch(`/api/dashboard/overview?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error('Erro ao buscar dados do dashboard');
+    const queryString = params.toString();
+    const url = queryString ? `/api/dashboard/overview?${queryString}` : '/api/dashboard/overview';
+    try {
+      const response = await fetch(url);
+      if (!response || typeof response.ok !== 'boolean') {
+        throw new Error('Erro ao buscar dados do dashboard');
+      }
+      if (!response.ok) {
+        throw new Error('Erro ao buscar dados do dashboard');
+      }
+      return response.json();
+    } catch (err: any) {
+      throw new Error(err?.message || 'Erro ao buscar dados do dashboard');
     }
-    return response.json();
   };
   
   const result = useQueryWithCache<DashboardOverviewResponse>(
@@ -107,7 +116,8 @@ export function useDashboardOverview(dateFrom?: string, dateTo?: string) {
     fetchOverview,
     {
       staleTime: 5 * 60 * 1000, // 5 minutos
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      ...optionsOverride
     }
   );
   

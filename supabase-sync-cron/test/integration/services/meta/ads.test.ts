@@ -1,16 +1,15 @@
+// Mock do logger antes de qualquer importação
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn()
+};
+
+jest.mock('../../../../src/utils/logger', () => mockLogger);
+
 import { MetaAdsService } from '../../../../src/services/meta/ads';
 import { MetaAPIError } from '../../../../src/types/meta';
-import { logger } from '../../../../src/utils/logger';
-
-// Mock do logger
-jest.mock('../../../../src/utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn()
-  }
-}));
 
 describe('MetaAdsService Integration', () => {
   const config = {
@@ -52,14 +51,14 @@ describe('MetaAdsService Integration', () => {
       });
 
       // Verifica logs
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Buscando anúncios ativos',
           accountId: config.accountId
         })
       );
 
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           msg: 'Busca de anúncios ativos concluída',
           totalAds: ads.length
@@ -74,7 +73,7 @@ describe('MetaAdsService Integration', () => {
       });
 
       await expect(invalidService.getActiveAds()).rejects.toThrow(MetaAPIError);
-      expect(logger.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('deve lidar com account ID inválido', async () => {
@@ -84,7 +83,7 @@ describe('MetaAdsService Integration', () => {
       });
 
       await expect(invalidService.getActiveAds()).rejects.toThrow(MetaAPIError);
-      expect(logger.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 }); 

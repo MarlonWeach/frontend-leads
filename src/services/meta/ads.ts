@@ -30,8 +30,8 @@ export class MetaAdsService {
 
   private async makeRequest<T>(path: string, params: Record<string, string>): Promise<T> {
     const url = new URL(`${this.baseUrl}/${path}`);
-    url.searchParams.append('access_token', this.accessToken);
-    
+    // NÃO adicionar access_token na query string
+    // url.searchParams.append('access_token', this.accessToken);
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
@@ -40,7 +40,12 @@ export class MetaAdsService {
     
     for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
       try {
-        const response = await fetch(url.toString());
+        // Adicionar header Authorization
+        const response = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`
+          }
+        });
         const data = await response.json();
 
         if (!response.ok) {
@@ -123,7 +128,7 @@ export class MetaAdsService {
 
     while (nextUrl) {
       try {
-        const response = await this.makeRequest<MetaAdsResponse>(nextUrl, {
+        const response: MetaAdsResponse = await this.makeRequest<MetaAdsResponse>(nextUrl, {
           fields: 'id,name,status,effective_status,created_time,updated_time',
           effective_status: 'ACTIVE',
           limit: '100'

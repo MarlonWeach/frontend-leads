@@ -1,5 +1,6 @@
-import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, UseQueryOptions, UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 
 // Opções para o hook useQueryWithCache
 export interface UseQueryWithCacheOptions<TData, TError> 
@@ -41,10 +42,29 @@ export function useQueryWithCache<TData, TError = Error>(
   // Estado para armazenar a data da última atualização
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Obter o queryClient do contexto
+  const queryClient = useQueryClient();
+
   // Usar o hook useQuery do React Query
   const queryResult = useQuery<TData, TError, TData>({
     queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-    queryFn,
+    queryFn: async () => {
+      try {
+        // Tentar buscar do cache do React Query
+        const cache = queryClient.getQueryCache().find(Array.isArray(queryKey) ? queryKey : [queryKey]);
+        if (cache && cache.state.data !== undefined) {
+          logger.info('Cache hit', { key: queryKey });
+          return cache.state.data as TData;
+        } else {
+          logger.info('Cache miss', { key: queryKey });
+        }
+        const data = await queryFn();
+        return data;
+      } catch (error) {
+        logger.error('Error fetching data', { key: queryKey, error });
+        throw error;
+      }
+    },
     ...queryOptions
   });
 

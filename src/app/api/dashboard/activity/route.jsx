@@ -19,15 +19,15 @@ export async function GET() {
     return NextResponse.json(await serverCache.getOrSet(
       cacheKey,
       async () => {
-        // Primeiro, buscar anúncios ativos
+        // Buscar anúncios ativos (status do anúncio, não do adset)
         const { data: activeAds, error: adsError } = await supabase
           .from('ads')
-          .select('id')
+          .select('ad_id, name, adset_id, campaign_id, status')
           .eq('status', 'ACTIVE');
-        
         if (adsError) throw adsError;
         
-        const activeAdIds = (activeAds || []).map(ad => ad.id).filter(Boolean);
+        const activeAdIds = (activeAds || []).map(ad => ad.ad_id).filter(Boolean);
+        logger.debug({ activeAdIds }, 'IDs de anúncios ativos encontrados');
         
         // Se não houver anúncios ativos, retornar dados vazios
         if (activeAdIds.length === 0) {
@@ -38,10 +38,11 @@ export async function GET() {
         // Buscar leads associados a anúncios ativos
         const { data: metaLeads, error: metaLeadsError } = await supabase
           .from('meta_leads')
-          .select('lead_count, status')
+          .select('lead_count, status, ad_id')
           .in('ad_id', activeAdIds);
-        
         if (metaLeadsError) throw metaLeadsError;
+
+        logger.debug({ metaLeads }, 'Leads associados aos anúncios ativos');
         
         // Agrupa os leads por status
         const activityData = metaLeads.reduce((acc, lead) => {
@@ -69,9 +70,9 @@ export async function GET() {
     ));
   } catch (error) {
     logger.error({
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
     }, 'Erro ao buscar dados de atividade');
-    
     return NextResponse.json(
       { error: 'Erro ao buscar dados de atividade' },
       { status: 500 }

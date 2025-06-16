@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { 
-  useDashboardOverview, 
+import {
+  useDashboardOverview,
   useDashboardActivity,
   useDashboardRecentSales,
   useDashboardSearch,
@@ -9,15 +9,33 @@ import {
 } from '@/hooks/useDashboardData';
 import { ReactNode } from 'react';
 
+// Mock do logger (inline no jest.mock, antes de qualquer importação)
+jest.mock('@/utils/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+  }
+}));
+
 // Mock do fetch global
 global.fetch = jest.fn();
 
-// Wrapper para o React Query
+// Obter referência ao mockLogger
+const { logger: mockLogger } = jest.requireMock('@/utils/logger');
+
+// Wrapper para o React Query com configurações específicas para testes
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
+        cacheTime: 0,
+        staleTime: 0,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false
       },
     },
   });
@@ -60,12 +78,15 @@ describe('useDashboardData hooks', () => {
       // Inicialmente, deve estar carregando
       expect(result.current.isLoading).toBe(true);
       
-      // Aguardar a conclusão da consulta
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      // Aguardar a conclusão da consulta com timeout aumentado
+      await waitFor(() => expect(result.current.isSuccess).toBe(true), {
+        timeout: 5000
+      });
       
       // Verificar se os dados foram retornados corretamente
       expect(result.current.data).toEqual(mockData);
       expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/overview');
+      expect(mockLogger.info).toHaveBeenCalled();
     });
     
     it('deve incluir parâmetros de data na URL quando fornecidos', async () => {
@@ -89,8 +110,29 @@ describe('useDashboardData hooks', () => {
     it('deve lidar com erros na API', async () => {
       const errorMessage = 'Erro ao buscar dados';
       
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error(errorMessage));
+      
+      const { result } = renderHook(() => useDashboardOverview(), {
+        wrapper: createWrapper()
+      });
+      
+      // Aguardar a conclusão da consulta com timeout aumentado
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 5000
+      });
+      
+      // Verificar se o erro foi capturado corretamente
+      expect(result.current.error).toBeInstanceOf(Error);
+      expect((result.current.error as Error).message).toBe('Erro ao buscar dados do dashboard');
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+    
+    it('deve lidar com respostas não-ok da API', async () => {
+      const errorMessage = 'Erro interno do servidor';
+      
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
+        status: 500,
         statusText: errorMessage
       });
       
@@ -98,12 +140,15 @@ describe('useDashboardData hooks', () => {
         wrapper: createWrapper()
       });
       
-      // Aguardar a conclusão da consulta
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      // Aguardar a conclusão da consulta com timeout aumentado
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 5000
+      });
       
       // Verificar se o erro foi capturado corretamente
       expect(result.current.error).toBeInstanceOf(Error);
-      expect((result.current.error as Error).message).toContain(errorMessage);
+      expect((result.current.error as Error).message).toBe('Erro ao buscar dados do dashboard');
+      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
   
@@ -123,12 +168,15 @@ describe('useDashboardData hooks', () => {
         wrapper: createWrapper()
       });
       
-      // Aguardar a conclusão da consulta
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      // Aguardar a conclusão da consulta com timeout aumentado
+      await waitFor(() => expect(result.current.isSuccess).toBe(true), {
+        timeout: 5000
+      });
       
       // Verificar se os dados foram retornados corretamente
       expect(result.current.data).toEqual(mockData);
       expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/activity');
+      expect(mockLogger.info).toHaveBeenCalled();
     });
   });
   

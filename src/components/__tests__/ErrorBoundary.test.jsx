@@ -1,81 +1,128 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import * as Sentry from '@sentry/nextjs';
+import { captureError } from '../../lib/sentry';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Mock de Sentry para evitar chamadas reais durante os testes
-jest.mock('@sentry/browser', () => ({
+// Mock do Sentry e captureError
+jest.mock('@sentry/nextjs', () => ({
   captureException: jest.fn(),
+  init: jest.fn(),
+  flush: jest.fn(),
+  withScope: jest.fn((callback) => callback({ setExtra: jest.fn() }))
 }));
 
-const ProblematicComponent = ({ shouldThrow }) => {
-  if (shouldThrow) {
-    throw new Error('Erro de teste!');
-  }
-  return <div>Componente normal</div>;
-};
+jest.mock('../../lib/sentry', () => ({
+  captureError: jest.fn((error, context) => {
+    Sentry.captureException(error);
+  })
+}));
 
 describe('ErrorBoundary', () => {
-  const originalConsoleError = console.error;
+  const ThrowError = () => {
+    throw new Error('Erro de teste!');
+  };
 
-  // Suprimir erros de React gerados pela ErrorBoundary durante os testes
+  const NormalComponent = () => <div>Componente normal</div>;
+
   beforeEach(() => {
-    console.error = jest.fn();
+    jest.clearAllMocks();
+    // Limpar console.error para não poluir os logs
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    console.error = originalConsoleError;
-    jest.clearAllMocks();
-  });
-
-  it('deve renderizar o children se não houver erro', () => {
-    render(
-      <ErrorBoundary>
-        <ProblematicComponent shouldThrow={false} />
-      </ErrorBoundary>
-    );
-
-    expect(screen.getByText('Componente normal')).toBeInTheDocument();
-    expect(screen.queryByText('Ops! Algo deu errado')).not.toBeInTheDocument();
+    console.error.mockRestore();
   });
 
   it('deve renderizar a UI de fallback quando um erro ocorre', () => {
+    // Suprimir o erro de console que o React gera ao propagar o erro
+    const originalError = console.error;
+    console.error = jest.fn();
+
     render(
       <ErrorBoundary>
-        <ProblematicComponent shouldThrow={true} />
+        <ThrowError />
       </ErrorBoundary>
     );
 
     expect(screen.getByText('Ops! Algo deu errado')).toBeInTheDocument();
-    expect(screen.getByText('Erro de teste!')).toBeInTheDocument();
+    expect(screen.getByText('Desculpe, ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para resolver.')).toBeInTheDocument();
     expect(screen.getByText('Tentar novamente')).toBeInTheDocument();
+
+    console.error = originalError;
   });
 
-  it('deve chamar Sentry.captureException quando um erro ocorre', () => {
-    const Sentry = require('@sentry/browser');
+  it('deve chamar captureError quando um erro ocorre', () => {
+    // Suprimir o erro de console que o React gera ao propagar o erro
+    const originalError = console.error;
+    console.error = jest.fn();
+
+    const error = new Error('Erro de teste!');
     render(
       <ErrorBoundary>
-        <ProblematicComponent shouldThrow={true} />
+        <ThrowError />
       </ErrorBoundary>
     );
 
-    expect(Sentry.captureException).toHaveBeenCalledTimes(1);
-    expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error));
+    expect(captureError).toHaveBeenCalled();
+    const capturedError = captureError.mock.calls[0][0];
+    expect(capturedError.message).toBe(error.message);
+
+    console.error = originalError;
   });
 
-  it('deve resetar o estado do erro ao clicar em "Tentar novamente" e re-renderizar o children', () => {
-    render(
+  it('deve resetar o estado do erro ao clicar em "Tentar novamente"', async () => {
+    // Suprimir o erro de console que o React gera ao propagar o erro
+    const originalError = console.error;
+    console.error = jest.fn();
+
+    const { rerender } = render(
       <ErrorBoundary>
-        <ProblematicComponent shouldThrow={true} />
+        <NormalComponent />
       </ErrorBoundary>
     );
 
-    // Verifica que a UI de fallback está visível
+    // Verificar se o componente normal foi renderizado inicialmente
+    expect(screen.getByText('Componente normal')).toBeInTheDocument();
+
+    // Forçar um erro
+    await act(async () => {
+      rerender(
+        <ErrorBoundary>
+          <ThrowError />
+        </ErrorBoundary>
+      );
+    });
+
+    // Verificar se o erro foi renderizado
     expect(screen.getByText('Ops! Algo deu errado')).toBeInTheDocument();
 
-    // Simula o clique no botão "Tentar novamente"
-    fireEvent.click(screen.getByText('Tentar novamente'));
+    // Clicar em "Tentar novamente" e re-renderizar
+    await act(async () => {
+      fireEvent.click(screen.getByText('Tentar novamente'));
+      rerender(
+        <ErrorBoundary>
+          <NormalComponent />
+        </ErrorBoundary>
+      );
+    });
 
-    // O componente ProblematicComponent agora deve renderizar normalmente
+    // Aguardar e verificar se o componente normal foi renderizado novamente
+    await waitFor(() => {
+      expect(screen.getByText('Componente normal')).toBeInTheDocument();
+      expect(screen.queryByText('Ops! Algo deu errado')).not.toBeInTheDocument();
+    });
+
+    console.error = originalError;
+  });
+
+  it('deve renderizar children normalmente quando não há erro', () => {
+    render(
+      <ErrorBoundary>
+        <NormalComponent />
+      </ErrorBoundary>
+    );
+
     expect(screen.getByText('Componente normal')).toBeInTheDocument();
     expect(screen.queryByText('Ops! Algo deu errado')).not.toBeInTheDocument();
   });
