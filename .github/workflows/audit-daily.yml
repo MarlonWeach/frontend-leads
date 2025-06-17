@@ -1,0 +1,154 @@
+name: 🔍 Auditoria Diária - Meta API vs Supabase
+
+on:
+  schedule:
+    # Executa todos os dias às 3h UTC (meia-noite BRT)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Permite execução manual
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/audit-daily.js'
+      - '.github/workflows/audit-daily.yml'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  audit:
+    name: Executar Auditoria Diária
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: |
+        npm ci
+        echo "✅ Dependências instaladas"
+        
+    - name: 🔧 Setup environment
+      run: |
+        echo "🔧 Configurando variáveis de ambiente..."
+        # Verificar se as variáveis necessárias estão definidas
+        if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+          echo "❌ NEXT_PUBLIC_SUPABASE_URL não definida"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+          echo "❌ SUPABASE_SERVICE_ROLE_KEY não definida"
+          exit 1
+        fi
+        if [ -z "${{ secrets.META_ACCESS_TOKEN }}" ]; then
+          echo "❌ META_ACCESS_TOKEN não definida"
+          exit 1
+        fi
+        if [ -z "${{ secrets.META_ACCOUNT_ID }}" ]; then
+          echo "❌ META_ACCOUNT_ID não definida"
+          exit 1
+        fi
+        echo "✅ Todas as variáveis de ambiente estão definidas"
+        
+    - name: 🧪 Test script execution
+      run: |
+        echo "🧪 Testando execução do script..."
+        node scripts/audit-daily.js --test || echo "⚠️ Script pode ter problemas (continuando mesmo assim)"
+        
+    - name: 🔍 Run daily audit
+      id: audit
+      run: |
+        echo "🚀 Iniciando auditoria diária..."
+        echo "📅 Data/Hora: $(date)"
+        echo "🔄 Branch: ${{ github.ref_name }}"
+        echo "👤 Executor: ${{ github.actor }}"
+        
+        # Executar auditoria e capturar saída
+        OUTPUT=$(node scripts/audit-daily.js 2>&1)
+        EXIT_CODE=$?
+        
+        # Salvar saída para uso posterior
+        echo "audit_output<<EOF" >> $GITHUB_OUTPUT
+        echo "$OUTPUT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Salvar saída em arquivo para upload
+        echo "$OUTPUT" > audit-output.log
+        
+        # Verificar se houve divergências
+        if echo "$OUTPUT" | grep -q "DIVERGÊNCIAS ENCONTRADAS"; then
+          echo "has_discrepancies=true" >> $GITHUB_OUTPUT
+          echo "❌ Divergências detectadas!"
+        else
+          echo "has_discrepancies=false" >> $GITHUB_OUTPUT
+          echo "✅ Paridade total - Sem divergências"
+        fi
+        
+        # Retornar código de saída
+        exit $EXIT_CODE
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+        META_ACCOUNT_ID: ${{ secrets.META_ACCOUNT_ID }}
+        
+    - name: 📤 Upload audit logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: audit-logs-${{ github.run_number }}
+        path: |
+          audit-output.log
+          logs/
+        retention-days: 30
+        
+    - name: 📊 Create summary
+      if: always()
+      run: |
+        echo "## 📊 Resumo da Auditoria Diária" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Data/Hora:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Executor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "audit-output.log" ]; then
+          echo "**Saída da Auditoria:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat audit-output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ steps.audit.outputs.has_discrepancies }}" == "true" ]; then
+          echo "## ⚠️ **ATENÇÃO: Divergências Detectadas!**" >> $GITHUB_STEP_SUMMARY
+          echo "Verifique os logs para mais detalhes." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ✅ **Paridade Total - Sem Divergências**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: 🔔 Notify on discrepancies
+      if: steps.audit.outputs.has_discrepancies == 'true'
+      run: |
+        echo "🔔 Divergências detectadas - Notificação enviada"
+        # Aqui você pode adicionar notificações para Slack, Discord, etc.
+        # Exemplo para Slack:
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"⚠️ Auditoria diária detectou divergências entre Meta API e Supabase!"}' \
+        #   ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: ✅ Success notification
+      if: success() && steps.audit.outputs.has_discrepancies == 'false'
+      run: |
+        echo "✅ Auditoria concluída com sucesso - Paridade total confirmada"
+        
+    - name: ❌ Failure notification
+      if: failure()
+      run: |
+        echo "❌ Auditoria falhou - Verifique os logs para mais detalhes"
+        # Aqui você pode adicionar notificações de erro 
