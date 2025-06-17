@@ -86,7 +86,7 @@ export interface DashboardSearchItem {
 
 // Hook para buscar dados do overview do dashboard
 export function useDashboardOverview(dateFrom?: string, dateTo?: string, optionsOverride: any = {}) {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   const queryKey = ['dashboard', 'overview', dateFrom && dateTo ? `${dateFrom}_${dateTo}` : 'all'];
   
@@ -133,7 +133,7 @@ export function useDashboardOverview(dateFrom?: string, dateTo?: string, options
 
 // Hook para buscar dados de atividade do dashboard
 export function useDashboardActivity() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   const queryKey = ['dashboard', 'activity'];
   
@@ -168,7 +168,7 @@ export function useDashboardActivity() {
 
 // Hook para buscar dados de vendas recentes do dashboard
 export function useDashboardRecentSales() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   const queryKey = ['dashboard', 'recent-sales'];
   
@@ -203,7 +203,7 @@ export function useDashboardRecentSales() {
 
 // Hook para buscar dados de busca do dashboard
 export function useDashboardSearch() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   
   const queryKey = ['dashboard', 'search'];
   

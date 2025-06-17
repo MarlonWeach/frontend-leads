@@ -1,13 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  TrendingUp, Users, DollarSign, Target, Eye, MousePointer,
-  Activity, Zap, BarChart3, ArrowUpRight, ArrowDownRight,
-  AlertCircle, Info, Calendar, ChevronDown
-} from 'lucide-react';
-import { fetchPerformanceMetrics } from '../services/performanceService';
 
 export default function PerformanceDashboard() {
   console.log('🚀 DASHBOARD CARREGADO - Versão URL');

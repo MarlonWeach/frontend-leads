@@ -114,56 +114,52 @@ export async function syncAdsStatusCore(
     return { status, ads: activeAds };
   }
 
-  try {
-    // Preparar dados para upsert
-    const adsToUpdate = activeAds.map(ad => ({
-      id: ad.id,
-      status: 'ACTIVE',
-      updated_at: new Date().toISOString(),
-      meta_data: ad,
-    }));
+  // Preparar dados para upsert
+  const adsToUpdate = activeAds.map(ad => ({
+    id: ad.id,
+    status: 'ACTIVE',
+    updated_at: new Date().toISOString(),
+    meta_data: ad,
+  }));
 
-    // Atualizar anúncios ativos
-    const upsertResult = await upsertActiveAds(supabase, adsToUpdate);
-    
-    if (!upsertResult.success) {
-      throw {
-        code: 'DB_ERROR',
-        message: 'Database Error',
-        retryable: true,
-        details: upsertResult.error,
-      } as SyncError;
-    }
-
-    // Marcar anúncios inativos
-    const updateResult = await markInactiveAds(supabase, activeAds.map(ad => ad.id));
-    
-    if (!updateResult.success) {
-      throw {
-        code: 'DB_ERROR',
-        message: 'Database Error',
-        retryable: true,
-        details: updateResult.error,
-      } as SyncError;
-    }
-
-    const endTime = new Date();
-    const status: SyncStatus = {
-      success: true,
-      timestamp: endTime.toISOString(),
-      totalAds: activeAds.length,
-      activeAds: activeAds.length,
-      details: {
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        durationMs: endTime.getTime() - startTime.getTime(),
-      },
-    };
-
-    return { status, ads: activeAds };
-  } catch (error) {
-    throw error;
+  // Atualizar anúncios ativos
+  const upsertResult = await upsertActiveAds(supabase, adsToUpdate);
+  
+  if (!upsertResult.success) {
+    throw {
+      code: 'DB_ERROR',
+      message: 'Database Error',
+      retryable: true,
+      details: upsertResult.error,
+    } as SyncError;
   }
+
+  // Marcar anúncios inativos
+  const updateResult = await markInactiveAds(supabase, activeAds.map(ad => ad.id));
+  
+  if (!updateResult.success) {
+    throw {
+      code: 'DB_ERROR',
+      message: 'Database Error',
+      retryable: true,
+      details: updateResult.error,
+    } as SyncError;
+  }
+
+  const endTime = new Date();
+  const status: SyncStatus = {
+    success: true,
+    timestamp: endTime.toISOString(),
+    totalAds: activeAds.length,
+    activeAds: activeAds.length,
+    details: {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      durationMs: endTime.getTime() - startTime.getTime(),
+    },
+  };
+
+  return { status, ads: activeAds };
 }
 
 // Função principal com retry logic e dependências injetáveis

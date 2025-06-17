@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Building2, Users, TrendingUp, DollarSign, Eye, BarChart3,
-  Calendar, Filter, Search, ArrowRight, CheckCircle, Clock,
-  Phone, Mail, Globe, Settings, ChevronRight, PieChart,
-  AlertCircle
+  Building2, Users, DollarSign, BarChart3,
+  AlertCircle, ChevronRight, Mail, Globe, ArrowRight, CheckCircle
 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AdvertisersDashboard() {
   const [advertisers, setAdvertisers] = useState([]);
@@ -217,10 +215,6 @@ export default function AdvertisersDashboard() {
       style: 'currency',
       currency: 'BRL'
     }).format(value || 0);
-  };
-
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat('pt-BR').format(value || 0);
   };
 
   if (loading && advertisers.length === 0) {

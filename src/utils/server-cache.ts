@@ -88,7 +88,12 @@ export class ServerCache {
 
   // Definir valor no cache
   public set<T>(key: string, value: T, ttl?: number): boolean {
-    const success = this.cache.set(key, value, ttl);
+    let success: boolean;
+    if (ttl !== undefined) {
+      success = this.cache.set(key, value, ttl);
+    } else {
+      success = this.cache.set(key, value);
+    }
     if (success) {
       this.stats.lastRefreshed[key] = new Date();
       logger.debug({ key, ttl }, 'Cache entry set');

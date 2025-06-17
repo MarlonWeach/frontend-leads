@@ -1,3 +1,5 @@
+// @ts-nocheck
+export {};
 import { jest } from '@jest/globals';
 
 // Mock do logger

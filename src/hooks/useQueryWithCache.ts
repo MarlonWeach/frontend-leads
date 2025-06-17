@@ -51,7 +51,8 @@ export function useQueryWithCache<TData, TError = Error>(
     queryFn: async () => {
       try {
         // Tentar buscar do cache do React Query
-        const cache = queryClient.getQueryCache().find(Array.isArray(queryKey) ? queryKey : [queryKey]);
+        const normalizedKey = Array.isArray(queryKey) ? queryKey : [queryKey];
+        const cache = queryClient.getQueryCache().find({ queryKey: normalizedKey });
         if (cache && cache.state.data !== undefined) {
           logger.info('Cache hit', { key: queryKey });
           return cache.state.data as TData;
