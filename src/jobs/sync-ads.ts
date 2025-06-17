@@ -77,7 +77,9 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
       logger.error({ timeoutMs }, 'Timeout ao executar operação');
-      reject(new Error('Timeout'));
+      const timeoutError = new Error('Timeout') as SyncError;
+      timeoutError.retryable = false;
+      reject(timeoutError);
     }, timeoutMs);
   });
   return Promise.race([promise, timeoutPromise]);
@@ -112,50 +114,56 @@ export async function syncAdsStatusCore(
     return { status, ads: activeAds };
   }
 
-  // Preparar dados para upsert
-  const adsToUpdate = activeAds.map(ad => ({
-    id: ad.id,
-    status: 'ACTIVE',
-    updated_at: new Date().toISOString(),
-    meta_data: ad,
-  }));
+  try {
+    // Preparar dados para upsert
+    const adsToUpdate = activeAds.map(ad => ({
+      id: ad.id,
+      status: 'ACTIVE',
+      updated_at: new Date().toISOString(),
+      meta_data: ad,
+    }));
 
-  // Atualizar anúncios ativos
-  const upsertResult = await upsertActiveAds(supabase, adsToUpdate);
-  if (!upsertResult.success) {
-    throw {
-      code: 'DB_ERROR',
-      message: 'Database Error',
-      retryable: true,
-      details: upsertResult.error,
-    } as SyncError;
+    // Atualizar anúncios ativos
+    const upsertResult = await upsertActiveAds(supabase, adsToUpdate);
+    
+    if (!upsertResult.success) {
+      throw {
+        code: 'DB_ERROR',
+        message: 'Database Error',
+        retryable: true,
+        details: upsertResult.error,
+      } as SyncError;
+    }
+
+    // Marcar anúncios inativos
+    const updateResult = await markInactiveAds(supabase, activeAds.map(ad => ad.id));
+    
+    if (!updateResult.success) {
+      throw {
+        code: 'DB_ERROR',
+        message: 'Database Error',
+        retryable: true,
+        details: updateResult.error,
+      } as SyncError;
+    }
+
+    const endTime = new Date();
+    const status: SyncStatus = {
+      success: true,
+      timestamp: endTime.toISOString(),
+      totalAds: activeAds.length,
+      activeAds: activeAds.length,
+      details: {
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        durationMs: endTime.getTime() - startTime.getTime(),
+      },
+    };
+
+    return { status, ads: activeAds };
+  } catch (error) {
+    throw error;
   }
-
-  // Marcar anúncios inativos
-  const updateResult = await markInactiveAds(supabase, activeAds.map(ad => ad.id));
-  if (!updateResult.success) {
-    throw {
-      code: 'DB_ERROR',
-      message: 'Database Error',
-      retryable: true,
-      details: updateResult.error,
-    } as SyncError;
-  }
-
-  const endTime = new Date();
-  const status: SyncStatus = {
-    success: true,
-    timestamp: endTime.toISOString(),
-    totalAds: activeAds.length,
-    activeAds: activeAds.length,
-    details: {
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
-      durationMs: endTime.getTime() - startTime.getTime(),
-    },
-  };
-
-  return { status, ads: activeAds };
 }
 
 // Função principal com retry logic e dependências injetáveis
@@ -206,7 +214,24 @@ export async function syncAdsStatus(
         return { status, ads: activeAds };
       }
 
-      // Usar a função core simplificada
+      // Para lista vazia, retorna sucesso diretamente sem chamar syncAdsStatusCore
+      if (activeAds.length === 0) {
+        const endTime = new Date();
+        const status: SyncStatus = {
+          success: true,
+          timestamp: endTime.toISOString(),
+          totalAds: 0,
+          activeAds: 0,
+          details: {
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            durationMs: endTime.getTime() - startTime.getTime(),
+          },
+        };
+        return { status, ads: [] };
+      }
+
+      // Usar a função core simplificada para listas não vazias
       return await syncAdsStatusCore(activeAds, supabase, options);
       
     } catch (error) {
@@ -251,24 +276,7 @@ export async function syncAdsStatus(
     }
   }
 
-  // Se não conseguiu buscar anúncios, mas não houve erro fatal, retorna sucesso com lista vazia
-  if (opts.dryRun) {
-    logger.info('Modo dryRun ativado - nenhuma alteração será feita no banco');
-    const endTime = new Date();
-    const status: SyncStatus = {
-      success: true,
-      timestamp: endTime.toISOString(),
-      totalAds: 0,
-      activeAds: 0,
-      details: {
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        durationMs: endTime.getTime() - startTime.getTime(),
-      },
-    };
-    return { status, ads: [] };
-  }
-
+  // Se chegou aqui, falhou em todas as tentativas
   const endTime = new Date();
   const status: SyncStatus = {
     success: false,

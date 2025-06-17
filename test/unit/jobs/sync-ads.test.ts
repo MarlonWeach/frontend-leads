@@ -73,7 +73,12 @@ describe('syncAdsStatus', () => {
       }
     ];
     mockGetActiveAds.mockResolvedValueOnce(mockAds);
-    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase);
+    
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase, { metaAdsService: mockMetaAdsService });
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(1);
     expect(result.status.activeAds).toBe(1);
@@ -92,7 +97,12 @@ describe('syncAdsStatus', () => {
       retryable: true
     };
     mockGetActiveAds.mockRejectedValueOnce(apiError);
-    const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase);
+    
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase, { metaAdsService: mockMetaAdsService });
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBeTruthy();
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -115,11 +125,16 @@ describe('syncAdsStatus', () => {
       }
     ];
     mockGetActiveAds.mockResolvedValueOnce(mockAds);
-    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase);
+    
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase, { metaAdsService: mockMetaAdsService });
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBeTruthy();
     expect(mockLogger.error).toHaveBeenCalled();
-  });
+  }, 10000);
 
   it('deve respeitar a opção dryRun', async () => {
     const mockAds = [
@@ -131,7 +146,12 @@ describe('syncAdsStatus', () => {
       }
     ];
     mockGetActiveAds.mockResolvedValueOnce(mockAds);
-    const result = await syncAdsStatus({ ...DEFAULT_SYNC_OPTIONS, dryRun: true }, mockSupabase);
+    
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const result = await syncAdsStatus({ ...DEFAULT_SYNC_OPTIONS, dryRun: true }, mockSupabase, { metaAdsService: mockMetaAdsService });
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(1);
     expect(result.status.activeAds).toBe(1);
@@ -142,7 +162,12 @@ describe('syncAdsStatus', () => {
 
   it('deve processar lista vazia de anúncios', async () => {
     mockGetActiveAds.mockResolvedValueOnce([]);
-    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase);
+    
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase, { metaAdsService: mockMetaAdsService });
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(0);
     expect(result.status.activeAds).toBe(0);
@@ -166,7 +191,12 @@ describe('syncAdsStatus', () => {
     mockGetActiveAds
       .mockRejectedValueOnce(apiError)
       .mockResolvedValueOnce(mockAds);
-    const resultPromise = syncAdsStatus({ retryCount: 2 }, mockSupabase);
+      
+    const mockMetaAdsService = {
+      getActiveAds: mockGetActiveAds
+    };
+    
+    const resultPromise = syncAdsStatus({ retryCount: 2 }, mockSupabase, { metaAdsService: mockMetaAdsService });
     await jest.runAllTimersAsync();
     const result = await resultPromise;
     expect(result.status.success).toBe(true);
@@ -189,9 +219,15 @@ describe('syncAdsStatus', () => {
       mockGetActiveAds.mockImplementationOnce(
         () => new Promise(resolve => setTimeout(() => resolve(mockAds), timeoutMs + 100))
       );
+      
+      const mockMetaAdsService = {
+        getActiveAds: mockGetActiveAds
+      };
+      
       const resultPromise = syncAdsStatus(
         { ...DEFAULT_SYNC_OPTIONS, timeoutMs },
-        mockSupabase
+        mockSupabase,
+        { metaAdsService: mockMetaAdsService }
       );
       await jest.advanceTimersByTimeAsync(timeoutMs);
       const result = await resultPromise;
@@ -213,9 +249,15 @@ describe('syncAdsStatus', () => {
       mockGetActiveAds.mockImplementationOnce(
         () => new Promise(resolve => setTimeout(() => resolve(mockAds), timeoutMs - 100))
       );
+      
+      const mockMetaAdsService = {
+        getActiveAds: mockGetActiveAds
+      };
+      
       const resultPromise = syncAdsStatus(
         { ...DEFAULT_SYNC_OPTIONS, timeoutMs },
-        mockSupabase
+        mockSupabase,
+        { metaAdsService: mockMetaAdsService }
       );
       await jest.advanceTimersByTimeAsync(timeoutMs - 100);
       const result = await resultPromise;

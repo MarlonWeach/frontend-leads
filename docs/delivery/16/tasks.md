@@ -47,8 +47,8 @@ This document lists all tasks associated with PBI 16.
 - [x] Sincronizar anúncios ativos corretamente (status dinâmico)
 - [x] Atualizar dados quando um anúncio muda de status
 
-### Status Atual dos Testes (83% Concluído)
-**✅ PASSANDO (15 suites):**
+### Status Atual dos Testes (89% Concluído)
+**✅ PASSANDO (16 suites):**
 - ErrorMessage.test.jsx
 - LoadingState.test.jsx  
 - DashboardOverview.test.jsx
@@ -56,6 +56,7 @@ This document lists all tasks associated with PBI 16.
 - LeadsDashboard.test.jsx
 - AdvertisersDashboard.test.jsx
 - sync-ads.test.ts
+- sync-ads-simplified.test.ts
 - ads.test.ts
 - overview.test.jsx (integration)
 - useVirtualizedList.test.js
@@ -65,15 +66,9 @@ This document lists all tasks associated with PBI 16.
 - server-cache.test.ts
 - useQueryWithCache.test.tsx
 
-**❌ FALHANDO (3 suites):**
-- sync-ads.test.ts (6 de 8 testes falhando - problemas no retorno de status da função syncAdsStatus)
-- 2 outros testes menores
-
 ### Detalhamento dos Problemas Restantes
-1. **sync-ads.test.ts**: ⚠️ Em Progresso. A versão simplificada (sync-ads-simplified.test.ts) está funcionando com todos os 8 cenários passando. A versão original (sync-ads.test.ts) ainda apresenta 6 falhas dos 8 testes, relacionadas ao retorno incorreto do status da função syncAdsStatus. Trabalharemos agora na correção da implementação para alinhar com os testes esperados.
+1. **sync-ads.test.ts**: ✅ Resolvido. Corrigimos a implementação da função syncAdsStatus e os mocks do MetaAdsService. Todos os 8 cenários de teste agora estão passando (sucesso, falha, dryRun, lista vazia, retry, timeout, etc).
 
 ### Próximos Passos
-1. Corrigir implementação da função syncAdsStatus para que retorne o status correto nos testes
-2. Verificar lógica de dryRun, timeout e processamento de lista vazia
-3. Finalizar 2 testes menores restantes
-4. Alcançar 100% dos testes passando 
+1. Finalizar 2 testes menores restantes
+2. Alcançar 100% dos testes passando 
