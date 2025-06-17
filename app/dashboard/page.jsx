@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import MainLayout from '../../src/components/MainLayout';
 import DashboardPageClient from './DashboardPageClient';
 
 // Componente de loading
@@ -12,9 +13,15 @@ const LoadingState = () => (
 );
 
 export default function DashboardPage() {
+  const breadcrumbs = [
+    { name: 'Dashboard', href: '/dashboard' }
+  ];
+
   return (
-    <Suspense fallback={<LoadingState />}>
-      <DashboardPageClient />
-    </Suspense>
+    <MainLayout title="Dashboard" breadcrumbs={breadcrumbs}>
+      <Suspense fallback={<LoadingState />}>
+        <DashboardPageClient />
+      </Suspense>
+    </MainLayout>
   );
 }

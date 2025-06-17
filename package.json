@@ -8,7 +8,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "next lint"
+    "lint": "next lint",
+    "audit:daily": "node scripts/audit-daily.js",
+    "audit:run": "node scripts/audit-daily.js"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "^1.2.7",
@@ -18,10 +20,11 @@
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-query-devtools": "^5.80.6",
     "@tanstack/react-virtual": "^3.13.10",
+    "axios": "^1.10.0",
     "lucide-react": "^0.511.0",
     "next": "14.2.29",
     "node-cache": "^5.1.2",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.15.3"

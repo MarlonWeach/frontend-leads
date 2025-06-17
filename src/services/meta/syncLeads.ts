@@ -11,6 +11,11 @@ interface SyncLeadsConfig {
   retryDelay?: number;
 }
 
+function normalizeAccountId(accountId: string): string {
+  if (!accountId) return '';
+  return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+}
+
 export class MetaLeadsSyncService {
   private supabase: SupabaseClient;
   private metaAdsService: MetaAdsService;
@@ -24,11 +29,14 @@ export class MetaLeadsSyncService {
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    this.metaAdsService = new MetaAdsService(config);
+    this.metaAdsService = new MetaAdsService({
+      ...config,
+      accountId: normalizeAccountId(config.accountId)
+    });
     this.retryAttempts = config.retryAttempts || 3;
     this.retryDelay = config.retryDelay || 1000;
     this.accessToken = config.accessToken;
-    this.accountId = config.accountId;
+    this.accountId = normalizeAccountId(config.accountId);
   }
 
   private async exponentialBackoff(retryCount: number): Promise<void> {
@@ -49,7 +57,7 @@ export class MetaLeadsSyncService {
 
       const timeRange = encodeURIComponent(JSON.stringify({ since: startDate, until: endDate }));
       const adIdsFilter = encodeURIComponent(JSON.stringify(activeAdIds));
-      const url = `https://graph.facebook.com/v23.0/act_${this.accountId}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range=${timeRange}&ad_ids=${adIdsFilter}&access_token=${this.accessToken}`;
+      const url = `https://graph.facebook.com/v23.0/${this.accountId}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range=${timeRange}&ad_ids=${adIdsFilter}&access_token=${this.accessToken}`;
       
       logger.debug({ 
         msg: 'Fazendo requisição para Meta API', 
@@ -156,7 +164,7 @@ export class MetaLeadsSyncService {
       }
 
       // Verifica se a conta tem acesso aos dados
-      const expectedId = `act_${this.accountId}`;
+      const expectedId = normalizeAccountId(this.accountId);
       const hasAccess = data.data.some((account: any) => account.id === expectedId);
       if (!hasAccess) {
         logger.error({

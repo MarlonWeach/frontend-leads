@@ -132,37 +132,47 @@ export default function DashboardOverview() {
     <div data-testid="dashboard-overview" className="space-y-8">
       {/* Filtros de período */}
       <div className="flex items-center justify-between">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleFilterClick('7d')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              currentPeriod === '7d'
-                ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            7 dias
-          </button>
-          <button
-            onClick={() => handleFilterClick('30d')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              currentPeriod === '30d'
-                ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            30 dias
-          </button>
-          <button
-            onClick={() => handleFilterClick('90d')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              currentPeriod === '90d'
-                ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            90 dias
-          </button>
+        <div className="flex items-center space-x-4">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleFilterClick('7d')}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                currentPeriod === '7d'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              7 dias
+            </button>
+            <button
+              onClick={() => handleFilterClick('30d')}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                currentPeriod === '30d'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              30 dias
+            </button>
+            <button
+              onClick={() => handleFilterClick('90d')}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                currentPeriod === '90d'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              90 dias
+            </button>
+          </div>
+          {/* Período selecionado */}
+          <div className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-md">
+            <span className="font-medium">Período:</span> {
+              dateFrom && dateTo 
+                ? `${new Date(dateFrom).toLocaleDateString('pt-BR')} a ${new Date(dateTo).toLocaleDateString('pt-BR')}`
+                : 'Últimos 30 dias'
+            }
+          </div>
         </div>
         <div className="text-sm text-gray-500">
           Última atualização: {new Date().toLocaleTimeString('pt-BR')}
@@ -170,7 +180,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Métricas principais */}
-      <div data-testid="metrics-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div data-testid="metrics-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
         <div data-testid="metric-card-leads" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="flex-1">
@@ -242,11 +252,71 @@ export default function DashboardOverview() {
               </div>
               <p data-testid="metric-performance-spend" className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.performance.spend)}</p>
               <p className="text-xs text-gray-500 mt-1">
-                CTR: <span data-testid="metric-performance-ctr">{formatPercentage(metrics.performance.ctr)}</span>
+                Custo por lead: {formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}
               </p>
             </div>
             <div className="ml-4 flex-shrink-0 text-orange-500">
               <DollarSign className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+
+        <div data-testid="metric-card-impressions" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <div className="flex items-center">
+                <p className="text-sm font-medium text-gray-600">Impressões</p>
+                <Tooltip content="Total de impressões no período selecionado">
+                  <Info className="h-4 w-4 ml-1 text-gray-400" />
+                </Tooltip>
+              </div>
+              <p data-testid="metric-performance-impressions" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.performance.impressions)}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Alcance total
+              </p>
+            </div>
+            <div className="ml-4 flex-shrink-0 text-indigo-500">
+              <Eye className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+
+        <div data-testid="metric-card-clicks" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <div className="flex items-center">
+                <p className="text-sm font-medium text-gray-600">Cliques</p>
+                <Tooltip content="Total de cliques no período selecionado">
+                  <Info className="h-4 w-4 ml-1 text-gray-400" />
+                </Tooltip>
+              </div>
+              <p data-testid="metric-performance-clicks" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.performance.clicks)}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                CTR: <span data-testid="metric-performance-ctr-secondary">{formatPercentage(metrics.performance.ctr)}</span>
+              </p>
+            </div>
+            <div className="ml-4 flex-shrink-0 text-teal-500">
+              <MousePointer className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+
+        <div data-testid="metric-card-conversion-rate" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <div className="flex items-center">
+                <p className="text-sm font-medium text-gray-600">Taxa de Conversão</p>
+                <Tooltip content="Taxa de conversão: leads / cliques">
+                  <Info className="h-4 w-4 ml-1 text-gray-400" />
+                </Tooltip>
+              </div>
+              <p data-testid="metric-conversion-rate" className="text-3xl font-bold text-gray-900">{formatPercentage(metrics.leads.conversion_rate)}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formatNumber(metrics.leads.total)} leads / {formatNumber(metrics.performance.clicks)} cliques
+              </p>
+            </div>
+            <div className="ml-4 flex-shrink-0 text-emerald-500">
+              <CheckCircle className="h-8 w-8" />
             </div>
           </div>
         </div>

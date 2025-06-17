@@ -5,6 +5,8 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true
   },
+  // Desabilitar telemetria para evitar erros de tracing
+  telemetry: false,
   env: {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,

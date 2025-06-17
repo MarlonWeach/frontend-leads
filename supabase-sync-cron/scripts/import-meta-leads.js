@@ -4,7 +4,12 @@ const fetch = require('node-fetch');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const ACCOUNT_ID = process.env.META_ACCOUNT_ID;
+function normalizeAccountId(accountId) {
+  if (!accountId) return '';
+  return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+}
+
+const ACCOUNT_ID = normalizeAccountId(process.env.META_ACCOUNT_ID);
 const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 
 // Função para obter a data de 30 dias atrás
@@ -23,7 +28,7 @@ async function fetchMetaLeads() {
   const startDate = getStartDate();
   const endDate = getEndDate();
   
-  const url = `https://graph.facebook.com/v22.0/act_${ACCOUNT_ID}/insights?fields=ad_id,ad_name,adset_id,campaign_id,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range={'since':'${startDate}','until':'${endDate}'}&access_token=${ACCESS_TOKEN}`;
+  const url = `https://graph.facebook.com/v22.0/${ACCOUNT_ID}/insights?fields=ad_id,ad_name,adset_id,campaign_id,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range={'since':'${startDate}','until':'${endDate}'}&access_token=${ACCESS_TOKEN}`;
   
   console.log('Buscando dados do Meta...');
   const res = await fetch(url);

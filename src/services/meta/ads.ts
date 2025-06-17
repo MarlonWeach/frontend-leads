@@ -13,6 +13,11 @@ const MODEL_PROVIDER_ERROR_CODES = {
   RATE_LIMIT: 'MODEL_PROVIDER_RATE_LIMIT'
 };
 
+function normalizeAccountId(accountId: string): string {
+  if (!accountId) return '';
+  return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+}
+
 export class MetaAdsService {
   private readonly baseUrl: string;
   private readonly accessToken: string;
@@ -23,7 +28,7 @@ export class MetaAdsService {
   constructor(config: MetaAdsServiceConfig) {
     this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     this.accessToken = config.accessToken;
-    this.accountId = config.accountId;
+    this.accountId = normalizeAccountId(config.accountId);
     this.retryAttempts = config.retryAttempts || DEFAULT_RETRY_ATTEMPTS;
     this.retryDelay = config.retryDelay || DEFAULT_RETRY_DELAY;
   }
@@ -130,7 +135,7 @@ export class MetaAdsService {
       try {
         const response: MetaAdsResponse = await this.makeRequest<MetaAdsResponse>(nextUrl, {
           fields: 'id,name,status,effective_status,created_time,updated_time',
-          effective_status: 'ACTIVE',
+          effective_status: JSON.stringify(['ACTIVE']),
           limit: '100'
         });
 

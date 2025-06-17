@@ -14,6 +14,8 @@ export async function GET(request) {
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
 
+    console.log('Filtros de data recebidos:', { dateFrom, dateTo });
+
     // Buscar métricas de campanhas
     const [
       { count: totalCampaigns },
@@ -23,27 +25,45 @@ export async function GET(request) {
       supabase.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE')
     ]);
 
-    // Buscar métricas de leads da tabela ads
-    let adsQuery = supabase
-      .from('ads')
-      .select('leads_count, spend, impressions, clicks, created_at, status');
+    // Buscar dados reais da tabela meta_leads (dados da Meta API)
+    let metaLeadsQuery = supabase
+      .from('meta_leads')
+      .select('lead_count, spend, impressions, clicks, created_time, ad_id, ad_name, campaign_name');
 
-    if (dateFrom) {
-      adsQuery = adsQuery.gte('created_at', dateFrom);
+    // CORREÇÃO: Aplicar filtros de data corretamente
+    // created_time representa a data de início do período de relatório da Meta API
+    if (dateFrom && dateTo) {
+      // Converter para data local para comparação correta
+      const fromDate = new Date(dateFrom);
+      const toDate = new Date(dateTo);
+      
+      console.log('Aplicando filtros de data:', {
+        fromDate: fromDate.toISOString(),
+        toDate: toDate.toISOString()
+      });
+
+      metaLeadsQuery = metaLeadsQuery
+        .gte('created_time', fromDate.toISOString().split('T')[0])
+        .lte('created_time', toDate.toISOString().split('T')[0]);
+    } else {
+      // Se não há filtros, usar apenas os últimos 30 dias por padrão
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      metaLeadsQuery = metaLeadsQuery
+        .gte('created_time', thirtyDaysAgo.toISOString().split('T')[0]);
     }
-    if (dateTo) {
-      adsQuery = adsQuery.lt('created_at', dateTo);
-    }
 
-    const { data: adsData, error: adsError } = await adsQuery;
-    if (adsError) throw adsError;
+    const { data: metaLeadsData, error: metaLeadsError } = await metaLeadsQuery;
+    if (metaLeadsError) throw metaLeadsError;
 
-    console.log('adsData length:', adsData.length);
-    console.log('Primeiros 5 adsData entries:', adsData.slice(0, 5));
+    console.log('metaLeadsData length:', metaLeadsData?.length || 0);
+    console.log('Primeiros 5 metaLeadsData entries:', metaLeadsData?.slice(0, 5) || []);
 
-    // Agregar dados de leads da tabela ads
-    const leadsMetrics = adsData.reduce((acc, entry) => {
-      acc.totalLeads += (entry.leads_count || 0);
+    // Agregar dados de leads da tabela meta_leads (dados reais da Meta API)
+    // IMPORTANTE: Agora calculando apenas do período filtrado
+    const leadsMetrics = (metaLeadsData || []).reduce((acc, entry) => {
+      acc.totalLeads += (entry.lead_count || 0);
       acc.totalSpend += (parseFloat(entry.spend) || 0);
       acc.totalImpressions += (parseInt(entry.impressions) || 0);
       acc.totalClicks += (parseInt(entry.clicks) || 0);
@@ -68,16 +88,15 @@ export async function GET(request) {
       ? (leadsMetrics.totalLeads / leadsMetrics.totalClicks) * 100 
       : 0;
 
-    // Buscar atividade recente (leads dos últimos 7 dias da tabela ads)
+    // Buscar atividade recente (leads dos últimos 7 dias da tabela meta_leads)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data: recentLeads } = await supabase
-      .from('ads')
-      .select('leads_count, spend, impressions, clicks, created_at, status')
-      .eq('status', 'ACTIVE')
-      .gte('created_at', sevenDaysAgo.toISOString())
-      .order('created_at', { ascending: false })
+      .from('meta_leads')
+      .select('lead_count, spend, impressions, clicks, created_time, ad_name, campaign_name')
+      .gte('created_time', sevenDaysAgo.toISOString().split('T')[0])
+      .order('created_time', { ascending: false })
       .limit(10);
 
     // Gerar alertas baseados nas métricas
@@ -113,7 +132,15 @@ export async function GET(request) {
       });
     }
 
-    console.log('Dados recuperados com sucesso!');
+    console.log('Dados recuperados com sucesso da Meta API!');
+    console.log('Métricas calculadas:', {
+      totalLeads: leadsMetrics.totalLeads,
+      totalSpend: leadsMetrics.totalSpend,
+      totalImpressions: leadsMetrics.totalImpressions,
+      totalClicks: leadsMetrics.totalClicks,
+      ctr: ctr,
+      conversionRate: conversionRate
+    });
     
     return NextResponse.json({
       metrics: {
@@ -134,9 +161,9 @@ export async function GET(request) {
       },
       recentActivity: recentLeads || [],
       alerts,
-      overviewData: adsData.map(ad => ({
-        date: ad.created_at.split('T')[0],
-        total: ad.leads_count || 0
+      overviewData: (metaLeadsData || []).map(lead => ({
+        date: lead.created_time.split('T')[0],
+        total: lead.lead_count || 0
       }))
     });
   } catch (error) {

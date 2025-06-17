@@ -28,6 +28,11 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+function normalizeAccountId(accountId: string): string {
+  if (!accountId) return '';
+  return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+}
+
 async function getDateRange(): Promise<{ startDate: string; endDate: string }> {
   const endDate = new Date();
   const startDate = new Date();
@@ -54,7 +59,7 @@ async function main() {
     // Configuração do serviço
     const syncService = new MetaLeadsSyncService({
       accessToken: process.env.META_ACCESS_TOKEN!,
-      accountId: process.env.META_ACCOUNT_ID!,
+      accountId: normalizeAccountId(process.env.META_ACCOUNT_ID!),
       retryAttempts: 3,
       retryDelay: 1000
     });
