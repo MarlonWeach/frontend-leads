@@ -324,8 +324,15 @@ if (require.main === module) {
   runDailyAudit()
     .then(result => {
       if (result.success) {
-        process.exit(result.hasDiscrepancies ? 1 : 0);
+        if (result.hasDiscrepancies) {
+          console.log('⚠️ Auditoria finalizada com divergências de dados (não é erro técnico).');
+          process.exit(0);
+        } else {
+          console.log('✅ Auditoria finalizada sem divergências.');
+          process.exit(0);
+        }
       } else {
+        console.error('Erro fatal:', result.error);
         process.exit(1);
       }
     })
