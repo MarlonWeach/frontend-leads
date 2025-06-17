@@ -22,6 +22,14 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
+console.log('🟢 Iniciando auditoria (início do script)');
+console.log('Ambiente:', {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'OK' : 'FALTANDO',
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'FALTANDO',
+  META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN ? 'OK' : 'FALTANDO',
+  META_ACCOUNT_ID: process.env.META_ACCOUNT_ID ? 'OK' : 'FALTANDO',
+});
+
 // Configuração do Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -332,6 +340,8 @@ if (require.main === module) {
       console.error('❌ Auditoria finalizada com erro inesperado. Nenhuma mensagem detalhada foi impressa.');
     }
   });
+
+  console.log('🟢 Auditoria finalizada com sucesso (fim do script)');
 }
 
 module.exports = { runDailyAudit }; 
