@@ -325,6 +325,13 @@ if (require.main === module) {
       console.error('Erro fatal:', error);
       process.exit(1);
     });
+
+  // Garante mensagem de erro se o script terminar com exit code 1 sem mensagem
+  process.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('❌ Auditoria finalizada com erro inesperado. Nenhuma mensagem detalhada foi impressa.');
+    }
+  });
 }
 
 module.exports = { runDailyAudit }; 
