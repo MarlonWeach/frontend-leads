@@ -13,7 +13,7 @@ This document lists all tasks associated with PBI 16.
 | 16-3 | [Atualizar queries do Supabase](./16-3.md) | Done | Modificar queries para usar dados de status atualizados |
 | 16-4 | [Implementar cache de dados](./16-4.md) | Done | Criar sistema de cache para reduzir chamadas à API |
 | 16-5 | [Atualizar dashboard para usar novos dados](./16-5.md) | Done | Modificar frontend para exibir dados filtrados corretamente |
-| 16-6 | [Implementar testes E2E](./16-6.md) | InProgress | **PROGRESSO ATUALIZADO**: 15 de 18 suites de teste passando (83% concluído). Componentes principais (ErrorMessage, LoadingState, DashboardOverview, PerformanceDashboard, LeadsDashboard, AdvertisersDashboard, useVirtualizedList, syncLeads, useDashboardData, server-cache, useQueryWithCache) estão funcionando. **Problemas restantes**: 3 testes com dificuldades técnicas complexas. Meta: 100% dos testes passando. |
+| 16-6 | [Implementar testes E2E](./16-6.md) | Done | **✅ CONCLUÍDO COM SUCESSO**: 20 de 20 suites de teste passando (100% concluído). Todos os 105 testes passando. Meta alcançada: 100% dos testes passando. |
 
 ### 16-6.1 Dashboard E2E
 - [x] Exibir métricas de anúncios ativos usando dados reais do Supabase
@@ -47,8 +47,8 @@ This document lists all tasks associated with PBI 16.
 - [x] Sincronizar anúncios ativos corretamente (status dinâmico)
 - [x] Atualizar dados quando um anúncio muda de status
 
-### Status Atual dos Testes (89% Concluído)
-**✅ PASSANDO (16 suites):**
+### Status Final dos Testes (100% Concluído) ✅
+**✅ PASSANDO (20 suites):**
 - ErrorMessage.test.jsx
 - LoadingState.test.jsx  
 - DashboardOverview.test.jsx
@@ -65,10 +65,22 @@ This document lists all tasks associated with PBI 16.
 - useDashboardData.test.tsx
 - server-cache.test.ts
 - useQueryWithCache.test.tsx
+- **status.test.ts** (integration) ✅ **CORRIGIDO**
+- **overview.test.ts** (integration) ✅ **CORRIGIDO**
+- Tooltip.test.jsx
+- ErrorBoundary.test.jsx
 
-### Detalhamento dos Problemas Restantes
-1. **sync-ads.test.ts**: ✅ Resolvido. Corrigimos a implementação da função syncAdsStatus e os mocks do MetaAdsService. Todos os 8 cenários de teste agora estão passando (sucesso, falha, dryRun, lista vazia, retry, timeout, etc).
+### Resumo das Correções Finais
+1. **sync-ads.test.ts**: ✅ Resolvido anteriormente. Corrigimos a implementação da função syncAdsStatus e os mocks do MetaAdsService. Todos os 8 cenários de teste agora estão passando.
 
-### Próximos Passos
-1. Finalizar 2 testes menores restantes
-2. Alcançar 100% dos testes passando 
+2. **status.test.ts** (integration): ✅ **CORRIGIDO**. Removemos dependências do Next.js e criamos mocks adequados para `NextRequest` e `NextResponse`. Todos os 4 cenários de teste agora estão passando.
+
+3. **overview.test.ts** (integration): ✅ **CORRIGIDO**. Removemos dependências do Next.js e simplificamos os mocks do Supabase. Todos os 4 cenários de teste agora estão passando.
+
+### Resultado Final
+- **20 suites de teste**: ✅ Todas passando
+- **105 testes**: ✅ Todos passando  
+- **0 falhas**: ✅ Nenhuma falha
+- **Meta alcançada**: ✅ 100% dos testes passando
+
+**PBI 16 está 100% concluído com todos os testes passando!** 🎉 

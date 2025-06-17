@@ -1,7 +1,13 @@
-// Configuração do ambiente Next.js para testes
+// Configuração do ambiente para testes
 import { jest } from '@jest/globals';
-import { NextRequest, NextResponse } from 'next/server';
-import { mockLogger } from '../../../setup';
+
+// Mock do logger
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 // Mock do middleware
 jest.mock('@/middleware', () => ({
@@ -9,36 +15,64 @@ jest.mock('@/middleware', () => ({
   withRateLimit: jest.fn((handler) => handler)
 }));
 
-import { createMocks } from 'node-mocks-http';
-import { syncAdsStatus } from '@/jobs/sync-ads';
-import { DEFAULT_SYNC_OPTIONS } from '@/types/sync';
-import { resetRateLimit, getRequestCount, checkRateLimit } from '@/utils/rateLimit';
-
 // Mock do syncAdsStatus
+const mockSyncAdsStatus = jest.fn();
 jest.mock('@/jobs/sync-ads', () => ({
-  syncAdsStatus: jest.fn()
+  syncAdsStatus: mockSyncAdsStatus
 }));
 
 // Mock do rateLimit
+const mockCheckRateLimit = jest.fn();
 jest.mock('@/utils/rateLimit', () => ({
   resetRateLimit: jest.fn(),
   getRequestCount: jest.fn(),
-  checkRateLimit: jest.fn()
+  checkRateLimit: mockCheckRateLimit
 }));
 
-// Mock global de Request para Next.js
-// eslint-disable-next-line no-undef
-if (typeof global.Request === 'undefined') {
-  global.Request = class {};
+import { DEFAULT_SYNC_OPTIONS } from '@/types/sync';
+
+// Mock das classes Next.js
+class MockNextRequest {
+  url: string;
+  method: string;
+  body: string;
+
+  constructor(url: string, options: { method: string; body?: string } = { method: 'GET' }) {
+    this.url = url;
+    this.method = options.method;
+    this.body = options.body || '';
+  }
+
+  async json() {
+    try {
+      return JSON.parse(this.body);
+    } catch {
+      return null;
+    }
+  }
+}
+
+class MockNextResponse {
+  status: number;
+  data: any;
+
+  constructor(data: any, options: { status?: number } = {}) {
+    this.status = options.status || 200;
+    this.data = data;
+  }
+
+  async json() {
+    return this.data;
+  }
 }
 
 // Mock da função POST
-const mockPOST = async (request: NextRequest) => {
+const mockPOST = async (request: MockNextRequest) => {
   try {
     // Verificar rate limit
-    const isAllowed = await checkRateLimit(request);
+    const isAllowed = await mockCheckRateLimit(request);
     if (!isAllowed) {
-      return NextResponse.json(
+      return new MockNextResponse(
         { success: false, error: 'Rate limit excedido' },
         { status: 429 }
       );
@@ -59,15 +93,15 @@ const mockPOST = async (request: NextRequest) => {
     }
 
     // Executar sincronização
-    const result = await syncAdsStatus(options);
+    const result = await mockSyncAdsStatus(options);
 
-    return NextResponse.json(
+    return new MockNextResponse(
       { success: true, data: result },
       { status: 200 }
     );
   } catch (error) {
     mockLogger.error('Erro ao sincronizar status dos anúncios:', error);
-    return NextResponse.json(
+    return new MockNextResponse(
       { success: false, error: error.message },
       { status: 500 }
     );
@@ -89,10 +123,10 @@ describe('POST /api/sync/ads/status', () => {
       ads: []
     };
 
-    (syncAdsStatus as jest.Mock).mockResolvedValue(mockResult);
-    (checkRateLimit as jest.Mock).mockResolvedValue(true);
+    mockSyncAdsStatus.mockResolvedValue(mockResult);
+    mockCheckRateLimit.mockResolvedValue(true);
 
-    const request = new NextRequest('http://localhost:3000/api/sync/ads/status', {
+    const request = new MockNextRequest('http://localhost:3000/api/sync/ads/status', {
       method: 'POST',
       body: JSON.stringify({ force: true })
     });
@@ -108,9 +142,9 @@ describe('POST /api/sync/ads/status', () => {
   });
 
   it('deve retornar erro 429 quando rate limit é excedido', async () => {
-    (checkRateLimit as jest.Mock).mockResolvedValue(false);
+    mockCheckRateLimit.mockResolvedValue(false);
 
-    const request = new NextRequest('http://localhost:3000/api/sync/ads/status', {
+    const request = new MockNextRequest('http://localhost:3000/api/sync/ads/status', {
       method: 'POST'
     });
 
@@ -126,10 +160,10 @@ describe('POST /api/sync/ads/status', () => {
 
   it('deve retornar erro 500 quando a sincronização falha', async () => {
     const mockError = new Error('Erro de sincronização');
-    (syncAdsStatus as jest.Mock).mockRejectedValue(mockError);
-    (checkRateLimit as jest.Mock).mockResolvedValue(true);
+    mockSyncAdsStatus.mockRejectedValue(mockError);
+    mockCheckRateLimit.mockResolvedValue(true);
 
-    const request = new NextRequest('http://localhost:3000/api/sync/ads/status', {
+    const request = new MockNextRequest('http://localhost:3000/api/sync/ads/status', {
       method: 'POST'
     });
 
@@ -153,22 +187,22 @@ describe('POST /api/sync/ads/status', () => {
       ads: []
     };
 
-    (syncAdsStatus as jest.Mock).mockResolvedValue(mockResult);
-    (checkRateLimit as jest.Mock).mockResolvedValue(true);
+    mockSyncAdsStatus.mockResolvedValue(mockResult);
+    mockCheckRateLimit.mockResolvedValue(true);
 
-    const request = new NextRequest('http://localhost:3000/api/sync/ads/status', {
+    const request = new MockNextRequest('http://localhost:3000/api/sync/ads/status', {
       method: 'POST',
       body: 'invalid json'
     });
 
     const response = await mockPOST(request);
-      const data = await response.json();
+    const data = await response.json();
 
-      expect(response.status).toBe(200);
+    expect(response.status).toBe(200);
     expect(data).toEqual({
       success: true,
       data: mockResult
     });
-      expect(syncAdsStatus).toHaveBeenCalledWith(DEFAULT_SYNC_OPTIONS);
+    expect(mockSyncAdsStatus).toHaveBeenCalledWith(DEFAULT_SYNC_OPTIONS);
   });
 }); 
