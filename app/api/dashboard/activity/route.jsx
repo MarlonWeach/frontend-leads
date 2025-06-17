@@ -8,6 +8,7 @@ const supabase = createClient(
 
 export async function GET() {
   try {
+    // Buscar métricas apenas da tabela meta_leads (sem JOIN problemático)
     const { data: metrics, error: metricsError } = await supabase
       .from('meta_leads')
       .select(`
@@ -16,12 +17,9 @@ export async function GET() {
         impressions,
         clicks,
         ad_id,
-        ads!inner (
-          id,
-          status
-        )
+        created_time
       `)
-      .eq('ads.status', 'ACTIVE');
+      .not('ad_id', 'is', null); // Filtrar apenas registros com ad_id válido
 
     if (metricsError) {
       console.error('Erro ao buscar métricas:', metricsError);
