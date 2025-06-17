@@ -77,6 +77,44 @@ This document lists all tasks associated with PBI 16.
 
 3. **overview.test.ts** (integration): ✅ **CORRIGIDO**. Removemos dependências do Next.js e simplificamos os mocks do Supabase. Todos os 4 cenários de teste agora estão passando.
 
+### 🔧 Técnicas Utilizadas para Resolução dos Problemas
+
+#### **Problema Principal Identificado:**
+- **Dependências do Next.js**: Os testes de integração estavam tentando usar APIs do Next.js (`NextRequest`, `NextResponse`) que não estão disponíveis no ambiente de teste Jest.
+
+#### **Técnicas Aplicadas:**
+
+1. **Mocking Customizado de APIs do Next.js**:
+   - Criamos classes `MockNextRequest` e `MockNextResponse` que simulam o comportamento das APIs reais
+   - Implementamos métodos essenciais como `json()`, `status`, e construtores apropriados
+   - Mantivemos a interface compatível com o código original
+
+2. **Remoção de Dependências Problemáticas**:
+   - Eliminamos imports de `next/server` que causavam erros de `ReferenceError: Request is not defined`
+   - Substituímos por implementações mock que funcionam no ambiente Jest
+
+3. **Correção da Configuração de Mocks do Jest**:
+   - Movemos a definição dos mocks para antes dos imports
+   - Criamos variáveis mock separadas (`mockSyncAdsStatus`, `mockCheckRateLimit`) para controle adequado
+   - Garantimos que os mocks sejam acessíveis nos testes
+
+4. **Simplificação de Mocks Complexos**:
+   - Reduzimos a complexidade dos mocks do Supabase nos testes de overview
+   - Mantivemos apenas os mocks essenciais para validar a funcionalidade
+   - Evitamos mocks excessivamente detalhados que poderiam quebrar facilmente
+
+5. **Manutenção da Cobertura de Testes**:
+   - Preservamos todos os cenários de teste originais (sucesso, erro, rate limit, etc.)
+   - Mantivemos as validações de comportamento esperado
+   - Garantimos que os testes continuem validando a lógica de negócio
+
+#### **Benefícios das Técnicas Aplicadas:**
+- ✅ **Isolamento**: Testes não dependem mais de APIs externas do Next.js
+- ✅ **Confiabilidade**: Mocks estáveis que não quebram com mudanças no framework
+- ✅ **Performance**: Testes executam mais rapidamente sem dependências pesadas
+- ✅ **Manutenibilidade**: Código de teste mais limpo e fácil de entender
+- ✅ **Portabilidade**: Testes funcionam em qualquer ambiente Jest
+
 ### Resultado Final
 - **20 suites de teste**: ✅ Todas passando
 - **105 testes**: ✅ Todos passando  
