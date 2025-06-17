@@ -60,6 +60,11 @@ jobs:
       run: |
         echo "🧪 Testando execução do script..."
         node scripts/audit-daily.js --test || echo "⚠️ Script pode ter problemas (continuando mesmo assim)"
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+        META_ACCOUNT_ID: ${{ secrets.META_ACCOUNT_ID }}
         
     - name: 🔍 Run daily audit
       id: audit
