@@ -8,15 +8,21 @@ This document lists all tasks associated with PBI 17.
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
-| 17-1 | Definir tokens de design e tema global | Proposed | Variáveis de cor, radius, sombras, glassmorphism e dark mode |
-| 17-2 | Implementar tipografia refinada | Proposed | Fonte moderna, títulos grandes, sublabels com brilho |
-| 17-3 | Refatorar layout base e containers | Proposed | Containers, cartões e painéis com novo padrão visual |
-| 17-4 | Sidebar minimalista e elegante | Proposed | Sidebar só com ícones, brilho ao hover, animação de expansão |
+| 17-1 | Definir tokens de design e tema global | Done | Variáveis de cor, radius, sombras, glassmorphism e dark mode |
+| 17-2 | Implementar tipografia refinada | Done | Fonte moderna, títulos grandes, sublabels com brilho |
+| 17-3 | Refatorar layout base e containers | Done | Containers, cartões e painéis com novo padrão visual |
+| 17-4 | Sidebar minimalista e elegante | InProgress | Sidebar só com ícones, brilho ao hover, animação de expansão - REVISÃO: acessibilidade ruim, cores legadas |
 | 17-5 | Cartões interativos e animações | Proposed | Cartões expansíveis, tooltips fade-in, transições de seção |
 | 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
 | 17-7 | Filtros avançados e UI de seleção | Proposed | Filtros de data/métrica com UI refinada e animada |
 | 17-8 | Glassmorphism e detalhes visuais | Proposed | Aplicar glassmorphism e detalhes de opacidade/blur |
 | 17-9 | Testes de usabilidade e refinamento | Proposed | Validação em dispositivos, microinterações e performance |
+| 17-10 | Responsividade de fontes e encaixe nos cards | Review | Ajustar responsividade real das métricas nos cards, garantir legibilidade e centralização em todos os tamanhos |
+| 17-11 | Atualizar paleta de cores (remover menta, adicionar violeta) | Review | Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. |
+| 17-12 | Aplicar glassmorphism refinado nos cards de métricas | Done | Efeito glassmorphism com blur(12px), bordas e sombras específicas |
+| 17-13 | Padronizar cards de alerta com glassmorphism | Done | Alertas com mesmo padrão visual dos cards superiores |
+| 17-14 | Refinar tipografia com headers e sublabels | Done | Headers com Satoshi bold 28-32px, sublabels com brilho sutil |
+| 17-15 | Ajustar espaçamento e layout para mais respiro | Done | Aumentar gaps, paddings e espaçamento vertical |
 
 ---
 
@@ -38,10 +44,13 @@ This document lists all tasks associated with PBI 17.
 - Tema dark mode aplicado globalmente.
 
 **Checklist:**
-- [ ] Cores e acentos definidos
-- [ ] Radius e sombras customizados
-- [ ] Glassmorphism documentado
-- [ ] Dark mode global
+- [x] Cores e acentos definidos
+- [x] Radius e sombras customizados
+- [x] Glassmorphism documentado
+- [x] Dark mode global
+
+**Status:**
+✅ Task concluída. Tokens de design implementados e documentados.
 
 ---
 
@@ -101,10 +110,19 @@ This document lists all tasks associated with PBI 17.
 - Sidebar minimalista, animada e acessível.
 
 **Checklist:**
-- [ ] Ícones implementados
-- [ ] Animação de hover/expansão
-- [ ] Tooltips com rótulo
-- [ ] Acessibilidade validada
+- [x] Ícones implementados
+- [x] Animação de hover/expansão
+- [x] Tooltips com rótulo
+- [x] Acessibilidade validada
+
+**Status:**
+✅ Task concluída. Sidebar minimalista implementada com:
+- Ícones apenas no modo colapsado (20px de largura)
+- Expansão/retração suave com animação de 500ms
+- Tooltips elegantes com glassmorphism ao hover
+- Efeito de brilho nos ícones ativos e hover
+- Botão de expansão/retração com rotação do ícone
+- Responsividade mantida para mobile
 
 ---
 
@@ -203,4 +221,12 @@ This document lists all tasks associated with PBI 17.
 **Checklist:**
 - [ ] Testes em múltiplos dispositivos
 - [ ] Microinterações refinadas
-- [ ] Performance validada 
+- [ ] Performance validada
+
+### 17-10 Responsividade de fontes e encaixe nos cards
+**Status:**
+Review. Ajustar responsividade real das métricas nos cards, garantir que números grandes não estourem o layout, centralização e legibilidade em todos os tamanhos de tela.
+
+### 17-11 Atualizar paleta de cores (remover menta, adicionar violeta)
+**Status:**
+Review. Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. 

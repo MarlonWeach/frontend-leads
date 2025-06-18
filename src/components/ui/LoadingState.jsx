@@ -1,19 +1,23 @@
 import React from 'react';
 
-const LoadingState = ({ message = 'Carregando...', hideSpinner = false }) => {
+export function LoadingState({ 
+  message = 'Carregando...', 
+  size = 'default',
+  className = '' 
+}) {
+  const sizes = {
+    sm: 'h-4 w-4',
+    default: 'h-8 w-8',
+    lg: 'h-12 w-12',
+    xl: 'h-16 w-16'
+  };
+
   return (
-    <div className="flex items-center justify-center p-8">
-      <div className="text-center">
-        {!hideSpinner && (
-          <div 
-            className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"
-            data-testid="loading-spinner"
-          ></div>
-        )}
-        <p className="text-gray-600 text-sm">{message}</p>
-      </div>
+    <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
+      <div className={`${sizes[size]} animate-spin rounded-full border-2 border-electric border-t-transparent`} />
+      {message && (
+        <p className="text-sublabel-refined text-white/70 text-center">{message}</p>
+      )}
     </div>
   );
-};
-
-export default LoadingState; 
+} 

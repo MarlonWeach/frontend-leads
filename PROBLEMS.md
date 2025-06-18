@@ -138,8 +138,36 @@
    - [ ] Refinar cálculos de métricas e validações
 3. **UX/UI**
    - [ ] Implementar gráficos interativos e filtros avançados
-4. **Segurança**
-   - [ ] Revisar RLS em tabelas públicas
+   - [ ] Interface ultra-refinada inspirada em Apple Vision Pro + Baremetrics
+
+---
+
+### Requisitos de UX/UI para o novo layout
+
+**🎨 Estilo visual**
+- Base em dark mode (#0E1117).
+- Acentos luminosos em azul elétrico, violeta e verde menta, com efeitos de glassmorphism suaves nos painéis.
+- Cartões e seções com cantos arredondados, sombras suaves e uso inteligente de espaçamento negativo para manter a interface respirável.
+
+**📊 Animações e gráficos**
+- Todos os gráficos devem animar ao carregar:
+  - Gráficos de barras sobem de forma fluida.
+  - Gráficos de pizza giram suavemente até o lugar.
+  - Gráficos de linha pulsam levemente conforme transmitem dados em tempo real.
+
+**🧭 Navegação e interações**
+- Sidebar minimalista e elegante, contendo apenas ícones, com efeitos de brilho ao passar o mouse e rótulos opcionais ao hover.
+- Ao interagir (hover ou tap):
+  - Cartões se expandem com suavidade.
+  - Tooltips aparecem com transições de fade-in.
+  - Mudança de seções com animações do tipo mola (spring-like).
+
+**✍️ Tipografia**
+- Use uma fonte sans-serif moderna como Satoshi, Geist ou Space Grotesk.
+- Títulos em negrito de 28 a 32px.
+- Sublabels e descrições com brilho sutil, integrados de forma elegante à estética geral.
+
+---
 
 ## Status Atual
 - Integração, sincronização, cache e queries: **Concluídos**

@@ -43,4 +43,19 @@ export function Search({ data }) {
       </ResponsiveContainer>
     </div>
   );
-} 
+}
+
+// Exemplo de aplicação para painel de busca:
+<div className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col">
+  <div className="text-title font-bold text-mint mb-4">Busca</div>
+  <input className="bg-background rounded-2xl p-3 text-mint placeholder:text-mint/50 focus:ring-2 focus:ring-electric" placeholder="Buscar..." />
+  {/* Resultados da busca */}
+  <div className="mt-4">
+    {results.map((result, idx) => (
+      <div key={idx} className="flex items-center justify-between py-2 border-b border-mint/20 last:border-0">
+        <span className="text-sublabel text-glow">{result.title}</span>
+        <span className="text-xs text-mint/70">{result.subtitle}</span>
+      </div>
+    ))}
+  </div>
+</div> 

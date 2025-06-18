@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, Search, Filter, Download, Phone, Mail, MessageCircle, 
   Calendar, CheckCircle, XCircle, Clock, AlertCircle, 
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useLeadsData, useLeadActions, useLeadExport } from '../hooks/useLeadsData';
 import { useAdvertiserFilter } from '../hooks/useAdvertisersData';
+import { Tooltip } from './Tooltip';
 
 export default function LeadsDashboard() {
   // Estados de filtro
@@ -17,7 +18,7 @@ export default function LeadsDashboard() {
     status: 'all',
     campaign_id: 'all',
     advertiser_id: 'all',
-    date_range: '7d'
+    date_range: '30d'
   });
 
   const [selectedLead, setSelectedLead] = useState(null);
@@ -42,6 +43,8 @@ export default function LeadsDashboard() {
     today: 0,
     this_week: 0
   };
+
+  const trends = data?.trends || [];
 
   const handleUpdateLeadStatus = async (leadId, newStatus) => {
     try {
@@ -116,18 +119,12 @@ export default function LeadsDashboard() {
     );
   }
 
-  const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'blue' }) => (
-    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
-        </div>
-        <div className={`h-10 w-10 bg-${color}-50 rounded-lg flex items-center justify-center`}>
-          <Icon className={`h-5 w-5 text-${color}-600`} />
-        </div>
-      </div>
+  const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'violet' }) => (
+    <div className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center">
+      <div className="mb-2 text-violet"><Icon className="h-8 w-8" /></div>
+      <div className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{value}</div>
+      <div className="text-sublabel text-violet mt-1">{title}</div>
+      {subtitle && <div className="text-xs text-electric/80 mt-1">{subtitle}</div>}
     </div>
   );
 
@@ -276,251 +273,221 @@ export default function LeadsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Painel de Leads</h1>
-              <p className="text-gray-600">Gerencie e qualifique seus leads de campanhas</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                disabled={updating}
-              >
-                <Download className="h-4 w-4" />
-                Exportar CSV
-              </button>
-            </div>
-          </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-header font-bold text-white mb-2">Leads</h1>
+          <p className="text-sublabel-refined text-white/70">
+            Gerencie e acompanhe seus leads
+          </p>
         </div>
-
-        {/* Métricas */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <MetricCard
-            title="Total de Leads"
-            value={metrics.total_leads}
-            subtitle="Todos os períodos"
-            icon={Users}
-            color="blue"
-          />
-          <MetricCard
-            title="Novos Leads"
-            value={metrics.new_leads}
-            subtitle="Aguardando contato"
-            icon={Clock}
-            color="yellow"
-          />
-          <MetricCard
-            title="Convertidos"
-            value={metrics.converted_leads}
-            subtitle={`${metrics.conversion_rate}% taxa de conversão`}
-            icon={CheckCircle}
-            color="green"
-          />
-          <MetricCard
-            title="Esta Semana"
-            value={metrics.this_week}
-            subtitle={`${metrics.today} hoje`}
-            icon={TrendingUp}
-            color="purple"
-          />
+        <div className="flex items-center space-x-4">
+          <select
+            value={filters.date_range}
+            onChange={(e) => setFilters({...filters, date_range: e.target.value})}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-electric"
+          >
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+          </select>
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-violet transition-colors"
+            disabled={updating}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </button>
         </div>
+      </div>
 
-        {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <MetricCard
+          title="Total de Leads"
+          value={metrics.total_leads}
+          subtitle="Todos os períodos"
+          icon={Users}
+          color="violet"
+        />
+        <MetricCard
+          title="Novos Leads"
+          value={metrics.new_leads}
+          subtitle="Aguardando contato"
+          icon={Clock}
+          color="violet"
+        />
+        <MetricCard
+          title="Convertidos"
+          value={metrics.converted_leads}
+          subtitle={`${metrics.conversion_rate}% taxa de conversão`}
+          icon={CheckCircle}
+          color="violet"
+        />
+        <MetricCard
+          title="Esta Semana"
+          value={metrics.this_week}
+          subtitle={`${metrics.today} hoje`}
+          icon={TrendingUp}
+          color="violet"
+        />
+      </div>
+
+      {/* Filtros */}
+      <div className="glass-card backdrop-blur-lg p-8">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
               <input
                 type="text"
-                placeholder="Buscar por nome, email ou telefone..."
+                placeholder="Buscar leads por nome, email ou telefone..."
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value})}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-electric"
               />
             </div>
-            
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos os Status</option>
-              <option value="new">Novos</option>
-              <option value="contacted">Contatados</option>
-              <option value="qualified">Qualificados</option>
-              <option value="converted">Convertidos</option>
-              <option value="unqualified">Desqualificados</option>
-            </select>
-
-            <select
-              value={filters.advertiser_id}
-              onChange={(e) => setFilters({...filters, advertiser_id: e.target.value})}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos os Anunciantes</option>
-              {advertisersForFilter.map(advertiser => (
-                <option key={advertiser.id} value={advertiser.id}>
-                  {advertiser.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={filters.campaign_id}
-              onChange={(e) => setFilters({...filters, campaign_id: e.target.value})}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todas as Campanhas</option>
-              {[...new Set(leads.map(l => l.campaign_id))].filter(Boolean).map(campaignId => {
-                const campaignLead = leads.find(l => l.campaign_id === campaignId);
-                return (
-                  <option key={campaignId} value={campaignId}>
-                    {campaignLead?.campaign_name || campaignId}
-                  </option>
-                );
-              })}
-            </select>
-
-            <select
-              value={filters.date_range}
-              onChange={(e) => setFilters({...filters, date_range: e.target.value})}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="7d">Últimos 7 dias</option>
-              <option value="30d">Últimos 30 dias</option>
-              <option value="90d">Últimos 90 dias</option>
-            </select>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+                className="pl-10 pr-8 py-3 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-electric appearance-none"
+              >
+                <option value="all">Todos os status</option>
+                <option value="new">Novos</option>
+                <option value="contacted">Contactados</option>
+                <option value="qualified">Qualificados</option>
+                <option value="converted">Convertidos</option>
+                <option value="unqualified">Desqualificados</option>
+              </select>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Tabela de Leads */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Leads ({leads.length})
-            </h3>
+      {/* Gráfico de tendências */}
+      <div className="glass-card backdrop-blur-lg p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-header font-semibold text-white">Tendências de Leads</h2>
+          <div className="flex items-center space-x-2">
+            <button className="px-3 py-1 text-sublabel-refined bg-electric text-background rounded-md">
+              Novos
+            </button>
+            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
+              Convertidos
+            </button>
+            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
+              Taxa de Conversão
+            </button>
           </div>
-          
-          {leads.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-2">Nenhum lead encontrado</p>
-              <p className="text-gray-400 text-sm">Tente ajustar os filtros ou aguarde novos leads</p>
-            </div>
+        </div>
+        
+        <div className="h-64 flex items-end justify-between space-x-2">
+          {trends.length > 0 ? (
+            trends.map((trend, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center">
+                <div 
+                  className="w-full bg-gradient-to-t from-electric to-violet rounded-t-lg transition-all duration-300 hover:opacity-80"
+                  style={{ height: `${(trend.value / Math.max(...trends.map(t => t.value))) * 200}px` }}
+                ></div>
+                <p className="text-xs text-white/70 mt-2">{trend.date}</p>
+              </div>
+            ))
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campanha</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leads.map((lead) => {
-                    const statusConfig = getStatusConfig(lead.status);
-                    const StatusIcon = statusConfig.icon;
-                    
-                    return (
-                      <tr key={lead.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{lead.full_name || 'Nome não informado'}</p>
-                            <p className="text-sm text-gray-500">{lead.form_data?.cidade || '-'}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <p className="text-sm text-gray-900">{lead.email || '-'}</p>
-                            <p className="text-sm text-gray-500">{lead.phone || '-'}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}`}>
-                              <StatusIcon className="h-3 w-3 mr-1" />
-                              {statusConfig.label}
-                            </span>
-                            {lead.quality_score && (
-                              <div className="flex">
-                                {[...Array(lead.quality_score)].map((_, i) => (
-                                  <Star key={i} className="h-3 w-3 text-yellow-400 fill-current" />
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <p className="text-sm text-gray-900">{lead.campaign_name || lead.campaign_id || '-'}</p>
-                          <p className="text-sm text-gray-500">{lead.form_data?.interest || '-'}</p>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(lead.created_time)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedLead(lead);
-                                setShowModal(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 p-1"
-                              title="Ver detalhes"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            {lead.email && (
-                              <a
-                                href={`mailto:${lead.email}`}
-                                className="text-gray-600 hover:text-gray-800 p-1"
-                                title="Enviar email"
-                              >
-                                <Mail className="h-4 w-4" />
-                              </a>
-                            )}
-                            {lead.phone && (
-                              <a
-                                href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-green-600 hover:text-green-800 p-1"
-                                title="WhatsApp"
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-sublabel-refined text-white/50">Dados de tendência não disponíveis</p>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Modal de detalhes */}
-        {showModal && selectedLead && (
-          <LeadModal
-            lead={selectedLead}
-            onClose={() => {
-              setShowModal(false);
-              setSelectedLead(null);
-            }}
-            onUpdateStatus={handleUpdateLeadStatus}
-          />
+      {/* Lista de Leads */}
+      <div className="glass-card backdrop-blur-lg p-8">
+        <h2 className="text-header font-semibold text-white mb-6">Lista de Leads</h2>
+        
+        {leads.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 text-white/30 mx-auto mb-4" />
+            <p className="text-sublabel-refined text-white/70">Nenhum lead cadastrado</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {leads.map((lead) => {
+              const statusConfig = getStatusConfig(lead.status);
+              const StatusIcon = statusConfig.icon;
+              
+              return (
+                <div
+                  key={lead.id}
+                  className="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-electric/20 rounded-full flex items-center justify-center">
+                      <StatusIcon className="h-6 w-6 text-electric" />
+                    </div>
+                    <div>
+                      <h3 className="text-sublabel-refined font-medium text-white">{lead.full_name || 'Lead sem nome'}</h3>
+                      <p className="text-xs text-white/70">{lead.email || 'Email não informado'}</p>
+                      {lead.phone && <p className="text-xs text-white/70">{lead.phone}</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-6">
+                    <div className="text-right">
+                      <p className="text-sublabel-refined font-medium text-white">
+                        {formatDate(lead.created_time)}
+                      </p>
+                      <p className="text-xs text-white/70">Data de criação</p>
+                    </div>
+                    
+                    {lead.campaign_name && (
+                      <div className="text-right">
+                        <p className="text-sublabel-refined font-medium text-white">
+                          {lead.campaign_name}
+                        </p>
+                        <p className="text-xs text-white/70">Campanha</p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                        {statusConfig.label}
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setSelectedLead(lead);
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-white/70 hover:text-electric transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
+
+      {/* Modal de detalhes */}
+      {showModal && selectedLead && (
+        <LeadModal
+          lead={selectedLead}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedLead(null);
+          }}
+          onUpdateStatus={handleUpdateLeadStatus}
+        />
+      )}
     </div>
   );
 }

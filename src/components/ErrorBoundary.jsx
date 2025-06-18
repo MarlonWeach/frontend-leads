@@ -24,52 +24,29 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-                <svg
-                  className="w-8 h-8 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
+        <div className="min-h-screen bg-glass flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center">
+            <div className="text-title font-bold text-mint mb-4">Erro inesperado</div>
+            <div className="text-sublabel text-glow mb-2">Ocorreu um erro ao carregar o conteúdo.</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-mint transition-colors"
+            >
+              Recarregar página
+            </button>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-mint transition-colors"
+            >
+              Tentar novamente
+            </button>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-6 p-4 bg-glass rounded-2xl text-left">
+                <p className="text-sm font-mono text-mint whitespace-pre-wrap">
+                  {this.state.error?.toString()}
+                </p>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Ops! Algo deu errado
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Desculpe, ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para resolver.
-              </p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Recarregar página
-                </button>
-                <button
-                  onClick={() => this.setState({ hasError: false, error: null })}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-                >
-                  Tentar novamente
-                </button>
-              </div>
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mt-6 p-4 bg-gray-100 rounded-md text-left">
-                  <p className="text-sm font-mono text-red-600 whitespace-pre-wrap">
-                    {this.state.error?.toString()}
-                  </p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       );

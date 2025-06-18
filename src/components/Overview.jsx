@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
+import { BarChart3 } from 'lucide-react';
 
 export function Overview({ data }) {
   return (
@@ -47,6 +48,17 @@ export function Overview({ data }) {
           />
         </AreaChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function OverviewCard({ valor, título, subtitulo }) {
+  return (
+    <div className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center">
+      <div className="mb-2 text-electric"><BarChart3 className="h-8 w-8" /></div>
+      <div className="text-title font-bold text-mint">{valor}</div>
+      <div className="text-sublabel text-glow mt-1">{título}</div>
+      {subtitulo && <div className="text-xs text-mint/70 mt-1">{subtitulo}</div>}
     </div>
   );
 } 

@@ -1,3 +1,56 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 🎨 Utilitário de brilho atualizado - Nova paleta */
+.text-glow {
+  text-shadow: 0 0 8px #3A8DFF, 0 0 2px #8A2BE2;
+  opacity: 0.85;
+}
+
+/* 💎 Glassmorphism refinado */
+.glass-card {
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 📝 Tipografia responsiva */
+.text-header {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 2vw, 2.25rem);
+  line-height: clamp(2.25rem, 2.5vw, 2.75rem);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.text-sublabel-refined {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 400;
+  font-size: clamp(0.875rem, 1vw, 1.125rem);
+  line-height: clamp(1.25rem, 1.5vw, 1.625rem);
+  opacity: 0.7;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.5px;
+}
+
+/* 🎯 Utilitários para responsividade de cards */
+.card-responsive {
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+/* 🌟 Efeitos de hover refinados */
+.hover-glow:hover {
+  text-shadow: 0 0 12px #3A8DFF, 0 0 4px #8A2BE2;
+  transition: text-shadow 0.3s ease;
+}
+
+/* 📱 Responsividade de grid */
+.grid-responsive {
+  grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 25vw, 320px), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}

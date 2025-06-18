@@ -13,12 +13,12 @@ import { useDashboardOverview } from '../hooks/useDashboardData';
 function LoadingState() {
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div key={i} className="glass-card backdrop-blur-lg p-6 animate-pulse">
+            <div className="h-4 bg-white/20 rounded w-1/4 mb-4"></div>
+            <div className="h-8 bg-white/30 rounded w-1/2 mb-2"></div>
+            <div className="h-4 bg-white/10 rounded w-3/4"></div>
           </div>
         ))}
       </div>
@@ -29,18 +29,29 @@ function LoadingState() {
 function ErrorState({ error, refetch }) {
   return (
     <div data-testid="error-message" className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <AlertCircle className="h-12 w-12 text-red-500" />
-      <h2 className="text-xl font-semibold text-gray-900">Ops! Algo deu errado</h2>
-      <p className="text-gray-600">{error?.message || 'Erro ao carregar dados do dashboard'}</p>
+      <AlertCircle className="h-12 w-12 text-electric" />
+      <h2 className="text-header text-white">Ops! Algo deu errado</h2>
+      <p className="text-sublabel-refined text-glow">{error?.message || 'Erro ao carregar dados do dashboard'}</p>
       <button
         data-testid="retry-button"
         onClick={() => refetch()}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-violet transition-colors"
       >
         Tentar novamente
       </button>
     </div>
   );
+}
+
+// Utilitário para abreviar números grandes
+function formatNumberShort(num) {
+  if (num === null || num === undefined) return '';
+  if (typeof num === 'string') num = Number(num.toString().replace(/\D/g, ''));
+  if (isNaN(num)) return '';
+  if (num >= 1e9) return (num / 1e9).toFixed(2).replace(/\.00$/, '') + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(2).replace(/\.00$/, '') + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  return num.toLocaleString('pt-BR');
 }
 
 export default function DashboardOverview() {
@@ -128,230 +139,148 @@ export default function DashboardOverview() {
     }).format((value || 0) / 100);
   };
 
+  // Lista de métricas para exibir nos cards
+  const metricsList = [
+    {
+      key: 'leads',
+      label: 'Total de Leads',
+      value: formatNumber(metrics.leads.total),
+      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.leads.new)}</span> novos • <span className="text-violet font-semibold">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão</>,
+      icon: <Users className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Total de leads gerados no período selecionado',
+      formatShort: true,
+    },
+    {
+      key: 'campaigns',
+      label: 'Campanhas Ativas',
+      value: formatNumber(metrics.campaigns.active),
+      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.campaigns.total)}</span> total</>,
+      icon: <Target className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Número de campanhas ativas no momento',
+    },
+    {
+      key: 'advertisers',
+      label: 'Anunciantes',
+      value: formatNumber(metrics.advertisers.total),
+      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.advertisers.active)}</span> ativos</>,
+      icon: <Building2 className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Total de anunciantes cadastrados',
+    },
+    {
+      key: 'spend',
+      label: 'Investimento',
+      value: metrics.performance.spend,
+      subinfo: <>Custo por lead: <span className="text-electric font-semibold">{formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}</span></>,
+      icon: <DollarSign className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Total investido no período selecionado',
+      formatShort: true,
+    },
+    {
+      key: 'impressions',
+      label: 'Impressões',
+      value: formatNumber(metrics.performance.impressions),
+      subinfo: <>Alcance total</>,
+      icon: <Eye className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Total de impressões no período selecionado',
+      formatShort: true,
+    },
+    {
+      key: 'clicks',
+      label: 'Cliques',
+      value: formatNumber(metrics.performance.clicks),
+      subinfo: <>CTR: <span className="text-electric font-semibold">{formatPercentage(metrics.performance.ctr)}</span></>,
+      icon: <MousePointer className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Total de cliques no período selecionado',
+      formatShort: true,
+    },
+    {
+      key: 'conversion_rate',
+      label: 'Taxa de Conversão',
+      value: formatPercentage(metrics.leads.conversion_rate),
+      subinfo: <>{formatNumber(metrics.leads.total)} leads / {formatNumber(metrics.performance.clicks)} cliques</>,
+      icon: <CheckCircle className="h-7 w-7 text-violet mt-2 self-end" />,
+      tooltip: 'Taxa de conversão de leads no período',
+    },
+  ];
+
   return (
     <div data-testid="dashboard-overview" className="space-y-8">
       {/* Filtros de período */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex space-x-2">
-            <button
-              onClick={() => handleFilterClick('7d')}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentPeriod === '7d'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              7 dias
-            </button>
-            <button
-              onClick={() => handleFilterClick('30d')}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentPeriod === '30d'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              30 dias
-            </button>
-            <button
-              onClick={() => handleFilterClick('90d')}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentPeriod === '90d'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              90 dias
-            </button>
+            {['7d', '30d', '90d'].map((period) => (
+              <button
+                key={period}
+                onClick={() => handleFilterClick(period)}
+                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-colors shadow-glass backdrop-blur-lg
+                  ${currentPeriod === period
+                    ? 'bg-electric text-background'
+                    : 'glass-card text-white hover:bg-white/10'}
+                `}
+              >
+                {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
+              </button>
+            ))}
           </div>
           {/* Período selecionado */}
-          <div className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-md">
-            <span className="font-medium">Período:</span> {
+          <div className="text-sublabel-refined text-glow glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
+            <span className="font-medium text-white">Período:</span> {
               dateFrom && dateTo 
                 ? `${new Date(dateFrom).toLocaleDateString('pt-BR')} a ${new Date(dateTo).toLocaleDateString('pt-BR')}`
                 : 'Últimos 30 dias'
             }
           </div>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sublabel-refined text-white/70">
           Última atualização: {new Date().toLocaleTimeString('pt-BR')}
         </div>
       </div>
 
       {/* Métricas principais */}
-      <div data-testid="metrics-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-        <div data-testid="metric-card-leads" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Total de Leads</p>
-                <Tooltip content="Total de leads gerados no período selecionado">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-leads-total" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.leads.total)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                <span data-testid="metric-leads-new">{formatNumber(metrics.leads.new)}</span> novos • <span data-testid="metric-leads-conversion">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão
-              </p>
+      <div data-testid="metrics-summary" className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] auto-rows-fr">
+        {metricsList.map(metric => (
+          <div key={metric.key} className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px]">
+            <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
+              <span className="text-sublabel-refined text-white/80 text-center w-full">{metric.label}</span>
+              <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-violet text-center w-full">
+                {metric.formatShort
+                  ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
+                  : metric.value}
+              </span>
+              <span className="text-xs text-electric/80 mt-1 text-center w-full">{metric.subinfo}</span>
             </div>
-            <div className="ml-4 flex-shrink-0 text-blue-500">
-              <Users className="h-8 w-8" />
-            </div>
+            <div className="mt-2">{metric.icon}</div>
           </div>
-        </div>
-
-        <div data-testid="metric-card-campaigns" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Campanhas Ativas</p>
-                <Tooltip content="Número de campanhas ativas no momento">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-campaigns-active" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.campaigns.active)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                <span data-testid="metric-campaigns-total">{formatNumber(metrics.campaigns.total)}</span> total
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-green-500">
-              <BarChart3 className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-
-        <div data-testid="metric-card-advertisers" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Anunciantes</p>
-                <Tooltip content="Número de anunciantes ativos e total">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-advertisers-active" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.advertisers.active)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                <span data-testid="metric-advertisers-total">{formatNumber(metrics.advertisers.total)}</span> cadastrados
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-purple-500">
-              <Building2 className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-
-        <div data-testid="metric-card-performance" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Investimento</p>
-                <Tooltip content="Valor total investido no período selecionado">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-performance-spend" className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.performance.spend)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Custo por lead: {formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-orange-500">
-              <DollarSign className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-
-        <div data-testid="metric-card-impressions" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Impressões</p>
-                <Tooltip content="Total de impressões no período selecionado">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-performance-impressions" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.performance.impressions)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Alcance total
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-indigo-500">
-              <Eye className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-
-        <div data-testid="metric-card-clicks" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Cliques</p>
-                <Tooltip content="Total de cliques no período selecionado">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-performance-clicks" className="text-3xl font-bold text-gray-900">{formatNumber(metrics.performance.clicks)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                CTR: <span data-testid="metric-performance-ctr-secondary">{formatPercentage(metrics.performance.ctr)}</span>
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-teal-500">
-              <MousePointer className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-
-        <div data-testid="metric-card-conversion-rate" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <p className="text-sm font-medium text-gray-600">Taxa de Conversão</p>
-                <Tooltip content="Taxa de conversão: leads / cliques">
-                  <Info className="h-4 w-4 ml-1 text-gray-400" />
-                </Tooltip>
-              </div>
-              <p data-testid="metric-conversion-rate" className="text-3xl font-bold text-gray-900">{formatPercentage(metrics.leads.conversion_rate)}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {formatNumber(metrics.leads.total)} leads / {formatNumber(metrics.performance.clicks)} cliques
-              </p>
-            </div>
-            <div className="ml-4 flex-shrink-0 text-emerald-500">
-              <CheckCircle className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Alertas */}
+      {/* Alertas - PADRONIZADOS COM GLASSMORPHISM */}
       {alerts.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {alerts.map((alert, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg ${
-                alert.type === 'warning'
-                  ? 'bg-yellow-50 border border-yellow-200'
-                  : 'bg-blue-50 border border-blue-200'
-              }`}
+              className="glass-card backdrop-blur-lg p-6"
             >
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   {alert.type === 'warning' ? (
-                    <AlertCircle className="h-5 w-5 text-yellow-400" />
+                    <AlertCircle className="h-5 w-5 text-violet" />
                   ) : (
-                    <Info className="h-5 w-5 text-blue-400" />
+                    <Info className="h-5 w-5 text-electric" />
                   )}
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-gray-900">{alert.title}</h3>
-                  <div className="mt-2 text-sm text-gray-700">
+                  <h3 className="text-sublabel-refined font-medium text-white">{alert.title}</h3>
+                  <div className="mt-2 text-sublabel-refined text-white/80">
                     <p>{alert.message}</p>
                   </div>
                   {alert.action && (
                     <div className="mt-4">
                       <a
                         href={alert.href}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                        className="text-sublabel-refined font-medium text-electric hover:text-violet transition-colors"
                       >
                         {alert.action} <ArrowRight className="inline h-4 w-4 ml-1" />
                       </a>
@@ -364,39 +293,39 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Atividade Recente */}
+      {/* Atividade Recente - PADRONIZADA COM GLASSMORPHISM */}
       {recentActivity.length > 0 && (
-        <div data-testid="dashboard-activity" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Atividade Recente</h2>
-          <div className="space-y-4">
+        <div data-testid="dashboard-activity" className="glass-card backdrop-blur-lg p-8">
+          <h2 className="text-header font-medium text-white mb-6">Atividade Recente</h2>
+          <div className="space-y-6">
             {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <div key={index} className="flex items-center justify-between py-3 border-b border-white/20 last:border-0">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     {activity.type === 'lead' ? (
-                      <Users className="h-5 w-5 text-blue-500" />
+                      <Users className="h-5 w-5 text-electric" />
                     ) : (
-                      <DollarSign className="h-5 w-5 text-green-500" />
+                      <DollarSign className="h-5 w-5 text-electric" />
                     )}
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sublabel-refined font-medium text-white">
                       {activity.type === 'lead' ? 'Novo Lead' : 'Investimento'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-white/70">
                       {new Date(activity.timestamp).toLocaleString('pt-BR')}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sublabel-refined font-medium text-white">
                     {activity.type === 'lead' 
                       ? `${formatNumber(activity.value)} leads`
                       : formatCurrency(activity.value)
                     }
                   </p>
                   {activity.metadata && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-white/70">
                       {activity.metadata.impressions && `${formatNumber(activity.metadata.impressions)} impressões`}
                       {activity.metadata.clicks && ` • ${formatNumber(activity.metadata.clicks)} cliques`}
                     </p>
@@ -408,24 +337,24 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Vendas Recentes (simulado) */}
-      <div data-testid="dashboard-recent-sales" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendas Recentes</h3>
-        <div className="text-gray-500">(Simulação para testes E2E)</div>
+      {/* Vendas Recentes (simulado) - PADRONIZADO COM GLASSMORPHISM */}
+      <div data-testid="dashboard-recent-sales" className="glass-card backdrop-blur-lg p-8">
+        <h3 className="text-header font-semibold text-white mb-6">Vendas Recentes</h3>
+        <div className="text-white/70">(Simulação para testes E2E)</div>
       </div>
 
-      {/* Gráfico de performance rápida */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Gráfico de performance rápida - PADRONIZADO COM GLASSMORPHISM */}
+      <div className="glass-card backdrop-blur-lg p-8">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Performance Geral</h3>
+          <h3 className="text-header font-semibold text-white">Performance Geral</h3>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
               7 dias
             </button>
-            <button className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md">
+            <button className="px-3 py-1 text-sublabel-refined bg-electric text-background rounded-md">
               30 dias
             </button>
-            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
               90 dias
             </button>
           </div>

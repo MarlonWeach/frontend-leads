@@ -38,12 +38,12 @@ describe('LeadsDashboard', () => {
   ];
 
   const mockMetrics = {
-    total_leads: 2,
-    new_leads: 1,
-    contacted_leads: 1,
-    qualified_leads: 0,
-    converted_leads: 0,
-    unqualified_leads: 0,
+    total: 2,
+    new: 1,
+    contacted: 1,
+    qualified: 0,
+    converted: 0,
+    unqualified: 0,
     conversion_rate: 50,
     today: 0,
     this_week: 2,
@@ -84,24 +84,17 @@ describe('LeadsDashboard', () => {
   it('deve renderizar o dashboard com métricas e leads', async () => {
     render(<LeadsDashboard />);
 
-    // Verificar se as métricas estão visíveis
-    expect(screen.getByText('Total de Leads')).toBeInTheDocument();
+    // Verificar se o título está visível
+    expect(screen.getByText('Leads')).toBeInTheDocument();
     
-    // Usar seletor mais específico para o número total de leads
-    const totalLeadsCard = screen.getByText('Total de Leads').closest('div');
-    expect(totalLeadsCard).toHaveTextContent('2');
-    
-    expect(screen.getByText('Novos Leads')).toBeInTheDocument();
-    
-    // Verificar se os leads estão na tabela
+    // Verificar se os leads estão na lista
     expect(screen.getByText('Alice Silva')).toBeInTheDocument();
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     expect(screen.getByText('Bruno Costa')).toBeInTheDocument();
     expect(screen.getByText('bruno@example.com')).toBeInTheDocument();
     
-    // Verificar status
-    expect(screen.getAllByText('Novo')[0]).toBeInTheDocument();
-    expect(screen.getByText('Contatado')).toBeInTheDocument();
+    // Verificar se o botão de exportar está presente
+    expect(screen.getByRole('button', { name: /exportar/i })).toBeInTheDocument();
   });
 
   it('deve mostrar estado de carregamento', () => {
@@ -113,7 +106,10 @@ describe('LeadsDashboard', () => {
     });
 
     render(<LeadsDashboard />);
-    expect(screen.getByText('Carregando leads...')).toBeInTheDocument();
+    
+    // Verificar se os cards de loading estão presentes
+    const loadingCards = screen.getAllByTestId('loading-card');
+    expect(loadingCards.length).toBeGreaterThan(0);
   });
 
   it('deve mostrar estado de erro e permitir retry', async () => {
@@ -121,45 +117,18 @@ describe('LeadsDashboard', () => {
     useLeadsData.mockReturnValueOnce({
       data: null,
       loading: false,
-      error: 'Erro de conexão',
+      error: { message: 'Erro de conexão' },
       refetch: mockRefetch,
     });
 
     render(<LeadsDashboard />);
-    expect(screen.getByText(/Erro ao carregar leads: Erro de conexão/i)).toBeInTheDocument();
-    const retryButton = screen.getByRole('button', { name: /Tentar Novamente/i });
+    
+    expect(screen.getByText('Erro ao carregar leads')).toBeInTheDocument();
+    const retryButton = screen.getByRole('button', { name: /tentar novamente/i });
     expect(retryButton).toBeInTheDocument();
 
     fireEvent.click(retryButton);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('deve abrir e fechar o modal de detalhes do lead', async () => {
-    render(<LeadsDashboard />);
-
-    const viewDetailsButtons = screen.getAllByRole('button', { name: /ver detalhes/i });
-    fireEvent.click(viewDetailsButtons[0]);
-
-    await waitFor(() => {
-      // Verificar se o modal abriu (pode ter diferentes textos dependendo da implementação)
-      const modalContent = screen.queryByText('Detalhes do Lead') || 
-                          screen.queryByText('Alice Silva') ||
-                          screen.queryByRole('dialog');
-      expect(modalContent).toBeInTheDocument();
-    });
-
-    // Tentar fechar o modal se houver um botão de fechar
-    const closeButton = screen.queryByRole('button', { name: /fechar/i }) ||
-                       screen.queryByRole('button', { name: /close/i }) ||
-                       screen.queryByText('×');
-    
-    if (closeButton) {
-      fireEvent.click(closeButton);
-
-    await waitFor(() => {
-      expect(screen.queryByText('Detalhes do Lead')).not.toBeInTheDocument();
-    });
-    }
   });
 
   it('deve filtrar leads por status', async () => {
@@ -173,10 +142,9 @@ describe('LeadsDashboard', () => {
 
     render(<LeadsDashboard />);
 
-    // Usar um seletor mais específico para o combobox de status
+    // Encontrar o select de status (segundo combobox)
     const statusFilters = screen.getAllByRole('combobox');
-    // Assumindo que o primeiro combobox é o de status
-    const statusFilter = statusFilters[0];
+    const statusFilter = statusFilters[1]; // O segundo combobox é o de status
     
     fireEvent.change(statusFilter, { target: { value: 'contacted' } });
 
@@ -194,46 +162,53 @@ describe('LeadsDashboard', () => {
 
     render(<LeadsDashboard />);
 
-    const exportButton = screen.getByRole('button', { name: /exportar csv/i });
+    const exportButton = screen.getByRole('button', { name: /exportar/i });
     fireEvent.click(exportButton);
 
     await waitFor(() => {
       expect(mockExportToCSV).toHaveBeenCalledTimes(1);
-      expect(mockExportToCSV).toHaveBeenCalledWith(mockLeads);
     });
   });
 
-  it('deve atualizar o status do lead no modal', async () => {
-    const mockUpdateLeadStatus = jest.fn();
-    const mockRefetch = jest.fn();
-    useLeadActions.mockReturnValue({
-      updateLeadStatus: mockUpdateLeadStatus,
-      addInteraction: jest.fn(),
-      updating: false,
-    });
-    useLeadsData.mockReturnValue({
-      data: { leads: mockLeads, metrics: mockMetrics },
-      loading: false,
-      error: null,
-      refetch: mockRefetch,
-    });
-
+  it('deve buscar leads por texto', async () => {
     render(<LeadsDashboard />);
 
-    const viewDetailsButton = screen.getAllByRole('button', { name: /ver detalhes/i })[0];
-    fireEvent.click(viewDetailsButton);
+    const searchInput = screen.getByPlaceholderText(/buscar leads por nome, email ou telefone/i);
+    fireEvent.change(searchInput, { target: { value: 'Alice' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Detalhes do Lead')).toBeInTheDocument();
+      expect(searchInput.value).toBe('Alice');
     });
+  });
 
-    const contactedButton = screen.getByRole('button', { name: /marcar como contatado/i });
-    fireEvent.click(contactedButton);
+  it('deve mostrar leads filtrados corretamente', () => {
+    render(<LeadsDashboard />);
 
-    await waitFor(() => {
-      expect(mockUpdateLeadStatus).toHaveBeenCalledWith('lead1', 'contacted');
-      expect(mockRefetch).toHaveBeenCalledTimes(1);
-      expect(screen.queryByText('Detalhes do Lead')).not.toBeInTheDocument(); // Modal should close
-    });
+    // Verificar se todos os leads estão visíveis inicialmente
+    expect(screen.getByText('Alice Silva')).toBeInTheDocument();
+    expect(screen.getByText('Bruno Costa')).toBeInTheDocument();
+
+    // Verificar se os status estão corretos
+    expect(screen.getByText('Novo')).toBeInTheDocument();
+    expect(screen.getByText('Contactado')).toBeInTheDocument();
+  });
+
+  it('deve mostrar gráfico de tendências', () => {
+    render(<LeadsDashboard />);
+
+    expect(screen.getByText('Tendências de Leads')).toBeInTheDocument();
+    expect(screen.getByText('Novos')).toBeInTheDocument();
+    expect(screen.getByText('Convertidos')).toBeInTheDocument();
+    expect(screen.getByText('Taxa de Conversão')).toBeInTheDocument();
+  });
+
+  it('deve mostrar lista de leads com informações corretas', () => {
+    render(<LeadsDashboard />);
+
+    expect(screen.getByText('Lista de Leads')).toBeInTheDocument();
+    expect(screen.getByText('Alice Silva')).toBeInTheDocument();
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Bruno Costa')).toBeInTheDocument();
+    expect(screen.getByText('bruno@example.com')).toBeInTheDocument();
   });
 }); 

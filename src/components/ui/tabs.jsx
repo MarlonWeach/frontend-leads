@@ -1,8 +1,22 @@
 import React from 'react';
 
-export function Tabs({ defaultValue, className, ...props }) {
+export function Tabs({ tabs, activeTab, onTabChange, className = '' }) {
   return (
-    <div className={`w-full ${className}`} {...props} />
+    <div className={`flex space-x-1 glass-card backdrop-blur-lg p-2 rounded-2xl ${className}`}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onTabChange(tab.id)}
+          className={`flex-1 px-4 py-2 rounded-xl text-sublabel-refined font-medium transition-all duration-200 ${
+            activeTab === tab.id
+              ? 'bg-electric text-background shadow-glass'
+              : 'text-white/70 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
