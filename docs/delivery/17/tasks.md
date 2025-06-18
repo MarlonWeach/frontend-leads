@@ -11,7 +11,7 @@ This document lists all tasks associated with PBI 17.
 | 17-1 | Definir tokens de design e tema global | Done | Variáveis de cor, radius, sombras, glassmorphism e dark mode |
 | 17-2 | Implementar tipografia refinada | Done | Fonte moderna, títulos grandes, sublabels com brilho |
 | 17-3 | Refatorar layout base e containers | Done | Containers, cartões e painéis com novo padrão visual |
-| 17-4 | Sidebar minimalista e elegante | InProgress | Sidebar só com ícones, brilho ao hover, animação de expansão - REVISÃO: acessibilidade ruim, cores legadas |
+| 17-4 | Sidebar minimalista e elegante | Done | Sidebar só com ícones, brilho ao hover, animação de expansão - Acessibilidade corrigida com nova paleta |
 | 17-5 | Cartões interativos e animações | Proposed | Cartões expansíveis, tooltips fade-in, transições de seção |
 | 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
 | 17-7 | Filtros avançados e UI de seleção | Proposed | Filtros de data/métrica com UI refinada e animada |
