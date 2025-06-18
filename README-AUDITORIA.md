@@ -170,3 +170,35 @@ Se encontrar problemas:
 3. **Credenciais**: Teste execução manual: `npm run audit:run`
 4. **Documentação**: Consulte `docs/github-actions-setup.md`
 5. **Variáveis**: Verifique `.env.local` para desenvolvimento local 
+
+## 🎨 Tokens de Design e Tema Global (UX/UI)
+
+Os principais tokens de design definidos em `tailwind.config.js` para o novo layout ultra-refinado são:
+
+- **Cores:**
+  - `background`: #0E1117 (dark mode)
+  - `electric`: #3A8DFF (azul elétrico)
+  - `violet`: #7C3AED (violeta)
+  - `mint`: #2FFFC3 (verde menta)
+- **Radius:**
+  - `xl`: 1.25rem
+  - `2xl`: 2rem
+  - `3xl`: 3rem
+  - `full`: 9999px
+- **Sombras:**
+  - `soft`: 0 4px 24px 0 rgba(16, 30, 54, 0.12)
+  - `glass`: 0 8px 32px 0 rgba(31, 38, 135, 0.18)
+- **Glassmorphism:**
+  - Utilitário: `backdrop-blur-{xs|sm|md|lg|xl}`
+  - Cor de fundo: `bg-glass` (rgba(255,255,255,0.08))
+- **Dark mode:**
+  - Ativado via classe `dark` no elemento root
+
+**Exemplo de uso:**
+```jsx
+<div className="bg-background text-mint rounded-2xl shadow-glass backdrop-blur-lg bg-glass dark">
+  ...
+</div>
+```
+
+Consulte o arquivo `tailwind.config.js` para a lista completa e atualizada de tokens. 
