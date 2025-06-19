@@ -12,17 +12,18 @@ import { useDashboardOverview } from '../hooks/useDashboardData';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { Card } from './ui/card';
 
 function LoadingState() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass-card backdrop-blur-lg p-6 animate-pulse">
+          <Card key={i} className="p-6 animate-pulse">
             <div className="h-4 bg-white/20 rounded w-1/4 mb-4"></div>
             <div className="h-8 bg-white/30 rounded w-1/2 mb-2"></div>
             <div className="h-4 bg-white/10 rounded w-3/4"></div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -38,7 +39,7 @@ function ErrorState({ error, refetch }) {
       <button
         data-testid="retry-button"
         onClick={() => refetch()}
-                      className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
+        className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
       >
         Tentar novamente
       </button>
@@ -216,10 +217,10 @@ export default function DashboardOverview() {
               <button
                 key={period}
                 onClick={() => handleFilterClick(period)}
-                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-colors shadow-glass backdrop-blur-lg
+                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-300 backdrop-blur-lg
                   ${currentPeriod === period
-                    ? 'bg-primary text-white'
-                    : 'glass-card text-white hover:bg-white/10'}
+                    ? 'bg-primary text-white shadow-primary-glow'
+                    : 'glass-light text-white hover:glass-medium'}
                 `}
               >
                 {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
@@ -227,7 +228,7 @@ export default function DashboardOverview() {
             ))}
           </div>
           {/* Período selecionado */}
-          <div className="text-sublabel-refined text-glow glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
+          <div className="text-sublabel-refined text-glow glass-light px-3 py-2 rounded-2xl">
             <span className="font-medium text-white">Período:</span> {
               dateFrom && dateTo 
                 ? `${new Date(dateFrom).toLocaleDateString('pt-BR')} a ${new Date(dateTo).toLocaleDateString('pt-BR')}`
@@ -246,21 +247,22 @@ export default function DashboardOverview() {
           return (
             <motion.div
               key={metric.key}
-              className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px]"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
-              <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
-                <span className="text-sublabel-refined text-primary-text text-center w-full">{metric.label}</span>
-                <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
-                  {metric.formatShort
-                    ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
-                    : metric.value}
-                </span>
-                <span className="text-xs text-secondary-text mt-1 text-center w-full">{metric.subinfo}</span>
-              </div>
-              <div className="mt-2">{metric.icon}</div>
+              <Card className="p-6 flex flex-col justify-between items-center min-h-[180px] interactive">
+                <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
+                  <span className="text-sublabel-refined text-primary-text text-center w-full">{metric.label}</span>
+                  <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
+                    {metric.formatShort
+                      ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
+                      : metric.value}
+                  </span>
+                  <span className="text-xs text-secondary-text mt-1 text-center w-full">{metric.subinfo}</span>
+                </div>
+                <div className="mt-2">{metric.icon}</div>
+              </Card>
             </motion.div>
           );
         })}
@@ -271,7 +273,7 @@ export default function DashboardOverview() {
         <div className="space-y-4">
           <h3 className="text-header font-bold text-primary-text">Alertas</h3>
           {alerts.map((alert, index) => (
-            <div key={index} className={`glass-card p-6 border-l-4 ${
+            <Card key={index} className={`p-6 border-l-4 ${
               alert.type === 'warning' ? 'border-cta' : 
               alert.type === 'error' ? 'border-red-500' : 'border-accent'
             }`}>
@@ -290,7 +292,7 @@ export default function DashboardOverview() {
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -304,7 +306,7 @@ export default function DashboardOverview() {
               Ver tudo
             </button>
           </div>
-          <div className="glass-card p-6">
+          <Card className="p-6">
             <div className="space-y-4">
               {recentActivity.slice(0, 5).map((activity, index) => (
                 <div key={index} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
@@ -325,18 +327,18 @@ export default function DashboardOverview() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Vendas Recentes (simulado) - PADRONIZADO COM GLASSMORPHISM */}
-      <div data-testid="dashboard-recent-sales" className="glass-card backdrop-blur-lg p-8">
+      <Card data-testid="dashboard-recent-sales" className="p-8">
         <h3 className="text-header font-semibold text-white mb-6">Vendas Recentes</h3>
         <div className="text-white/70">(Simulação para testes E2E)</div>
-      </div>
+      </Card>
 
       {/* Gráfico de performance rápida - PADRONIZADO COM GLASSMORPHISM */}
-      <div className="glass-card backdrop-blur-lg p-8">
+      <Card className="p-8">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-header font-semibold text-white">Performance Geral</h3>
           <div className="flex items-center space-x-2">
@@ -351,7 +353,7 @@ export default function DashboardOverview() {
             </button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

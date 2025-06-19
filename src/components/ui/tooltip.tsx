@@ -102,8 +102,8 @@ export function Tooltip({
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className={`
-              fixed z-50 px-4 py-3 text-sublabel-refined glass-card backdrop-blur-lg 
-              border-glass shadow-glass-glow rounded-2xl text-white pointer-events-none
+              fixed z-50 px-4 py-3 text-sublabel-refined glass-strong glass-highlight
+              rounded-2xl text-white pointer-events-none
               ${isMounted 
                 ? 'opacity-100 scale-100 translate-y-0' 
                 : 'opacity-0 scale-95 translate-y-2'
@@ -118,7 +118,7 @@ export function Tooltip({
               {content}
               <div
                 className={`
-                  absolute w-3 h-3 bg-glass-refined border-glass transform rotate-45
+                  absolute w-3 h-3 glass-strong border-glass-border transform rotate-45
                   transition-all duration-300 ease-out
                   ${position === 'top' ? 'top-full left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
                   position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 border-b-0 border-r-0' :

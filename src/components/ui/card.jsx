@@ -8,6 +8,7 @@ export function Card({
   expanded = false,
   onToggle,
   children,
+  variant = 'default', // 'default', 'strong', 'light'
   ...props 
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -35,17 +36,26 @@ export function Card({
     if (interactive) setIsPressed(false);
   };
 
+  // Variantes de glassmorphism
+  const variants = {
+    light: 'glass-light',
+    default: 'glass-medium glass-hover glass-highlight',
+    strong: 'glass-strong glass-highlight'
+  };
+
+  const baseClasses = `
+    ${variants[variant]} rounded-2xl
+    text-white transition-all duration-500 ease-out
+    border border-white/10
+    ${interactive ? 'cursor-pointer transform-gpu' : ''}
+    ${interactive && isHovered ? 'scale-[1.02] shadow-2xl border-primary/30 glass-strong' : ''}
+    ${interactive && isPressed ? 'scale-[0.98]' : ''}
+    ${expanded ? 'ring-2 ring-primary/50 shadow-primary-glow' : ''}
+  `;
+
   return (
     <div
-      className={`
-        glass-card backdrop-blur-lg bg-glass-refined border-glass shadow-glass-refined 
-        text-white rounded-2xl transition-all duration-500 ease-out
-        ${interactive ? 'cursor-pointer transform-gpu' : ''}
-        ${interactive && isHovered ? 'scale-105 shadow-glass-glow border-electric/30' : ''}
-        ${interactive && isPressed ? 'scale-95' : ''}
-        ${expanded ? 'ring-2 ring-electric/50 shadow-electric-glow' : ''}
-        ${className}
-      `}
+      className={`${baseClasses} ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
@@ -121,12 +131,12 @@ export function CardExpandable({
         <div className="flex items-center justify-between">
           <CardTitle>{title}</CardTitle>
           <div className={`
-            w-6 h-6 rounded-full bg-electric/20 flex items-center justify-center
+            w-6 h-6 rounded-full glass-light flex items-center justify-center
             transition-all duration-300 ease-out
-            ${isExpanded ? 'rotate-180 bg-electric/40' : ''}
+            ${isExpanded ? 'rotate-180 glass-medium' : ''}
           `}>
             <svg 
-              className="w-4 h-4 text-electric transition-transform duration-300"
+              className="w-4 h-4 text-primary transition-transform duration-300"
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"

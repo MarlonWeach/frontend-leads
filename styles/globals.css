@@ -14,13 +14,116 @@ html, body, #__next {
   opacity: 0.85;
 }
 
-/* 💎 Glassmorphism refinado com nova paleta */
+/* 💎 Glassmorphism refinado com nova paleta - MELHORADO */
 .glass-card {
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(46, 95, 242, 0.2);
-  box-shadow: 0 0 12px rgba(46, 95, 242, 0.1);
-  border-radius: 12px;
-  background: rgba(46, 95, 242, 0.05);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(46, 95, 242, 0.3);
+  box-shadow: 
+    0 0 20px rgba(46, 95, 242, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(46, 95, 242, 0.08);
+}
+
+/* 🔮 Classes utilitárias de glassmorphism - MELHORADAS */
+.glass-light {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.15), 
+    0 1px 6px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-medium {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 8px 40px rgba(0, 0, 0, 0.2), 
+    0 2px 12px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  backdrop-filter: blur(24px);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 16px 60px rgba(0, 0, 0, 0.25), 
+    0 4px 20px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-hover {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 
+    0 16px 50px rgba(0, 0, 0, 0.22), 
+    0 6px 16px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* 🌟 Glassmorphism com gradientes - MELHORADOS */
+.glass-gradient {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.08) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-gradient-strong {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.18) 0%, 
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.12) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* ✨ Efeitos internos de glassmorphism - MELHORADOS */
+.glass-inset {
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15), 
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.glass-highlight {
+  position: relative;
+}
+
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    rgba(46, 95, 242, 0.2),
+    rgba(255, 255, 255, 0.3),
+    transparent);
+  border-radius: 16px 16px 0 0;
+}
+
+/* 🎯 Fallbacks para navegadores sem suporte ao backdrop-filter - MELHORADOS */
+@supports not (backdrop-filter: blur(12px)) {
+  .glass-light, .glass-medium, .glass-strong, .glass-gradient, .glass-gradient-strong, .glass-card {
+    background: rgba(14, 17, 23, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* 📝 Tipografia responsiva com nova paleta */
@@ -64,4 +167,33 @@ html, body, #__next {
 .grid-responsive {
   grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 25vw, 320px), 1fr));
   gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* 🎭 Sombras customizadas para glassmorphism */
+.shadow-glass-light {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 1px 6px rgba(255, 255, 255, 0.05);
+}
+
+.shadow-glass-medium {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15), 0 2px 12px rgba(255, 255, 255, 0.08);
+}
+
+.shadow-glass-strong {
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.2), 0 4px 20px rgba(255, 255, 255, 0.1);
+}
+
+/* 💫 Animações de entrada para cards */
+@keyframes glass-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glass-animate {
+  animation: glass-appear 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

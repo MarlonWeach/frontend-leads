@@ -96,7 +96,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
           className={`flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-2xl transition-all duration-300 ease-out ${
             active
               ? 'bg-primary text-white shadow-primary-glow'
-              : 'text-white/80 hover:bg-glass hover:text-primary hover:shadow-soft'
+              : 'text-white/80 hover:glass-light hover:text-primary hover:shadow-soft'
           }`}
         >
           <Icon className="h-6 w-6" />
@@ -105,9 +105,9 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
         {/* Tooltip */}
         {isHovered && (
           <div className="absolute left-16 top-1/2 transform -translate-y-1/2 z-50">
-            <div className="bg-background border border-primary/20 rounded-xl px-3 py-2 text-sm text-white shadow-glass whitespace-nowrap">
+            <div className="glass-strong rounded-xl px-3 py-2 text-sm text-white whitespace-nowrap">
               {item.name}
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-background border-l border-b border-primary/20 rotate-45"></div>
+              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 glass-strong border-l border-b border-glass-border rotate-45"></div>
             </div>
           </div>
         )}
@@ -116,7 +116,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
   };
 
   const Sidebar = ({ isMobile = false }) => (
-    <div className={`flex-1 h-full flex flex-col bg-glass backdrop-blur-lg shadow-glass rounded-2xl m-2 transition-all duration-500 ease-out ${
+    <div className={`flex-1 h-full flex flex-col glass-medium glass-highlight rounded-2xl m-2 transition-all duration-500 ease-out ${
       sidebarExpanded ? 'w-64' : 'w-20'
     }`}>
       {/* Logo */}
@@ -147,7 +147,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
         {!isMobile && (
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="absolute right-2 top-4 p-2 rounded-xl text-white/80 hover:text-primary hover:bg-glass/50 transition-all duration-300"
+            className="absolute right-2 top-4 p-2 rounded-xl text-white/80 hover:text-primary hover:glass-light transition-all duration-300"
           >
             <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${sidebarExpanded ? 'rotate-180' : ''}`} />
           </button>
@@ -162,7 +162,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
           ))}
         </div>
 
-        <div className="pt-6 mt-6 border-t border-white/10">
+        <div className="pt-6 mt-6 border-t border-glass-border">
           {sidebarExpanded && (
             <div className="px-2 mb-4">
               <h3 className="text-xs font-semibold text-sublabel text-white/60 uppercase tracking-wider">
@@ -179,7 +179,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
       </nav>
 
       {/* User Info */}
-      <div className="flex-shrink-0 p-4 bg-glass/80 border-t border-white/10 rounded-b-2xl">
+      <div className="flex-shrink-0 p-4 glass-light border-t border-glass-border rounded-b-2xl">
         <div className="flex items-center">
           <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center shadow-primary-glow">
             <User className="h-5 w-5 text-background" />
@@ -195,7 +195,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
             </div>
           )}
           {sidebarExpanded && (
-            <button className="ml-2 p-2 rounded-xl text-white/80 hover:text-primary hover:bg-glass/50 transition-all duration-300">
+            <button className="ml-2 p-2 rounded-xl text-white/80 hover:text-primary hover:glass-light transition-all duration-300">
               <Settings className="h-4 w-4" />
             </button>
           )}
@@ -216,7 +216,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 flex z-40 lg:hidden">
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 glass-light" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex-1 flex flex-col max-w-xs w-full">
             <Sidebar isMobile />
           </div>
@@ -226,10 +226,10 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
       {/* Main content */}
       <div className={`flex flex-col w-0 flex-1 min-h-0 ${sidebarExpanded ? 'pl-64' : 'pl-20'}`}>
         {/* Top header */}
-        <div className="relative z-10 flex-shrink-0 flex h-16 bg-glass backdrop-blur-lg shadow-glass border-b border-white/10 rounded-2xl m-2">
+        <div className="relative z-10 flex-shrink-0 flex h-16 glass-medium glass-highlight border-b border-glass-border rounded-2xl m-2">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="px-4 border-r border-white/10 text-white/80 hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary lg:hidden transition-colors"
+            className="px-4 border-r border-glass-border text-white/80 hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary lg:hidden transition-colors"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -275,7 +275,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
                 <input
                   type="text"
                   placeholder="Buscar..."
-                  className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  className="pl-10 pr-4 py-2 glass-light border border-glass-border rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                 />
               </div>
 

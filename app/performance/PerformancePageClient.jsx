@@ -1,8 +1,8 @@
 "use client";
 
-import { usePerformanceData } from '@/hooks/usePerformanceData';
-import PerformanceDashboard from '@/components/PerformanceDashboard';
-import MainLayout from '@/components/MainLayout';
+import { usePerformanceData } from '../../src/hooks/usePerformanceData';
+import PerformanceDashboard from '../../src/components/PerformanceDashboard';
+import MainLayout from '../../src/components/MainLayout';
 
 export default function PerformancePageClient() {
   const { data, isLoading, error } = usePerformanceData();

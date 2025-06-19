@@ -14,8 +14,8 @@ This document lists all tasks associated with PBI 17.
 | 17-4 | Sidebar minimalista e elegante | Done | Sidebar só com ícones, brilho ao hover, animação de expansão - Acessibilidade corrigida com nova paleta |
 | 17-5 | Cartões interativos e animações | Done | Cartões expansíveis, tooltips fade-in, transições de seção |
 | 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
-| 17-7 | Filtros avançados e UI de seleção | Proposed | Filtros de data/métrica com UI refinada e animada |
-| 17-8 | Glassmorphism e detalhes visuais | Proposed | Aplicar glassmorphism e detalhes de opacidade/blur |
+| 17-7 | [Filtros avançados e UI de seleção](./17-7.md) | Done | Implementar sistema de filtros avançados com glassmorphism |
+| 17-8 | [Glassmorphism e detalhes visuais](./17-8.md) | Done | Aplicar glassmorphism refinado e identidade visual unificada |
 | 17-9 | Testes de usabilidade e refinamento | Proposed | Validação em dispositivos, microinterações e performance |
 | 17-10 | Responsividade de fontes e encaixe nos cards | Review | Ajustar responsividade real das métricas nos cards, garantir legibilidade e centralização em todos os tamanhos |
 | 17-11 | Atualizar paleta de cores (remover menta, adicionar violeta) | Review | Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. |

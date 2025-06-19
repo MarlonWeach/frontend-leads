@@ -31,6 +31,10 @@ module.exports = {
         'soft': '0 4px 24px 0 rgba(46, 95, 242, 0.12)',
         'glass': '0 8px 32px 0 rgba(46, 95, 242, 0.18)',
         'glass-refined': '0 0 12px rgba(255, 255, 255, 0.05)',
+        'glass-light': '0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(255, 255, 255, 0.05)',
+        'glass-medium': '0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(255, 255, 255, 0.08)',
+        'glass-strong': '0 16px 48px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(255, 255, 255, 0.1)',
+        'glass-inset': 'inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.1)',
         'primary-glow': '0 0 20px rgba(46, 95, 242, 0.4)',
         'cta-glow': '0 0 20px rgba(242, 157, 53, 0.4)',
       },
@@ -46,9 +50,16 @@ module.exports = {
       backgroundColor: {
         'glass': 'rgba(46, 95, 242, 0.08)',
         'glass-refined': 'rgba(255, 255, 255, 0.05)',
+        'glass-light': 'rgba(255, 255, 255, 0.03)',
+        'glass-medium': 'rgba(255, 255, 255, 0.08)',
+        'glass-strong': 'rgba(255, 255, 255, 0.12)',
+        'glass-hover': 'rgba(255, 255, 255, 0.1)',
       },
       borderColor: {
         'glass': 'rgba(46, 95, 242, 0.2)',
+        'glass-border': 'rgba(255, 255, 255, 0.1)',
+        'glass-border-light': 'rgba(255, 255, 255, 0.05)',
+        'glass-border-strong': 'rgba(255, 255, 255, 0.15)',
       },
       fontFamily: {
         sans: ['Satoshi', 'ui-sans-serif', 'system-ui', 'sans-serif'],
