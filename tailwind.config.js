@@ -9,13 +9,15 @@ module.exports = {
   darkMode: 'class', // Habilita dark mode via classe
   theme: {
     extend: {
-      // 🎨 Paleta de cores customizada - ATUALIZADA
+      // 🎨 Nova paleta de cores da Weach
       colors: {
-        background: '#0E1117',
-        electric: '#3A8DFF', // Azul elétrico - COR PRINCIPAL
-        violet: '#8A2BE2',   // Violeta - NOVA COR SECUNDÁRIA
-        // Removido: mint (verde menta)
-        // Exemplo de uso: bg-background, text-electric, text-violet, etc.
+        background: '#021526',        // Background escuro principal
+        primary: '#2E5FF2',          // Azul primário
+        secondary: '#416BBF',        // Azul secundário  
+        accent: '#1D79F2',           // Azul de destaque
+        cta: '#F29D35',             // Laranja para botões e CTAs
+        // Mantendo electric para compatibilidade, mas agora aponta para primary
+        electric: '#2E5FF2',
       },
       // 🟦 Radius customizados
       borderRadius: {
@@ -26,25 +28,27 @@ module.exports = {
       },
       // 🌑 Sombras customizadas - ATUALIZADAS
       boxShadow: {
-        'soft': '0 4px 24px 0 rgba(16, 30, 54, 0.12)',
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
-        'glass-refined': '0 0 12px rgba(255, 255, 255, 0.05)', // Novo: glassmorphism refinado
+        'soft': '0 4px 24px 0 rgba(46, 95, 242, 0.12)',
+        'glass': '0 8px 32px 0 rgba(46, 95, 242, 0.18)',
+        'glass-refined': '0 0 12px rgba(255, 255, 255, 0.05)',
+        'primary-glow': '0 0 20px rgba(46, 95, 242, 0.4)',
+        'cta-glow': '0 0 20px rgba(242, 157, 53, 0.4)',
       },
       // 💎 Utilitário para glassmorphism - ATUALIZADO
       backdropBlur: {
         xs: '2px',
         sm: '4px',
         md: '8px',
-        lg: '12px', // Atualizado para 12px conforme especificação
+        lg: '12px',
         xl: '16px',
         '2xl': '24px',
       },
       backgroundColor: {
-        'glass': 'rgba(255,255,255,0.08)',
-        'glass-refined': 'rgba(255,255,255,0.05)', // Novo: glassmorphism mais sutil
+        'glass': 'rgba(46, 95, 242, 0.08)',
+        'glass-refined': 'rgba(255, 255, 255, 0.05)',
       },
       borderColor: {
-        'glass': 'rgba(255,255,255,0.1)', // Novo: borda para glassmorphism
+        'glass': 'rgba(46, 95, 242, 0.2)',
       },
       fontFamily: {
         sans: ['Satoshi', 'ui-sans-serif', 'system-ui', 'sans-serif'],
@@ -54,7 +58,7 @@ module.exports = {
         'title': ['clamp(1.75rem, 2vw, 2.25rem)', { 
           lineHeight: 'clamp(2.25rem, 2.5vw, 2.75rem)', 
           fontWeight: '700',
-          textShadow: '0 0 4px rgba(255, 255, 255, 0.2)' // Brilho sutil em headers
+          textShadow: '0 0 4px rgba(245, 247, 250, 0.2)'
         }],
         'subtitle': ['clamp(1.125rem, 1.5vw, 1.5rem)', { 
           lineHeight: 'clamp(1.5rem, 1.75vw, 2rem)', 
@@ -64,7 +68,7 @@ module.exports = {
           lineHeight: 'clamp(1.25rem, 1.5vw, 1.625rem)', 
           fontWeight: '400',
           opacity: '0.7',
-          textShadow: '0 0 2px rgba(255, 255, 255, 0.1)', // Brilho sutil em sublabels
+          textShadow: '0 0 2px rgba(245, 247, 250, 0.1)',
           letterSpacing: '0.5px'
         }],
       },
@@ -74,11 +78,10 @@ module.exports = {
         '22': '5.5rem',
         '26': '6.5rem',
       },
-      // 🎯 Utilitários para glassmorphism refinado
-      extend: {
-        backdropFilter: {
-          'glass-refined': 'blur(12px)',
-        },
+      // 🎯 Cores de texto customizadas
+      textColor: {
+        'primary-text': '#F5F7FA',      // Texto principal
+        'secondary-text': 'rgba(245, 247, 250, 0.7)', // Texto secundário
       },
     },
   },

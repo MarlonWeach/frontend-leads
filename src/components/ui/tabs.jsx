@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Tabs({ tabs, activeTab, onTabChange, className = '' }) {
   return (
@@ -38,11 +39,20 @@ export function TabsTrigger({ value, className, ...props }) {
   );
 }
 
-export function TabsContent({ value, className, ...props }) {
+export function TabsContent({ value, className, children, ...props }) {
   return (
-    <div
-      className={`mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className}`}
-      {...props}
-    />
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={value}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 24, scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+        className={`mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className}`}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 } 

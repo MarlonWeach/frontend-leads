@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TooltipProps {
-  content: string;
+  content: React.ReactNode;
   children: React.ReactNode;
   position?: 'top' | 'bottom' | 'left' | 'right';
   className?: string;
@@ -22,7 +23,7 @@ export function Tooltip({
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (isVisible && triggerRef.current && tooltipRef.current) {
@@ -91,39 +92,45 @@ export function Tooltip({
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      {isVisible && (
-        <div
-          ref={tooltipRef}
-          className={`
-            fixed z-50 px-4 py-3 text-sublabel-refined glass-card backdrop-blur-lg 
-            border-glass shadow-glass-glow rounded-2xl text-white pointer-events-none
-            transition-all duration-300 ease-out transform-gpu
-            ${isMounted 
-              ? 'opacity-100 scale-100 translate-y-0' 
-              : 'opacity-0 scale-95 translate-y-2'
-            }
-          `}
-          style={{
-            left: tooltipPosition.x,
-            top: tooltipPosition.y,
-          }}
-        >
-          <div className="relative">
-            {content}
-            <div
-              className={`
-                absolute w-3 h-3 bg-glass-refined border-glass transform rotate-45
-                transition-all duration-300 ease-out
-                ${position === 'top' ? 'top-full left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
-                position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 border-b-0 border-r-0' :
-                position === 'left' ? 'left-full top-1/2 -translate-y-1/2 border-l-0 border-b-0' :
-                'right-full top-1/2 -translate-y-1/2 border-r-0 border-t-0'
-                }
-              `}
-            />
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            ref={tooltipRef}
+            key="tooltip"
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className={`
+              fixed z-50 px-4 py-3 text-sublabel-refined glass-card backdrop-blur-lg 
+              border-glass shadow-glass-glow rounded-2xl text-white pointer-events-none
+              ${isMounted 
+                ? 'opacity-100 scale-100 translate-y-0' 
+                : 'opacity-0 scale-95 translate-y-2'
+              }
+            `}
+            style={{
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+            }}
+          >
+            <div className="relative">
+              {content}
+              <div
+                className={`
+                  absolute w-3 h-3 bg-glass-refined border-glass transform rotate-45
+                  transition-all duration-300 ease-out
+                  ${position === 'top' ? 'top-full left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
+                  position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 border-b-0 border-r-0' :
+                  position === 'left' ? 'left-full top-1/2 -translate-y-1/2 border-l-0 border-b-0' :
+                  'right-full top-1/2 -translate-y-1/2 border-r-0 border-t-0'
+                  }
+                `}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 } 

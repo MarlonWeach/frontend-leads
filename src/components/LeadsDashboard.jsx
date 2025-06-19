@@ -10,6 +10,8 @@ import {
 import { useLeadsData, useLeadActions, useLeadExport } from '../hooks/useLeadsData';
 import { useAdvertiserFilter } from '../hooks/useAdvertisersData';
 import { Tooltip } from './Tooltip';
+import { motion } from 'framer-motion';
+import { SectionTransition } from './ui/transitions';
 
 export default function LeadsDashboard() {
   // Estados de filtro
@@ -107,7 +109,7 @@ export default function LeadsDashboard() {
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
         <div className="text-center bg-white p-8 rounded-lg shadow-md">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">Erro ao carregar leads: {error}</p>
+          <p className="text-red-600 mb-4">Erro ao carregar leads: {typeof error === 'string' ? error : error?.message || 'Erro desconhecido'}</p>
           <button 
             onClick={refetch}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -119,13 +121,18 @@ export default function LeadsDashboard() {
     );
   }
 
-  const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'violet' }) => (
-    <div className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center">
-      <div className="mb-2 text-violet"><Icon className="h-8 w-8" /></div>
-      <div className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{value}</div>
-      <div className="text-sublabel text-violet mt-1">{title}</div>
-      {subtitle && <div className="text-xs text-electric/80 mt-1">{subtitle}</div>}
-    </div>
+  const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'primary' }) => (
+    <motion.div
+      className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center"
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+    >
+      <div className="mb-2 text-primary"><Icon className="h-8 w-8" /></div>
+      <div className="font-bold text-primary text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{value}</div>
+      <div className="text-sublabel text-primary-text mt-1">{title}</div>
+      {subtitle && <div className="text-xs text-secondary-text mt-1">{subtitle}</div>}
+    </motion.div>
   );
 
   const LeadModal = ({ lead, onClose, onUpdateStatus }) => {
@@ -273,7 +280,7 @@ export default function LeadsDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <SectionTransition direction="up" duration={600} className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -286,7 +293,7 @@ export default function LeadsDashboard() {
           <select
             value={filters.date_range}
             onChange={(e) => setFilters({...filters, date_range: e.target.value})}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-electric"
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="7d">Últimos 7 dias</option>
             <option value="30d">Últimos 30 dias</option>
@@ -294,7 +301,7 @@ export default function LeadsDashboard() {
           </select>
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-violet transition-colors"
+                          className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
             disabled={updating}
           >
             <Download className="h-4 w-4 mr-2" />
@@ -310,28 +317,28 @@ export default function LeadsDashboard() {
           value={metrics.total_leads}
           subtitle="Todos os períodos"
           icon={Users}
-          color="violet"
+          color="primary"
         />
         <MetricCard
           title="Novos Leads"
           value={metrics.new_leads}
           subtitle="Aguardando contato"
           icon={Clock}
-          color="violet"
+          color="primary"
         />
         <MetricCard
           title="Convertidos"
           value={metrics.converted_leads}
           subtitle={`${metrics.conversion_rate}% taxa de conversão`}
           icon={CheckCircle}
-          color="violet"
+          color="primary"
         />
         <MetricCard
           title="Esta Semana"
           value={metrics.this_week}
           subtitle={`${metrics.today} hoje`}
           icon={TrendingUp}
-          color="violet"
+          color="primary"
         />
       </div>
 
@@ -346,7 +353,7 @@ export default function LeadsDashboard() {
                 placeholder="Buscar leads por nome, email ou telefone..."
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value})}
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-electric"
+                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -356,7 +363,7 @@ export default function LeadsDashboard() {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({...filters, status: e.target.value})}
-                className="pl-10 pr-8 py-3 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-electric appearance-none"
+                className="pl-10 pr-8 py-3 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
               >
                 <option value="all">Todos os status</option>
                 <option value="new">Novos</option>
@@ -375,7 +382,7 @@ export default function LeadsDashboard() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-header font-semibold text-white">Tendências de Leads</h2>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sublabel-refined bg-electric text-background rounded-md">
+            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
               Novos
             </button>
             <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
@@ -392,7 +399,7 @@ export default function LeadsDashboard() {
             trends.map((trend, index) => (
               <div key={index} className="flex-1 flex flex-col items-center">
                 <div 
-                  className="w-full bg-gradient-to-t from-electric to-violet rounded-t-lg transition-all duration-300 hover:opacity-80"
+                  className="w-full bg-gradient-to-t from-accent to-primary rounded-t-lg transition-all duration-300 hover:opacity-80"
                   style={{ height: `${(trend.value / Math.max(...trends.map(t => t.value))) * 200}px` }}
                 ></div>
                 <p className="text-xs text-white/70 mt-2">{trend.date}</p>
@@ -427,8 +434,8 @@ export default function LeadsDashboard() {
                   className="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-electric/20 rounded-full flex items-center justify-center">
-                      <StatusIcon className="h-6 w-6 text-electric" />
+                    <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                      <StatusIcon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sublabel-refined font-medium text-white">{lead.full_name || 'Lead sem nome'}</h3>
@@ -465,7 +472,7 @@ export default function LeadsDashboard() {
                         setSelectedLead(lead);
                         setShowModal(true);
                       }}
-                      className="p-2 text-white/70 hover:text-electric transition-colors"
+                      className="p-2 text-white/70 hover:text-primary transition-colors"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
@@ -488,6 +495,6 @@ export default function LeadsDashboard() {
           onUpdateStatus={handleUpdateLeadStatus}
         />
       )}
-    </div>
+    </SectionTransition>
   );
 }

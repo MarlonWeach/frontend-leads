@@ -1,5 +1,5 @@
 import { useFormattedLastUpdated } from '@/hooks/useQueryWithCache';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { Tooltip } from './tooltip';
 import { InfoIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,24 +35,14 @@ export function LastUpdated({
   });
   
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <div className={cn(
-            "flex items-center gap-1 text-xs text-muted-foreground",
-            className
-          )}>
-            {showIcon && <InfoIcon className="h-3 w-3" />}
-            <span>{fullText}</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <div className="text-xs">
-            <p>{tooltipText}</p>
-            <p className="mt-1 font-mono">{exactTime}</p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip content={<div className="text-xs"><p>{tooltipText}</p><p className="mt-1 font-mono">{exactTime}</p></div>}>
+      <div className={cn(
+        "flex items-center gap-1 text-xs text-muted-foreground",
+        className
+      )}>
+        {showIcon && <InfoIcon className="h-3 w-3" />}
+        <span>{fullText}</span>
+      </div>
+    </Tooltip>
   );
 } 

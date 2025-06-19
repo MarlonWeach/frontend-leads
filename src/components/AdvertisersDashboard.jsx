@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Building2, Users, DollarSign, BarChart3,
-  AlertCircle, ChevronRight, Mail, Globe, ArrowRight, CheckCircle, TrendingUp, Search, Filter, Download, Eye
+  AlertCircle, ChevronRight, Mail, Globe, ArrowRight, CheckCircle, TrendingUp, Search, Filter, Download, Eye, Target, Info
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAdvertisersData } from '../hooks/useAdvertisersData';
 import { Tooltip } from './Tooltip';
+import { motion } from 'framer-motion';
+import { SectionTransition } from './ui/transitions';
 
 export default function AdvertisersDashboard() {
   const [advertisers, setAdvertisers] = useState([]);
@@ -19,6 +21,7 @@ export default function AdvertisersDashboard() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const { data, isLoading, error: useAdvertisersDataError, refetch } = useAdvertisersData();
 
   useEffect(() => {
@@ -226,6 +229,12 @@ export default function AdvertisersDashboard() {
     return new Intl.NumberFormat('pt-BR').format(Math.round(value || 0));
   };
 
+  const periodOptions = [
+    { value: '7d', label: '7 dias' },
+    { value: '30d', label: '30 dias' },
+    { value: '90d', label: '90 dias' }
+  ];
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
@@ -254,356 +263,122 @@ export default function AdvertisersDashboard() {
     );
   }
 
-  const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'violet' }) => (
-    <div className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 flex flex-col items-center">
-      <div className={`mb-2 text-violet`}><Icon className="h-8 w-8" /></div>
-      <div className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{value}</div>
-      <div className="text-sublabel text-violet mt-1">{title}</div>
-      {subtitle && <div className="text-xs text-electric/80 mt-1">{subtitle}</div>}
-    </div>
-  );
-
-  const AdvertiserCard = ({ advertiser, onClick }) => (
-    <div
-      className="bg-glass rounded-2xl shadow-glass backdrop-blur-lg p-6 cursor-pointer hover:scale-[1.02] transition-transform flex flex-col"
-      onClick={onClick}
-    >
-      <div className="flex items-center mb-2">
-        <Building2 className="h-6 w-6 text-electric mr-2" />
-        <span className="text-title font-bold text-mint">{advertiser.name}</span>
-      </div>
-      <div className="text-sublabel text-glow mb-2">{advertiser.email}</div>
-      <div className="flex flex-wrap gap-2 mt-2">
-        <span className="bg-mint/10 text-mint rounded-full px-3 py-1 text-xs">{advertiser.metrics.total_campaigns} campanhas</span>
-        <span className="bg-electric/10 text-electric rounded-full px-3 py-1 text-xs">{advertiser.metrics.total_leads} leads</span>
-        <span className="bg-violet/10 text-violet rounded-full px-3 py-1 text-xs">{advertiser.metrics.converted_leads} convertidos</span>
-        <span className="bg-mint/10 text-mint rounded-full px-3 py-1 text-xs">R$ {advertiser.metrics.total_spend}</span>
-      </div>
-    </div>
-  );
-
-  const DetailedView = ({ advertiser }) => (
-    <div className="space-y-8">
-      {/* Header do anunciante */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div 
-              className="h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
-              style={{ backgroundColor: advertiser.brand_color || '#3B82F6' }}
-            >
-              {advertiser.name.charAt(0)}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{advertiser.name}</h2>
-              <p className="text-gray-600">{advertiser.company_name}</p>
-              <div className="flex items-center gap-4 mt-2">
-                {advertiser.email && (
-                  <a href={`mailto:${advertiser.email}`} className="text-sm text-blue-600 hover:underline">
-                    {advertiser.email}
-                  </a>
-                )}
-                {advertiser.phone && (
-                  <span className="text-sm text-gray-500">{advertiser.phone}</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setViewMode('overview');
-              setSelectedAdvertiser(null);
-            }}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-2"
-          >
-            <ArrowRight className="h-4 w-4 rotate-180" />
-            Voltar
-          </button>
-        </div>
-      </div>
-
-      {/* Métricas detalhadas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Campanhas Ativas"
-          value={advertiser.metrics?.active_campaigns || 0}
-          subtitle={`${advertiser.metrics?.total_campaigns || 0} total`}
-          icon={BarChart3}
-          color="blue"
-        />
-        <MetricCard
-          title="Total de Leads"
-          value={advertiser.metrics?.total_leads || 0}
-          subtitle={`${advertiser.metrics?.converted_leads || 0} convertidos`}
-          icon={Users}
-          color="green"
-        />
-        <MetricCard
-          title="Taxa de Conversão"
-          value={`${advertiser.metrics?.conversion_rate || 0}%`}
-          subtitle="Leads convertidos"
-          icon={CheckCircle}
-          color="purple"
-        />
-        <MetricCard
-          title="Investimento"
-          value={formatCurrency(advertiser.metrics?.total_spend)}
-          subtitle="Período selecionado"
-          icon={DollarSign}
-          color="orange"
-        />
-      </div>
-
-      {/* Campanhas do anunciante */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Campanhas</h3>
-        {advertiser.campaigns && advertiser.campaigns.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Nome</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Status</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Leads</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Gasto</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">CPL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {advertiser.campaigns.map((campaign, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium text-gray-900">{campaign.name}</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        campaign.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {campaign.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold">{campaign.leads_count || 0}</td>
-                    <td className="py-3 px-4 text-right">{formatCurrency(campaign.spend)}</td>
-                    <td className="py-3 px-4 text-right">
-                      {campaign.leads_count > 0 ? formatCurrency(campaign.spend / campaign.leads_count) : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">Nenhuma campanha encontrada</p>
-        )}
-      </div>
-
-      {/* Leads recentes */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Leads Recentes</h3>
-        {advertiser.recent_leads && advertiser.recent_leads.length > 0 ? (
-          <div className="space-y-3">
-            {advertiser.recent_leads.map((lead, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{lead.full_name}</p>
-                  <p className="text-sm text-gray-500">{lead.email} • {lead.campaign_name}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    lead.status === 'converted' ? 'bg-green-100 text-green-800' :
-                    lead.status === 'qualified' ? 'bg-blue-100 text-blue-800' :
-                    lead.status === 'contacted' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {lead.status}
-                  </span>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(lead.created_time).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">Nenhum lead encontrado</p>
-        )}
-      </div>
-    </div>
-  );
-
-  const advertisersData = data?.advertisers || [];
-  const metricsData = data?.metrics || {
-    total: 0,
-    active: 0,
-    inactive: 0,
-    totalSpend: 0,
-    totalLeads: 0
-  };
-
-  // Filtrar anunciantes
-  const filteredAdvertisers = advertisersData.filter(advertiser => {
-    const matchesSearch = advertiser.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         advertiser.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || advertiser.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Métricas gerais para cards principais
+  const metricsList = [
+    {
+      key: 'active_campaigns',
+      label: 'Campanhas Ativas',
+      value: overallMetrics.active_campaigns || 0,
+      subinfo: <><span className="text-accent font-semibold">{overallMetrics.total_campaigns || 0}</span> total</>,
+      icon: <Target className="h-7 w-7 text-primary mt-2 self-end" />,
+      tooltip: 'Número de campanhas ativas dos anunciantes',
+    },
+    {
+      key: 'total_leads',
+      label: 'Total de Leads',
+      value: overallMetrics.total_leads || 0,
+      subinfo: <><span className="text-accent font-semibold">{overallMetrics.converted_leads || 0}</span> convertidos</>,
+      icon: <Users className="h-7 w-7 text-primary mt-2 self-end" />,
+      tooltip: 'Total de leads gerados por todos os anunciantes',
+    },
+    {
+      key: 'total_spend',
+      label: 'Investimento',
+      value: formatCurrency(overallMetrics.total_spend),
+      subinfo: <>Custo por lead: <span className="text-accent font-semibold">{overallMetrics.total_leads > 0 ? formatCurrency(overallMetrics.total_spend / overallMetrics.total_leads) : '-'}</span></>,
+      icon: <DollarSign className="h-7 w-7 text-primary mt-2 self-end" />,
+      tooltip: 'Total investido pelos anunciantes',
+    },
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <SectionTransition direction="up" duration={600} className="space-y-8">
+      {/* Filtros de período */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-header font-bold text-white mb-2">Anunciantes</h1>
-          <p className="text-sublabel-refined text-white/70">
-            Gerencie e monitore seus anunciantes
-          </p>
-        </div>
         <div className="flex items-center space-x-4">
-          <button className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-violet transition-colors">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </button>
-        </div>
-      </div>
-
-      {/* Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-        <div className="glass-card backdrop-blur-lg p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sublabel-refined text-violet mb-3">Total de Anunciantes</p>
-              <p className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{formatNumber(metricsData.total)}</p>
-            </div>
-            <Building2 className="h-8 w-8 text-violet" />
-          </div>
-        </div>
-
-        <div className="glass-card backdrop-blur-lg p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sublabel-refined text-violet mb-3">Anunciantes Ativos</p>
-              <p className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{formatNumber(metricsData.active)}</p>
-            </div>
-            <Users className="h-8 w-8 text-violet" />
-          </div>
-        </div>
-
-        <div className="glass-card backdrop-blur-lg p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sublabel-refined text-violet mb-3">Anunciantes Inativos</p>
-              <p className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{formatNumber(metricsData.inactive)}</p>
-            </div>
-            <AlertCircle className="h-8 w-8 text-violet" />
-          </div>
-        </div>
-
-        <div className="glass-card backdrop-blur-lg p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sublabel-refined text-violet mb-3">Investimento Total</p>
-              <p className="font-bold text-violet text-[clamp(2rem,4vw,3.5rem)] leading-tight break-words">{formatCurrency(metricsData.totalSpend)}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-violet" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="glass-card backdrop-blur-lg p-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
-              <input
-                type="text"
-                placeholder="Buscar anunciantes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-electric"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-8 py-3 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-electric appearance-none"
+          <div className="flex space-x-2">
+            {periodOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSelectedPeriod(opt.value)}
+                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-colors shadow-glass backdrop-blur-lg
+                  ${selectedPeriod === opt.value
+                    ? 'bg-primary text-white'
+                    : 'glass-card text-white hover:bg-white/10'}
+                `}
               >
-                <option value="all">Todos os status</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Lista de Anunciantes */}
-      <div className="glass-card backdrop-blur-lg p-8">
-        <h2 className="text-header font-semibold text-white mb-6">Lista de Anunciantes</h2>
-        
-        {filteredAdvertisers.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-white/30 mx-auto mb-4" />
-            <p className="text-sublabel-refined text-white/70">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Nenhum anunciante encontrado com os filtros aplicados'
-                : 'Nenhum anunciante cadastrado'
-              }
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {filteredAdvertisers.map((advertiser) => (
-              <div
-                key={advertiser.id}
-                className="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-electric/20 rounded-full flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-electric" />
-                  </div>
-                  <div>
-                    <h3 className="text-sublabel-refined font-medium text-white">{advertiser.name}</h3>
-                    <p className="text-xs text-white/70">{advertiser.email}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <p className="text-sublabel-refined font-medium text-white">
-                      {formatCurrency(advertiser.totalSpend || 0)}
-                    </p>
-                    <p className="text-xs text-white/70">Investimento total</p>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-sublabel-refined font-medium text-white">
-                      {formatNumber(advertiser.totalLeads || 0)}
-                    </p>
-                    <p className="text-xs text-white/70">Leads gerados</p>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      advertiser.status === 'active'
-                        ? 'bg-electric/20 text-electric'
-                        : 'bg-violet/20 text-violet'
-                    }`}>
-                      {advertiser.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                  
-                  <button className="p-2 text-white/70 hover:text-electric transition-colors">
-                    <Eye className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+                {opt.label}
+              </button>
             ))}
           </div>
-        )}
+          <div className="text-sublabel-refined text-glow glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
+            <span className="font-medium text-white">Período:</span> Últimos {periodOptions.find(p => p.value === selectedPeriod)?.label}
+          </div>
+        </div>
+        <div className="text-sublabel-refined text-white/70">
+          Última atualização: {new Date().toLocaleTimeString('pt-BR')}
+        </div>
       </div>
-    </div>
+
+      {/* Grid de cards de métricas principais */}
+      <div data-testid="metrics-summary" className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] auto-rows-fr">
+        {metricsList.map(metric => (
+          <motion.div
+            key={metric.key}
+            className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px]"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
+              <span className="text-sublabel-refined text-primary-text text-center w-full">
+                {metric.label}
+                <Tooltip content={metric.tooltip}>
+                  <Info className="inline h-4 w-4 ml-1 text-accent align-text-top" />
+                </Tooltip>
+              </span>
+              <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
+                {metric.value}
+              </span>
+              <span className="text-xs text-secondary-text mt-1 text-center w-full">{metric.subinfo}</span>
+            </div>
+            <div className="mt-2">{metric.icon}</div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Grid de cards de anunciantes */}
+      <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] auto-rows-fr mt-8">
+        {advertisers.map(advertiser => (
+          <motion.div
+            key={advertiser.id}
+            className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px] cursor-pointer"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            onClick={() => setSelectedAdvertiser(advertiser)}
+          >
+            <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
+              <span className="text-sublabel-refined text-primary-text text-center w-full">
+                {advertiser.name}
+                <Tooltip content="Nome do anunciante">
+                  <Info className="inline h-4 w-4 ml-1 text-accent align-text-top" />
+                </Tooltip>
+              </span>
+              <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
+                {advertiser.metrics?.total_leads || 0} leads
+              </span>
+              <span className="text-xs text-secondary-text mt-1 text-center w-full">
+                {advertiser.metrics?.active_campaigns || 0} campanhas ativas
+              </span>
+              <span className="text-xs text-secondary-text mt-1 text-center w-full">
+                Investido: <span className="text-accent font-semibold">{formatCurrency(advertiser.metrics?.total_spend)}</span>
+              </span>
+            </div>
+            <div className="mt-2"><Building2 className="h-7 w-7 text-primary mt-2 self-end" /></div>
+          </motion.div>
+        ))}
+      </div>
+    </SectionTransition>
   );
 }

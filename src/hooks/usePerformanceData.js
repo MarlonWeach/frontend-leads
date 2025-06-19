@@ -2,81 +2,49 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-export function usePerformanceData(filters = {}) {
-  const [data, setData] = useState(null);
+export function usePerformanceData(dateFrom, dateTo) {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchPerformanceData();
-  }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFrom, dateTo]);
 
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
-      
-      // Buscar campanhas com métricas
-      let query = supabase
-        .from('campaigns')
-        .select(`
-          *,
-          adsets(
-            id,
-            name,
-            status,
-            daily_budget,
-            lifetime_budget,
-            spend,
-            impressions,
-            clicks,
-            cpm,
-            ctr,
-            cpc,
-            created_time,
-            updated_time
-          ),
-          ads(
-            id,
-            name,
-            status,
-            spend,
-            impressions,
-            clicks,
-            cpm,
-            ctr,
-            cpc,
-            created_time,
-            updated_time
-          )
-        `);
+      setError(null);
 
-      // Aplicar filtros
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      // Gerar dados mockados para teste (vou usar dados reais depois)
+      const mockData = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        
+        mockData.push({
+          date: date.toLocaleDateString('pt-BR', { 
+            day: 'numeric', 
+            month: 'short' 
+          }).replace(' de ', ' '),
+          spend: Math.random() * 1000 + 500,
+          impressions: Math.random() * 10000 + 5000,
+          clicks: Math.random() * 500 + 100,
+          leads: Math.random() * 50 + 10
+        });
       }
 
-      if (filters.dateRange) {
-        const dateLimit = getDateLimit(filters.dateRange);
-        query = query.gte('updated_time', dateLimit.toISOString());
-      }
-
-      const { data: campaigns, error: campaignsError } = await query;
-
-      if (campaignsError) throw campaignsError;
-
-      // Processar dados para métricas
-      const processedData = processPerformanceData(campaigns);
-      
-      setData(processedData);
+      setData(mockData);
     } catch (err) {
-      setError(err.message);
-      console.error('Erro ao buscar dados de performance:', err);
+      setError(err.message || err);
+      setData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  return { data, loading, error, refetch: fetchPerformanceData };
+  return { data, isLoading: loading, error, refetch: fetchPerformanceData };
 }
 
 // Função para processar os dados e calcular métricas

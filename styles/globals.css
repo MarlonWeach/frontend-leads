@@ -3,28 +3,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🎨 Utilitário de brilho atualizado - Nova paleta */
+html, body, #__next {
+  height: 100%;
+  min-height: 100%;
+}
+
+/* 🎨 Utilitário de brilho atualizado - Nova paleta Weach */
 .text-glow {
-  text-shadow: 0 0 8px #3A8DFF, 0 0 2px #8A2BE2;
+  text-shadow: 0 0 8px #2E5FF2, 0 0 2px #1D79F2;
   opacity: 0.85;
 }
 
-/* 💎 Glassmorphism refinado */
+/* 💎 Glassmorphism refinado com nova paleta */
 .glass-card {
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(46, 95, 242, 0.2);
+  box-shadow: 0 0 12px rgba(46, 95, 242, 0.1);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(46, 95, 242, 0.05);
 }
 
-/* 📝 Tipografia responsiva */
+/* 📝 Tipografia responsiva com nova paleta */
 .text-header {
   font-family: 'Satoshi', sans-serif;
   font-weight: 700;
   font-size: clamp(1.75rem, 2vw, 2.25rem);
   line-height: clamp(2.25rem, 2.5vw, 2.75rem);
-  text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+  text-shadow: 0 0 4px rgba(245, 247, 250, 0.2);
 }
 
 .text-sublabel-refined {
@@ -33,7 +38,7 @@
   font-size: clamp(0.875rem, 1vw, 1.125rem);
   line-height: clamp(1.25rem, 1.5vw, 1.625rem);
   opacity: 0.7;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 2px rgba(245, 247, 250, 0.1);
   letter-spacing: 0.5px;
 }
 
@@ -43,9 +48,15 @@
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
 }
 
-/* 🌟 Efeitos de hover refinados */
+/* 🌟 Efeitos de hover refinados com nova paleta */
 .hover-glow:hover {
-  text-shadow: 0 0 12px #3A8DFF, 0 0 4px #8A2BE2;
+  text-shadow: 0 0 12px #2E5FF2, 0 0 4px #1D79F2;
+  transition: text-shadow 0.3s ease;
+}
+
+/* 🔶 Hover CTA laranja */
+.hover-cta:hover {
+  text-shadow: 0 0 12px #F29D35, 0 0 4px rgba(242, 157, 53, 0.8);
   transition: text-shadow 0.3s ease;
 }
 

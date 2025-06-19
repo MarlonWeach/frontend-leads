@@ -12,7 +12,7 @@ This document lists all tasks associated with PBI 17.
 | 17-2 | Implementar tipografia refinada | Done | Fonte moderna, títulos grandes, sublabels com brilho |
 | 17-3 | Refatorar layout base e containers | Done | Containers, cartões e painéis com novo padrão visual |
 | 17-4 | Sidebar minimalista e elegante | Done | Sidebar só com ícones, brilho ao hover, animação de expansão - Acessibilidade corrigida com nova paleta |
-| 17-5 | Cartões interativos e animações | Proposed | Cartões expansíveis, tooltips fade-in, transições de seção |
+| 17-5 | Cartões interativos e animações | Done | Cartões expansíveis, tooltips fade-in, transições de seção |
 | 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
 | 17-7 | Filtros avançados e UI de seleção | Proposed | Filtros de data/métrica com UI refinada e animada |
 | 17-8 | Glassmorphism e detalhes visuais | Proposed | Aplicar glassmorphism e detalhes de opacidade/blur |
@@ -23,6 +23,7 @@ This document lists all tasks associated with PBI 17.
 | 17-13 | Padronizar cards de alerta com glassmorphism | Done | Alertas com mesmo padrão visual dos cards superiores |
 | 17-14 | Refinar tipografia com headers e sublabels | Done | Headers com Satoshi bold 28-32px, sublabels com brilho sutil |
 | 17-15 | Ajustar espaçamento e layout para mais respiro | Done | Aumentar gaps, paddings e espaçamento vertical |
+| 17-16 | Implementar projeção futura no gráfico de tendências | Proposed | Adicionar projeção de 3-5 dias futuros com dados simulados baseados em tendência histórica |
 
 ---
 
@@ -69,9 +70,9 @@ This document lists all tasks associated with PBI 17.
 - Títulos e sublabels seguem especificação visual.
 
 **Checklist:**
-- [ ] Fonte instalada e configurada
-- [ ] Classes de título e sublabel criadas
-- [ ] Brilho sutil aplicado em descrições
+- [x] Fonte instalada e configurada
+- [x] Classes de título e sublabel criadas
+- [x] Brilho sutil aplicado em descrições
 
 ---
 
@@ -90,9 +91,9 @@ This document lists all tasks associated with PBI 17.
 - Cartões e painéis seguem padrão visual.
 
 **Checklist:**
-- [ ] Containers refatorados
-- [ ] Espaçamento negativo aplicado
-- [ ] Testes de responsividade
+- [x] Containers refatorados
+- [x] Espaçamento negativo aplicado
+- [x] Testes de responsividade
 
 ---
 
@@ -141,9 +142,11 @@ This document lists all tasks associated with PBI 17.
 - Cartões e tooltips animados conforme especificação.
 
 **Checklist:**
-- [ ] Animação de expansão em cartões
-- [ ] Tooltips com fade-in
-- [ ] Transição de seção tipo mola
+- [x] Animação de expansão em cartões
+- [x] Tooltips com fade-in
+- [x] Transição de seção tipo mola
+
+**✅ CONCLUÍDO COM SUCESSO**: Todos os cartões, tooltips e transições animadas aplicados globalmente em todas as páginas principais, seguindo o padrão visual do dashboard.
 
 ---
 

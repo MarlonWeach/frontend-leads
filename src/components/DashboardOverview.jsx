@@ -5,10 +5,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   TrendingUp, Users, Building2, Target, DollarSign, Eye, 
   MousePointer, CheckCircle, Clock, AlertCircle, ArrowRight,
-  BarChart3, PieChart, Calendar, Download, Info
+  BarChart3, PieChart, Calendar, Download, Info, AlertTriangle, XCircle
 } from 'lucide-react';
 import { Tooltip } from './Tooltip';
 import { useDashboardOverview } from '../hooks/useDashboardData';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 
 function LoadingState() {
   return (
@@ -29,13 +32,13 @@ function LoadingState() {
 function ErrorState({ error, refetch }) {
   return (
     <div data-testid="error-message" className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <AlertCircle className="h-12 w-12 text-electric" />
+      <AlertCircle className="h-12 w-12 text-accent" />
       <h2 className="text-header text-white">Ops! Algo deu errado</h2>
       <p className="text-sublabel-refined text-glow">{error?.message || 'Erro ao carregar dados do dashboard'}</p>
       <button
         data-testid="retry-button"
         onClick={() => refetch()}
-        className="px-4 py-2 bg-electric text-background rounded-2xl hover:bg-violet transition-colors"
+                      className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
       >
         Tentar novamente
       </button>
@@ -145,8 +148,8 @@ export default function DashboardOverview() {
       key: 'leads',
       label: 'Total de Leads',
       value: formatNumber(metrics.leads.total),
-      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.leads.new)}</span> novos • <span className="text-violet font-semibold">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão</>,
-      icon: <Users className="h-7 w-7 text-violet mt-2 self-end" />,
+      subinfo: <><span className="text-accent font-semibold">{formatNumber(metrics.leads.new)}</span> novos • <span className="text-primary font-semibold">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão</>,
+      icon: <Users className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de leads gerados no período selecionado',
       formatShort: true,
     },
@@ -154,42 +157,42 @@ export default function DashboardOverview() {
       key: 'campaigns',
       label: 'Campanhas Ativas',
       value: formatNumber(metrics.campaigns.active),
-      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.campaigns.total)}</span> total</>,
-      icon: <Target className="h-7 w-7 text-violet mt-2 self-end" />,
+      subinfo: <><span className="text-accent font-semibold">{formatNumber(metrics.campaigns.total)}</span> total</>,
+      icon: <Target className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Número de campanhas ativas no momento',
     },
     {
       key: 'advertisers',
       label: 'Anunciantes',
       value: formatNumber(metrics.advertisers.total),
-      subinfo: <><span className="text-electric font-semibold">{formatNumber(metrics.advertisers.active)}</span> ativos</>,
-      icon: <Building2 className="h-7 w-7 text-violet mt-2 self-end" />,
+      subinfo: <><span className="text-accent font-semibold">{formatNumber(metrics.advertisers.active)}</span> ativos</>,
+      icon: <Building2 className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de anunciantes cadastrados',
     },
     {
       key: 'spend',
       label: 'Investimento',
       value: metrics.performance.spend,
-      subinfo: <>Custo por lead: <span className="text-electric font-semibold">{formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}</span></>,
-      icon: <DollarSign className="h-7 w-7 text-violet mt-2 self-end" />,
+      subinfo: <>Custo por lead: <span className="text-accent font-semibold">{formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}</span></>,
+      icon: <DollarSign className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total investido no período selecionado',
       formatShort: true,
     },
     {
       key: 'impressions',
       label: 'Impressões',
-      value: formatNumber(metrics.performance.impressions),
+      value: metrics.performance.impressions,
       subinfo: <>Alcance total</>,
-      icon: <Eye className="h-7 w-7 text-violet mt-2 self-end" />,
+      icon: <Eye className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de impressões no período selecionado',
       formatShort: true,
     },
     {
       key: 'clicks',
       label: 'Cliques',
-      value: formatNumber(metrics.performance.clicks),
-      subinfo: <>CTR: <span className="text-electric font-semibold">{formatPercentage(metrics.performance.ctr)}</span></>,
-      icon: <MousePointer className="h-7 w-7 text-violet mt-2 self-end" />,
+      value: metrics.performance.clicks,
+      subinfo: <>CTR: <span className="text-accent font-semibold">{formatPercentage(metrics.performance.ctr)}</span></>,
+      icon: <MousePointer className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de cliques no período selecionado',
       formatShort: true,
     },
@@ -198,7 +201,7 @@ export default function DashboardOverview() {
       label: 'Taxa de Conversão',
       value: formatPercentage(metrics.leads.conversion_rate),
       subinfo: <>{formatNumber(metrics.leads.total)} leads / {formatNumber(metrics.performance.clicks)} cliques</>,
-      icon: <CheckCircle className="h-7 w-7 text-violet mt-2 self-end" />,
+      icon: <CheckCircle className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Taxa de conversão de leads no período',
     },
   ];
@@ -215,7 +218,7 @@ export default function DashboardOverview() {
                 onClick={() => handleFilterClick(period)}
                 className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-colors shadow-glass backdrop-blur-lg
                   ${currentPeriod === period
-                    ? 'bg-electric text-background'
+                    ? 'bg-primary text-white'
                     : 'glass-card text-white hover:bg-white/10'}
                 `}
               >
@@ -239,52 +242,51 @@ export default function DashboardOverview() {
 
       {/* Métricas principais */}
       <div data-testid="metrics-summary" className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] auto-rows-fr">
-        {metricsList.map(metric => (
-          <div key={metric.key} className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px]">
-            <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
-              <span className="text-sublabel-refined text-white/80 text-center w-full">{metric.label}</span>
-              <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-violet text-center w-full">
-                {metric.formatShort
-                  ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
-                  : metric.value}
-              </span>
-              <span className="text-xs text-electric/80 mt-1 text-center w-full">{metric.subinfo}</span>
-            </div>
-            <div className="mt-2">{metric.icon}</div>
-          </div>
-        ))}
+        {metricsList.map(metric => {
+          return (
+            <motion.div
+              key={metric.key}
+              className="glass-card p-6 flex flex-col justify-between items-center min-h-[180px]"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
+                <span className="text-sublabel-refined text-primary-text text-center w-full">{metric.label}</span>
+                <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
+                  {metric.formatShort
+                    ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
+                    : metric.value}
+                </span>
+                <span className="text-xs text-secondary-text mt-1 text-center w-full">{metric.subinfo}</span>
+              </div>
+              <div className="mt-2">{metric.icon}</div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Alertas - PADRONIZADOS COM GLASSMORPHISM */}
       {alerts.length > 0 && (
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-header font-bold text-primary-text">Alertas</h3>
           {alerts.map((alert, index) => (
-            <div
-              key={index}
-              className="glass-card backdrop-blur-lg p-6"
-            >
+            <div key={index} className={`glass-card p-6 border-l-4 ${
+              alert.type === 'warning' ? 'border-cta' : 
+              alert.type === 'error' ? 'border-red-500' : 'border-accent'
+            }`}>
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  {alert.type === 'warning' ? (
-                    <AlertCircle className="h-5 w-5 text-violet" />
-                  ) : (
-                    <Info className="h-5 w-5 text-electric" />
-                  )}
+                  {alert.type === 'warning' && <AlertTriangle className="h-5 w-5 text-cta" />}
+                  {alert.type === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
+                  {alert.type === 'info' && <Info className="h-5 w-5 text-accent" />}
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sublabel-refined font-medium text-white">{alert.title}</h3>
-                  <div className="mt-2 text-sublabel-refined text-white/80">
-                    <p>{alert.message}</p>
-                  </div>
+                  <p className="text-sublabel font-medium text-primary-text">{alert.message}</p>
                   {alert.action && (
-                    <div className="mt-4">
-                      <a
-                        href={alert.href}
-                        className="text-sublabel-refined font-medium text-electric hover:text-violet transition-colors"
-                      >
-                        {alert.action} <ArrowRight className="inline h-4 w-4 ml-1" />
-                      </a>
-                    </div>
+                    <button className="mt-2 text-sublabel text-accent hover:text-primary transition-colors">
+                      {alert.action}
+                    </button>
                   )}
                 </div>
               </div>
@@ -293,46 +295,36 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Atividade Recente - PADRONIZADA COM GLASSMORPHISM */}
+      {/* Atividade Recente */}
       {recentActivity.length > 0 && (
-        <div data-testid="dashboard-activity" className="glass-card backdrop-blur-lg p-8">
-          <h2 className="text-header font-medium text-white mb-6">Atividade Recente</h2>
-          <div className="space-y-6">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-3 border-b border-white/20 last:border-0">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    {activity.type === 'lead' ? (
-                      <Users className="h-5 w-5 text-electric" />
-                    ) : (
-                      <DollarSign className="h-5 w-5 text-electric" />
-                    )}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-header font-bold text-primary-text">Atividade Recente</h3>
+            <button className="text-sublabel text-accent hover:text-primary transition-colors">
+              Ver tudo
+            </button>
+          </div>
+          <div className="glass-card p-6">
+            <div className="space-y-4">
+              {recentActivity.slice(0, 5).map((activity, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
+                    <span className="text-sublabel text-primary-text">
+                      {activity.type === 'lead' ? 'Novo lead' : 'Atividade'}: {activity.value}
+                    </span>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sublabel-refined font-medium text-white">
-                      {activity.type === 'lead' ? 'Novo Lead' : 'Investimento'}
-                    </p>
-                    <p className="text-xs text-white/70">
-                      {new Date(activity.timestamp).toLocaleString('pt-BR')}
-                    </p>
-                  </div>
+                  <span className="text-xs text-secondary-text">
+                    {(() => {
+                      const date = new Date(activity.timestamp);
+                      return activity.timestamp && !isNaN(date)
+                        ? formatDistanceToNow(date, { addSuffix: true, locale: ptBR })
+                        : 'Data desconhecida';
+                    })()}
+                  </span>
                 </div>
-                <div className="text-right">
-                  <p className="text-sublabel-refined font-medium text-white">
-                    {activity.type === 'lead' 
-                      ? `${formatNumber(activity.value)} leads`
-                      : formatCurrency(activity.value)
-                    }
-                  </p>
-                  {activity.metadata && (
-                    <p className="text-xs text-white/70">
-                      {activity.metadata.impressions && `${formatNumber(activity.metadata.impressions)} impressões`}
-                      {activity.metadata.clicks && ` • ${formatNumber(activity.metadata.clicks)} cliques`}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -348,13 +340,13 @@ export default function DashboardOverview() {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-header font-semibold text-white">Performance Geral</h3>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
+            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
               7 dias
             </button>
-            <button className="px-3 py-1 text-sublabel-refined bg-electric text-background rounded-md">
+            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
               30 dias
             </button>
-            <button className="px-3 py-1 text-sublabel-refined bg-white/10 text-white rounded-md hover:bg-white/20">
+            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
               90 dias
             </button>
           </div>

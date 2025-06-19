@@ -2,7 +2,7 @@ import { Button } from './button';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { Tooltip } from './tooltip';
 
 interface RefreshButtonProps {
   onRefresh: () => Promise<void>;
@@ -35,29 +35,22 @@ export function RefreshButton({
   };
   
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <Button
-            variant={variant}
-            size={size}
-            onClick={handleRefresh}
-            className={cn(className)}
-            disabled={isRefreshing}
-          >
-            <RefreshCw 
-              className={cn(
-                "h-4 w-4", 
-                isRefreshing && "animate-spin"
-              )} 
-            />
-            <span className="sr-only">{tooltipText}</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p className="text-xs">{tooltipText}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip content={<p className="text-xs">{tooltipText}</p>}>
+      <Button
+        variant={variant}
+        size={size}
+        onClick={handleRefresh}
+        className={cn(className)}
+        disabled={isRefreshing}
+      >
+        <RefreshCw 
+          className={cn(
+            "h-4 w-4", 
+            isRefreshing && "animate-spin"
+          )} 
+        />
+        <span className="sr-only">{tooltipText}</span>
+      </Button>
+    </Tooltip>
   );
 } 

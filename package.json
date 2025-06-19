@@ -13,6 +13,10 @@
     "audit:run": "node scripts/audit-daily.js"
   },
   "dependencies": {
+    "@nivo/bar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@sentry/nextjs": "^9.28.0",
     "@supabase/ssr": "^0.1.0",
@@ -21,6 +25,8 @@
     "@tanstack/react-query-devtools": "^5.80.6",
     "@tanstack/react-virtual": "^3.13.10",
     "axios": "^1.10.0",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.18.1",
     "lucide-react": "^0.511.0",
     "next": "14.2.29",
     "node-cache": "^5.1.2",
