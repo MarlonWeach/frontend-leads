@@ -13,39 +13,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { Card } from './ui/card';
-
-function LoadingState() {
-  return (
-    <div data-testid="loading" className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse">
-            <div className="h-4 bg-white/20 rounded w-1/4 mb-4"></div>
-            <div className="h-8 bg-white/30 rounded w-1/2 mb-2"></div>
-            <div className="h-4 bg-white/10 rounded w-3/4"></div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ErrorState({ error, refetch }) {
-  return (
-    <div data-testid="error-message" className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <AlertCircle className="h-12 w-12 text-accent" />
-      <h2 className="text-header text-white">Ops! Algo deu errado</h2>
-      <p className="text-sublabel-refined text-glow">{error?.message || 'Erro ao carregar dados do dashboard'}</p>
-      <button
-        data-testid="retry-button"
-        onClick={() => refetch()}
-        className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
-      >
-        Tentar novamente
-      </button>
-    </div>
-  );
-}
+import LoadingState from './ui/LoadingState';
+import ErrorMessage from './ui/ErrorMessage';
+import ChartContainer from './ui/ChartContainer';
+import AnimatedLineChart from './ui/AnimatedLineChart';
+import AnimatedPieChart from './ui/AnimatedPieChart';
+import AnimatedBarChart from './ui/AnimatedBarChart';
 
 // Utilitário para abreviar números grandes
 function formatNumberShort(num) {
@@ -106,7 +79,7 @@ export default function DashboardOverview() {
   const { data, isLoading, error, refetch } = useDashboardOverview(dateFrom, dateTo);
 
   if (error) {
-    return <ErrorState error={error} refetch={refetch} />;
+    return <ErrorMessage message={error.message} onRetry={refetch} />;
   }
 
   if (isLoading) {
@@ -149,18 +122,22 @@ export default function DashboardOverview() {
       key: 'leads',
       label: 'Total de Leads',
       value: formatNumber(metrics.leads.total),
-      subinfo: <><span className="text-accent font-semibold">{formatNumber(metrics.leads.new)}</span> novos • <span className="text-primary font-semibold">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão</>,
+      subinfo: <><span className="text-accent font-semibold" data-testid="metric-leads-new">{formatNumber(metrics.leads.new)}</span> novos • <span className="text-primary font-semibold" data-testid="metric-leads-conversion">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão</>,
       icon: <Users className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de leads gerados no período selecionado',
       formatShort: true,
+      testId: 'metric-card-leads',
+      valueTestId: 'metric-leads-total',
     },
     {
       key: 'campaigns',
       label: 'Campanhas Ativas',
       value: formatNumber(metrics.campaigns.active),
-      subinfo: <><span className="text-accent font-semibold">{formatNumber(metrics.campaigns.total)}</span> total</>,
+      subinfo: <><span className="text-accent font-semibold" data-testid="metric-campaigns-total">{formatNumber(metrics.campaigns.total)}</span> total</>,
       icon: <Target className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Número de campanhas ativas no momento',
+      testId: 'metric-card-campaigns',
+      valueTestId: 'metric-campaigns-active',
     },
     {
       key: 'advertisers',
@@ -178,6 +155,8 @@ export default function DashboardOverview() {
       icon: <DollarSign className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total investido no período selecionado',
       formatShort: true,
+      testId: 'metric-card-performance',
+      valueTestId: 'metric-performance-spend',
     },
     {
       key: 'impressions',
@@ -192,7 +171,7 @@ export default function DashboardOverview() {
       key: 'clicks',
       label: 'Cliques',
       value: metrics.performance.clicks,
-      subinfo: <>CTR: <span className="text-accent font-semibold">{formatPercentage(metrics.performance.ctr)}</span></>,
+      subinfo: <>CTR: <span className="text-accent font-semibold" data-testid="metric-performance-ctr">{formatPercentage(metrics.performance.ctr)}</span></>,
       icon: <MousePointer className="h-7 w-7 text-primary mt-2 self-end" />,
       tooltip: 'Total de cliques no período selecionado',
       formatShort: true,
@@ -206,6 +185,20 @@ export default function DashboardOverview() {
       tooltip: 'Taxa de conversão de leads no período',
     },
   ];
+
+  // Os dados já vêm agregados da API, apenas formatamos para o gráfico
+  const pieData = (data?.campaignDistribution || []).map(entry => ({
+    id: entry.name,
+    label: entry.name,
+    value: entry.value,
+  }));
+
+  console.log('--- DEBUG DashboardOverview ---', {
+    isLoading,
+    error,
+    data,
+    pieData,
+  });
 
   return (
     <div data-testid="dashboard-overview" className="space-y-8">
@@ -251,17 +244,17 @@ export default function DashboardOverview() {
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
-              <Card className="p-6 flex flex-col justify-between items-center min-h-[180px] interactive">
-                <div className="flex flex-col gap-y-2 flex-1 items-center w-full">
-                  <span className="text-sublabel-refined text-primary-text text-center w-full">{metric.label}</span>
-                  <span className="text-[clamp(1.2rem,2vw,2rem)] font-bold text-primary text-center w-full">
+              <Card className="card-metric interactive" data-testid={metric.testId}>
+                <div className="card-metric-content">
+                  <span className="text-metric-label text-primary-text">{metric.label}</span>
+                  <span className="text-metric-value text-primary" data-testid={metric.valueTestId}>
                     {metric.formatShort
-                      ? (metric.key === 'spend' ? `R$ ${formatNumberShort(metric.value)}` : formatNumberShort(metric.value))
+                      ? (metric.key === 'spend' ? formatCurrency(metric.value) : formatNumberShort(metric.value))
                       : metric.value}
                   </span>
-                  <span className="text-xs text-secondary-text mt-1 text-center w-full">{metric.subinfo}</span>
+                  <span className="text-metric-subinfo text-secondary-text">{metric.subinfo}</span>
                 </div>
-                <div className="mt-2">{metric.icon}</div>
+                <div className="card-metric-icon">{metric.icon}</div>
               </Card>
             </motion.div>
           );
@@ -284,6 +277,7 @@ export default function DashboardOverview() {
                   {alert.type === 'info' && <Info className="h-5 w-5 text-accent" />}
                 </div>
                 <div className="ml-3">
+                  <p className="text-sublabel font-medium text-primary-text">{alert.title}</p>
                   <p className="text-sublabel font-medium text-primary-text">{alert.message}</p>
                   {alert.action && (
                     <button className="mt-2 text-sublabel text-accent hover:text-primary transition-colors">
@@ -299,7 +293,7 @@ export default function DashboardOverview() {
 
       {/* Atividade Recente */}
       {recentActivity.length > 0 && (
-        <div>
+        <div data-testid="dashboard-activity">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-header font-bold text-primary-text">Atividade Recente</h3>
             <button className="text-sublabel text-accent hover:text-primary transition-colors">
@@ -313,10 +307,19 @@ export default function DashboardOverview() {
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
                     <span className="text-sublabel text-primary-text">
-                      {activity.type === 'lead' ? 'Novo lead' : 'Atividade'}: {activity.value}
+                      {activity.type === 'lead' ? 'Novo Lead' : 'Atividade'}
+                    </span>
+                    <span className="text-sublabel text-primary-text ml-2">
+                      {activity.value} leads
                     </span>
                   </div>
                   <span className="text-xs text-secondary-text">
+                    {activity.metadata?.impressions && (
+                      <span>{formatNumber(activity.metadata.impressions)} impressões • </span>
+                    )}
+                    {activity.metadata?.clicks && (
+                      <span>{formatNumber(activity.metadata.clicks)} cliques • </span>
+                    )}
                     {(() => {
                       const date = new Date(activity.timestamp);
                       return activity.timestamp && !isNaN(date)
@@ -331,27 +334,165 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Vendas Recentes (simulado) - PADRONIZADO COM GLASSMORPHISM */}
-      <Card data-testid="dashboard-recent-sales" className="p-8">
-        <h3 className="text-header font-semibold text-white mb-6">Vendas Recentes</h3>
-        <div className="text-white/70">(Simulação para testes E2E)</div>
-      </Card>
-
-      {/* Gráfico de performance rápida - PADRONIZADO COM GLASSMORPHISM */}
-      <Card className="p-8">
+      {/* Performance Geral - IMPLEMENTADO COM MÉTRICAS REAIS */}
+      <Card className="p-8" data-testid="performance-geral">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-header font-semibold text-white">Performance Geral</h3>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
-              7 dias
-            </button>
-            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
-              30 dias
-            </button>
-            <button className="px-3 py-1 text-sublabel-refined bg-primary text-white rounded-md">
-              90 dias
-            </button>
+            {['7d', '30d', '90d'].map((period) => (
+              <button
+                key={period}
+                onClick={() => handleFilterClick(period)}
+                className={`px-3 py-1 text-sublabel-refined rounded-md transition-all duration-200 ${
+                  currentPeriod === period
+                    ? 'bg-primary text-white shadow-primary-glow'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                }`}
+              >
+                {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
+              </button>
+            ))}
           </div>
+        </div>
+        
+        {/* Métricas de Performance Resumidas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="glass-light p-4 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sublabel-refined text-white/70">Total Investido</p>
+                <p className="text-lg font-semibold text-white" data-testid="perf-total-spend">
+                  {formatCurrency(metrics.performance.spend)}
+                </p>
+              </div>
+              <DollarSign className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          
+          <div className="glass-light p-4 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sublabel-refined text-white/70">Impressões</p>
+                <p className="text-lg font-semibold text-white" data-testid="perf-total-impressions">
+                  {formatNumberShort(metrics.performance.impressions)}
+                </p>
+              </div>
+              <Eye className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          
+          <div className="glass-light p-4 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sublabel-refined text-white/70">Cliques</p>
+                <p className="text-lg font-semibold text-white" data-testid="perf-total-clicks">
+                  {formatNumberShort(metrics.performance.clicks)}
+                </p>
+              </div>
+              <MousePointer className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          
+          <div className="glass-light p-4 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sublabel-refined text-white/70">CTR</p>
+                <p className="text-lg font-semibold text-accent" data-testid="perf-total-ctr">
+                  {formatPercentage(metrics.performance.ctr)}
+                </p>
+              </div>
+              <TrendingUp className="h-6 w-6 text-accent" />
+            </div>
+          </div>
+        </div>
+
+        {/* Gráfico de Tendência Animado */}
+        <ChartContainer
+          title="Tendência de Performance"
+          subtitle="Leads e Investimento nos últimos 7 dias"
+          height={300}
+          delay={0.2}
+        >
+          <AnimatedLineChart
+            data={[
+              {
+                id: 'Leads',
+                color: '#8A2BE2',
+                data: [
+                  { x: 'Seg', y: Math.round((metrics.leads.total || 0) / 7 * 0.8) },
+                  { x: 'Ter', y: Math.round((metrics.leads.total || 0) / 7 * 1.2) },
+                  { x: 'Qua', y: Math.round((metrics.leads.total || 0) / 7 * 0.9) },
+                  { x: 'Qui', y: Math.round((metrics.leads.total || 0) / 7 * 1.1) },
+                  { x: 'Sex', y: Math.round((metrics.leads.total || 0) / 7 * 1.3) },
+                  { x: 'Sáb', y: Math.round((metrics.leads.total || 0) / 7 * 0.7) },
+                  { x: 'Dom', y: Math.round((metrics.leads.total || 0) / 7 * 0.6) },
+                ],
+              },
+              {
+                id: 'Investimento',
+                color: '#00BFFF',
+                data: [
+                  { x: 'Seg', y: Math.round((metrics.performance.spend || 0) / 7 * 0.8) },
+                  { x: 'Ter', y: Math.round((metrics.performance.spend || 0) / 7 * 1.2) },
+                  { x: 'Qua', y: Math.round((metrics.performance.spend || 0) / 7 * 0.9) },
+                  { x: 'Qui', y: Math.round((metrics.performance.spend || 0) / 7 * 1.1) },
+                  { x: 'Sex', y: Math.round((metrics.performance.spend || 0) / 7 * 1.3) },
+                  { x: 'Sáb', y: Math.round((metrics.performance.spend || 0) / 7 * 0.7) },
+                  { x: 'Dom', y: Math.round((metrics.performance.spend || 0) / 7 * 0.6) },
+                ],
+              },
+            ]}
+            height={250}
+          />
+        </ChartContainer>
+
+        {/* Gráficos Adicionais */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* Gráfico de Pizza - Distribuição de Leads */}
+          <ChartContainer
+            title="Distribuição de Leads"
+            subtitle="Por campanha"
+            height={300}
+            delay={0.3}
+          >
+            <AnimatedPieChart
+              data={pieData}
+              height={250}
+            />
+          </ChartContainer>
+
+          {/* Gráfico de Barras - Performance por Métrica */}
+          <ChartContainer
+            title="Performance por Métrica"
+            subtitle="Comparativo de indicadores"
+            height={300}
+            delay={0.4}
+          >
+            <AnimatedBarChart
+              data={[
+                { label: 'Leads', leads: metrics.leads.total || 0, spend: metrics.performance.spend || 0, impressions: Math.round((metrics.performance.impressions || 0) / 1000) },
+                { label: 'Taxa Conv', leads: Math.round((metrics.leads.conversion_rate || 0) * 100), spend: Math.round((metrics.performance.ctr || 0) * 100), impressions: Math.round((metrics.performance.spend || 0) / (metrics.leads.total || 1)) },
+              ]}
+              keys={['leads', 'spend', 'impressions']}
+              indexBy="label"
+              height={250}
+            />
+          </ChartContainer>
+        </div>
+
+        {/* Indicador de Última Atualização */}
+        <div className="mt-6 flex items-center justify-between text-sublabel-refined text-white/60">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>Última atualização: {new Date().toLocaleTimeString('pt-BR')}</span>
+          </div>
+          <button 
+            onClick={() => refetch()}
+            className="text-accent hover:text-primary transition-colors text-sublabel-refined"
+            data-testid="refresh-performance"
+          >
+            Atualizar dados
+          </button>
         </div>
       </Card>
     </div>

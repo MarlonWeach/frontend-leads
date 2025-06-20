@@ -54,11 +54,17 @@ export interface DashboardRecentActivity {
   metadata?: Record<string, any>;
 }
 
+export interface CampaignDistribution {
+  name: string;
+  value: number;
+}
+
 export interface DashboardOverviewResponse {
   metrics: DashboardMetrics;
   recentActivity: DashboardRecentActivity[];
   alerts: DashboardAlert[];
   overviewData: DashboardOverviewData[];
+  campaignDistribution?: CampaignDistribution[];
   cacheInfo?: {
     timestamp: string;
     source: string;

@@ -1,34 +1,30 @@
-import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+'use client';
 
-export function ErrorMessage({ 
-  error, 
-  onRetry, 
-  title = 'Erro',
-  className = '' 
+import React from 'react';
+import { Card } from './card';
+import { AlertCircle } from 'lucide-react';
+
+export default function ErrorMessage({
+  title = "Ops! Algo deu errado",
+  message,
+  onRetry,
 }) {
   return (
-    <div className={`flex flex-col items-center justify-center space-y-6 p-8 ${className}`}>
-      <div className="glass-card backdrop-blur-lg p-6 rounded-2xl border border-white/10">
-        <div className="flex items-center space-x-4">
-          <AlertCircle className="h-8 w-8 text-violet flex-shrink-0" />
-          <div className="flex-1">
-            <h3 className="text-header font-semibold text-white mb-2">{title}</h3>
-            <p className="text-sublabel-refined text-white/80">
-              {error?.message || 'Ocorreu um erro inesperado'}
-            </p>
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className="mt-4 px-4 py-2 bg-electric text-background rounded-xl hover:bg-violet transition-colors flex items-center space-x-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>Tentar novamente</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+    <div data-testid="error-message" className="flex items-center justify-center min-h-[400px]">
+       <Card className="p-8 text-center glass-light border-accent/30 shadow-lg shadow-accent/10">
+        <AlertCircle className="h-12 w-12 text-accent mx-auto mb-4" />
+        <h2 className="text-header text-white mb-2">{title}</h2>
+        {message && <p className="text-sublabel-refined text-glow mb-6">{message}</p>}
+        {onRetry && (
+          <button
+            data-testid="retry-button"
+            onClick={onRetry}
+            className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
+          >
+            Tentar novamente
+          </button>
+        )}
+      </Card>
     </div>
   );
 } 

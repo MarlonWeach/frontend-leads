@@ -19,7 +19,7 @@ const customJestConfig = {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(@supabase|@supabase/.*|@supabase-js|@supabase-js/.*)/)'
+    '/node_modules/(?!(@supabase|@supabase/.*|@supabase-js|@supabase-js/.*|@nivo|d3|d3-.*)/)'
   ],
   globals: {
     'ts-jest': {

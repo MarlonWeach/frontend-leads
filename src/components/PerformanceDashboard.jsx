@@ -108,112 +108,112 @@ const PerformanceDashboard = ({ data }) => {
       {/* Cards de métricas principais */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {/* Investimento Total */}
-        <Card className="p-6 interactive" interactive>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sublabel-refined text-white/70 mb-2">Investimento Total</p>
-              <p className="text-2xl font-bold text-white">
-                {formatCurrency(aggregatedMetrics.totalSpend)}
-              </p>
-            </div>
-            <DollarSign className="h-8 w-8 text-blue-500" />
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">Investimento Total</span>
+            <span className="text-metric-value text-white">
+              {formatCurrency(aggregatedMetrics.totalSpend)}
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              +12.5% vs período anterior
+            </span>
           </div>
-          <div className="flex items-center text-xs text-white/60">
-            <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-            <span>+12.5% vs período anterior</span>
+          <div className="card-metric-icon">
+            <DollarSign className="h-8 w-8 text-blue-500" />
           </div>
         </Card>
 
         {/* Impressões */}
-        <Card className="p-6 interactive" interactive>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sublabel-refined text-white/70 mb-2">Impressões</p>
-              <p className="text-2xl font-bold text-white">
-                {formatNumberShort(aggregatedMetrics.totalImpressions)}
-              </p>
-            </div>
-            <Eye className="h-8 w-8 text-green-500" />
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">Impressões</span>
+            <span className="text-metric-value text-white">
+              {formatNumberShort(aggregatedMetrics.totalImpressions)}
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              +8.2% vs período anterior
+            </span>
           </div>
-          <div className="flex items-center text-xs text-white/60">
-            <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-            <span>+8.2% vs período anterior</span>
+          <div className="card-metric-icon">
+            <Eye className="h-8 w-8 text-green-500" />
           </div>
         </Card>
 
         {/* Cliques */}
-        <Card className="p-6 interactive" interactive>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sublabel-refined text-white/70 mb-2">Cliques</p>
-              <p className="text-2xl font-bold text-white">
-                {formatNumberShort(aggregatedMetrics.totalClicks)}
-              </p>
-            </div>
-            <MousePointer className="h-8 w-8 text-orange-500" />
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">Cliques</span>
+            <span className="text-metric-value text-white">
+              {formatNumberShort(aggregatedMetrics.totalClicks)}
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              CTR: {formatPercentage(aggregatedMetrics.ctr)}
+            </span>
           </div>
-          <div className="flex items-center text-xs text-white/60">
-            <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-            <span>CTR: {formatPercentage(aggregatedMetrics.ctr)}</span>
+          <div className="card-metric-icon">
+            <MousePointer className="h-8 w-8 text-orange-500" />
           </div>
         </Card>
 
         {/* Leads */}
-        <Card className="p-6 interactive" interactive>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sublabel-refined text-white/70 mb-2">Leads Gerados</p>
-              <p className="text-2xl font-bold text-white">
-                {formatNumberShort(aggregatedMetrics.totalLeads)}
-              </p>
-            </div>
-            <Users className="h-8 w-8 text-pink-500" />
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">Leads Gerados</span>
+            <span className="text-metric-value text-white">
+              {formatNumberShort(aggregatedMetrics.totalLeads)}
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              +15.3% vs período anterior
+            </span>
           </div>
-          <div className="flex items-center text-xs text-white/60">
-            <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-            <span>+15.3% vs período anterior</span>
+          <div className="card-metric-icon">
+            <Users className="h-8 w-8 text-pink-500" />
           </div>
         </Card>
       </div>
 
       {/* Métricas secundárias */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 interactive" interactive>
-          <div className="text-center">
-            <p className="text-sublabel-refined text-white/70 mb-3">CPC (Custo por Clique)</p>
-            <p className="text-2xl font-bold text-white">
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">CPC (Custo por Clique)</span>
+            <span className="text-metric-value text-white">
               {formatCurrency(aggregatedMetrics.cpc)}
-            </p>
-            <div className="flex items-center justify-center text-xs text-white/60 mt-2">
-              <TrendingDown className="h-3 w-3 mr-1 text-green-500" />
-              <span>-5.2% vs período anterior</span>
-            </div>
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingDown className="inline h-3 w-3 mr-1 text-green-500" />
+              -5.2% vs período anterior
+            </span>
           </div>
         </Card>
 
-        <Card className="p-6 interactive" interactive>
-          <div className="text-center">
-            <p className="text-sublabel-refined text-white/70 mb-3">CPM (Custo por Mil)</p>
-            <p className="text-2xl font-bold text-white">
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">CPM (Custo por Mil)</span>
+            <span className="text-metric-value text-white">
               {formatCurrency(aggregatedMetrics.cpm)}
-            </p>
-            <div className="flex items-center justify-center text-xs text-white/60 mt-2">
-              <TrendingUp className="h-3 w-3 mr-1 text-orange-500" />
-              <span>+3.1% vs período anterior</span>
-            </div>
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-orange-500" />
+              +3.1% vs período anterior
+            </span>
           </div>
         </Card>
 
-        <Card className="p-6 interactive" interactive>
-          <div className="text-center">
-            <p className="text-sublabel-refined text-white/70 mb-3">Taxa de Conversão</p>
-            <p className="text-2xl font-bold text-white">
+        <Card className="card-metric interactive" interactive="true">
+          <div className="card-metric-content">
+            <span className="text-metric-label text-white/70">Taxa de Conversão</span>
+            <span className="text-metric-value text-white">
               {formatPercentage(aggregatedMetrics.conversionRate)}
-            </p>
-            <div className="flex items-center justify-center text-xs text-white/60 mt-2">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              <span>+2.8% vs período anterior</span>
-            </div>
+            </span>
+            <span className="text-metric-subinfo text-white/60">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              +2.8% vs período anterior
+            </span>
           </div>
         </Card>
       </div>

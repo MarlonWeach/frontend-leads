@@ -13,12 +13,12 @@ This document lists all tasks associated with PBI 17.
 | 17-3 | Refatorar layout base e containers | Done | Containers, cartões e painéis com novo padrão visual |
 | 17-4 | Sidebar minimalista e elegante | Done | Sidebar só com ícones, brilho ao hover, animação de expansão - Acessibilidade corrigida com nova paleta |
 | 17-5 | Cartões interativos e animações | Done | Cartões expansíveis, tooltips fade-in, transições de seção |
-| 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
+| 17-6 | [Gráficos interativos e animados](./17-6.md) | InProgress | Gráficos de barras, pizza e linha animados |
 | 17-7 | [Filtros avançados e UI de seleção](./17-7.md) | Done | Implementar sistema de filtros avançados com glassmorphism |
 | 17-8 | [Glassmorphism e detalhes visuais](./17-8.md) | Done | Aplicar glassmorphism refinado e identidade visual unificada |
-| 17-9 | [Testes de usabilidade e refinamento](./17-9.md) | Review | Validação de usabilidade, microinterações e performance |
-| 17-10 | Responsividade de fontes e encaixe nos cards | Review | Ajustar responsividade real das métricas nos cards, garantir legibilidade e centralização em todos os tamanhos |
-| 17-11 | Atualizar paleta de cores (remover menta, adicionar violeta) | Review | Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. |
+| 17-9 | [Testes de usabilidade e refinamento](./17-9.md) | Done | Validação de usabilidade, microinterações e performance |
+| 17-10 | Responsividade de fontes e encaixe nos cards | Done | Ajustar responsividade real das métricas nos cards, garantir legibilidade e centralização em todos os tamanhos |
+| 17-11 | [Atualizar paleta de cores (remover menta, adicionar violeta)](./17-11.md) | Done | Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. |
 | 17-12 | Aplicar glassmorphism refinado nos cards de métricas | Done | Efeito glassmorphism com blur(12px), bordas e sombras específicas |
 | 17-13 | Padronizar cards de alerta com glassmorphism | Done | Alertas com mesmo padrão visual dos cards superiores |
 | 17-14 | Refinar tipografia com headers e sublabels | Done | Headers com Satoshi bold 28-32px, sublabels com brilho sutil |

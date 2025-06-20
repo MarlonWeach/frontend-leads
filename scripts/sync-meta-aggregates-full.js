@@ -6,10 +6,9 @@ const accountId = process.env.META_ACCOUNT_ID.startsWith('act_') ? process.env.M
 const accessToken = process.env.META_ACCESS_TOKEN;
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-// Configuração de período (últimos 7 dias por padrão)
-const dateTo = new Date();
-const dateFrom = new Date();
-dateFrom.setDate(dateTo.getDate() - 7);
+// Forçar período fixo para debug
+const dateFrom = new Date('2025-06-14T00:00:00Z');
+const dateTo = new Date('2025-06-20T23:59:59Z');
 
 const formatDate = d => d.toISOString().split('T')[0];
 
@@ -31,11 +30,19 @@ async function fetchMetaAggregates(level) {
     'date_stop'
   ];
   
-  const url = `https://graph.facebook.com/v19.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&filtering=[{\"field\":\"ad.effective_status\",\"operator\":\"IN\",\"value\":[\"ACTIVE\"]}]&access_token=${accessToken}`;
+  const url = `https://graph.facebook.com/v23.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&time_increment=1&access_token=${accessToken}`;
   
   console.log(`🔍 Buscando dados de ${level} da Meta API...`);
   const res = await fetch(url);
   const json = await res.json();
+  
+  // Logar o JSON bruto para debug
+  console.log('🟢 JSON bruto da Meta API:', JSON.stringify(json, null, 2));
+  
+  if (json.error) {
+    console.error('❌ Erro na Meta API:', json.error);
+    return [];
+  }
   
   if (!json.data) {
     console.error('❌ Erro ao buscar dados da Meta API:', json);
@@ -67,7 +74,11 @@ async function insertAggregates(level, data) {
   console.log(`📥 Inserindo dados de ${level} no Supabase...`);
   
   const records = data.map(row => {
-    const leads = parseInt((row.actions || []).find(a => a.action_type === 'lead')?.value || 0);
+    let leads = 0;
+    if (Array.isArray(row.actions)) {
+      const leadAction = row.actions.find(a => a.action_type === 'onsite_conversion.lead_grouped');
+      leads = leadAction ? parseInt(leadAction.value) : 0;
+    }
     const clicks = parseInt(row.clicks) || 0;
     const impressions = parseInt(row.impressions) || 0;
     const spend = parseFloat(row.spend) || 0;
@@ -130,7 +141,11 @@ async function validateSync() {
   // Buscar totais da Meta API
   const metaData = await fetchMetaAggregates('campaign');
   const metaTotals = metaData.reduce((acc, row) => {
-    const leads = parseInt((row.actions || []).find(a => a.action_type === 'lead')?.value || 0);
+    let leads = 0;
+    if (Array.isArray(row.actions)) {
+      const leadAction = row.actions.find(a => a.action_type === 'onsite_conversion.lead_grouped');
+      leads = leadAction ? parseInt(leadAction.value) : 0;
+    }
     acc.leads += leads;
     acc.spend += parseFloat(row.spend) || 0;
     acc.impressions += parseInt(row.impressions) || 0;
@@ -138,7 +153,7 @@ async function validateSync() {
     return acc;
   }, { leads: 0, spend: 0, impressions: 0, clicks: 0 });
   
-  console.log('\n📊 Comparação de Totais:');
+  console.log('\n Comparação de Totais:');
   console.log('Supabase:', supabaseTotals);
   console.log('Meta API:', metaTotals);
   
@@ -157,13 +172,35 @@ async function validateSync() {
   return isEqual;
 }
 
+async function updateSyncStatus(status, errorMessage = null) {
+  const { error } = await supabase
+    .from('sync_status')
+    .update({
+      status: status,
+      last_sync_start: status === 'syncing' ? new Date().toISOString() : undefined,
+      last_sync_end: status === 'idle' || status === 'error' ? new Date().toISOString() : undefined,
+      error_message: errorMessage,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', 'meta_leads_sync');
+
+  if (error) {
+    console.error(`❌ Erro ao atualizar status da sincronização para '${status}':`, error);
+  } else {
+    console.log(`✅ Status da sincronização atualizado para '${status}'`);
+  }
+}
+
 async function main() {
   console.log('🚀 Iniciando sincronização FULL de dados agregados');
-  console.log(`📅 Período: ${formatDate(dateFrom)} a ${formatDate(dateTo)}`);
-  console.log(`🏢 Account ID: ${accountId}`);
-  console.log('');
   
   try {
+    await updateSyncStatus('syncing');
+
+    console.log(`📅 Período: ${formatDate(dateFrom)} a ${formatDate(dateTo)}`);
+    console.log(`🏢 Account ID: ${accountId}`);
+    console.log('');
+    
     // 1. Limpar dados existentes
     const cleared = await clearExistingData();
     if (!cleared) {
@@ -187,10 +224,12 @@ async function main() {
     // 3. Validar sincronização
     await validateSync();
     
+    await updateSyncStatus('idle');
     console.log('\n🎉 Sincronização FULL concluída com sucesso!');
     
   } catch (error) {
     console.error('❌ Erro durante sincronização:', error);
+    await updateSyncStatus('error', error.message);
   }
 }
 

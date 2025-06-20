@@ -1,28 +1,9 @@
 'use client';
-
 import React from 'react';
-import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
 import { motion } from 'framer-motion';
 
-// Função para normalizar valores em diferentes escalas
-function normalizeValue(value, min, max) {
-  if (max === min) return 0;
-  return ((value - min) / (max - min)) * 100;
-}
-
-// Função para abreviar números
-function formatNumberShort(num) {
-  if (num === null || num === undefined || isNaN(num)) return '0';
-  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
-  return Math.round(num).toLocaleString('pt-BR');
-}
-
-// Cores do tema
-const DEFAULT_COLORS = ["#2E5FF2", "#8A2BE2", "#F29D35", "#00E6C0"];
-
-const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
+const AnimatedLineChart = ({ data, height = 300 }) => {
   // Tema personalizado para Apple Vision Pro + Baremetrics
   const theme = {
     background: 'transparent',
@@ -97,25 +78,21 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ 
         duration: 0.8, 
-        delay: 0.2,
+        delay: 0.4,
         ease: [0.25, 0.46, 0.45, 0.94] 
       }}
       className="w-full h-full"
       style={{ height }}
     >
-      <ResponsiveBar
+      <ResponsiveLine
         data={data}
-        keys={keys}
-        indexBy={indexBy}
         margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-        padding={0.3}
-        groupMode="grouped"
-        valueScale={{ type: 'linear' }}
-        indexScale={{ type: 'band', round: true }}
-        colors={colors}
-        borderColor={{
-          from: 'color',
-          modifiers: [['darker', 1.6]],
+        xScale={{ type: 'point' }}
+        yScale={{ 
+          type: 'linear', 
+          min: 'auto', 
+          max: 'auto', 
+          stacked: false 
         }}
         axisTop={null}
         axisRight={null}
@@ -125,7 +102,7 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
           tickRotation: 0,
           legend: '',
           legendPosition: 'middle',
-          legendOffset: 32,
+          legendOffset: 36,
         }}
         axisLeft={{
           tickSize: 5,
@@ -135,36 +112,59 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
           legendPosition: 'middle',
           legendOffset: -40,
         }}
-        labelSkipWidth={12}
-        labelSkipHeight={12}
-        labelTextColor={{
-          from: 'color',
-          modifiers: [['darker', 1.6]],
-        }}
+        pointSize={8}
+        pointColor={{ theme: 'background' }}
+        pointBorderWidth={2}
+        pointBorderColor={{ from: 'serieColor' }}
+        pointLabelYOffset={-12}
+        useMesh={true}
+        colors={colors}
+        lineWidth={2}
         theme={theme}
         animate={true}
         motionStiffness={90}
         motionDamping={15}
-        enableLabel={false}
-        tooltip={({ id, value, color, indexValue }) => (
+        enableArea={true}
+        areaOpacity={0.15}
+        areaBlendMode="multiply"
+        enableGridX={false}
+        enableGridY={true}
+        gridYValues={[0, 25, 50, 75, 100]}
+        curve="monotoneX"
+        enablePoints={true}
+        pointSymbol={({ size, color, borderWidth, borderColor }) => (
+          <motion.circle
+            r={size / 2}
+            fill={color}
+            stroke={borderColor}
+            strokeWidth={borderWidth}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ scale: 1.5 }}
+          />
+        )}
+        tooltip={({ point }) => (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
             <div className="flex items-center gap-2 mb-1">
               <div 
                 className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: point.color }}
               />
               <span className="text-white font-medium font-satoshi">
-                {indexValue}
+                {point.serieId}
               </span>
             </div>
             <div className="text-gray-300 text-sm font-satoshi">
-              {id}: <span className="text-white font-semibold">{value}</span>
+              Data: <span className="text-white font-semibold">{point.data.x}</span>
+            </div>
+            <div className="text-gray-300 text-sm font-satoshi">
+              Valor: <span className="text-white font-semibold">{point.data.y}</span>
             </div>
           </div>
         )}
         legends={[
           {
-            dataFrom: 'keys',
             anchor: 'bottom',
             direction: 'row',
             justify: false,
@@ -191,4 +191,4 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
   );
 };
 
-export default AnimatedBarChart;
+export default AnimatedLineChart; 

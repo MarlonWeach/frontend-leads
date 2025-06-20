@@ -9,6 +9,7 @@ import {
   PieChart, Target, Mail, Calendar, FileText, Download
 } from 'lucide-react';
 import { SectionTransition } from './ui/transitions';
+import SyncStatus from './SyncStatus';
 
 const navigation = [
   {
@@ -29,12 +30,7 @@ const navigation = [
     icon: Users,
     description: 'Gestão de leads e conversões'
   },
-  {
-    name: 'Anunciantes',
-    href: '/advertisers',
-    icon: Building2,
-    description: 'Painel por cliente/empresa'
-  },
+
   {
     name: 'Campanhas',
     href: '/campaigns',
@@ -269,6 +265,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
             </div>
 
             <div className="flex items-center space-x-4">
+              <SyncStatus />
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />

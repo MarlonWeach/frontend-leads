@@ -3,32 +3,37 @@
 import { usePerformanceData } from '../../src/hooks/usePerformanceData';
 import PerformanceDashboard from '../../src/components/PerformanceDashboard';
 import MainLayout from '../../src/components/MainLayout';
+import LoadingState from '../../src/components/ui/LoadingState';
+import ErrorMessage from '../../src/components/ui/ErrorMessage';
 
 export default function PerformancePageClient() {
-  const { data, isLoading, error } = usePerformanceData();
+  const { data, isLoading, error, refetch } = usePerformanceData();
 
-  if (error) {
+  const breadcrumbs = [
+    { name: 'Performance', href: '/performance' }
+  ];
+
+  if (isLoading) {
     return (
-      <MainLayout>
-        <div className="text-center text-red-500 py-8">
-          Erro ao carregar dados: {error}
-        </div>
+      <MainLayout title="Performance" breadcrumbs={breadcrumbs}>
+        <LoadingState type="table" />
       </MainLayout>
     );
   }
 
-  if (isLoading) {
+  if (error) {
     return (
-      <MainLayout>
-        <div className="text-center py-8">
-          Carregando...
-        </div>
+      <MainLayout title="Performance" breadcrumbs={breadcrumbs}>
+        <ErrorMessage
+          message={error.message}
+          onRetry={refetch}
+        />
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout>
+    <MainLayout title="Performance" breadcrumbs={breadcrumbs}>
       <PerformanceDashboard data={data} />
     </MainLayout>
   );

@@ -94,10 +94,13 @@
 - **Descrição**: A página de performance não exibe dados reais, apenas um componente de teste.
 - **Solução Sugerida**: Implementar a lógica para buscar e exibir métricas reais de performance, usando dados da tabela `meta_leads` e filtros de período.
 
-### 5. Filtro padrão de ativos em /advertisers
-- **Status**: Aberto
-- **Descrição**: A página de anunciantes (/advertisers) não aplica filtro padrão para exibir apenas anunciantes ativos.
-- **Solução Sugerida**: Adicionar filtro padrão para mostrar apenas anunciantes com status "active" ao carregar a página.
+### 5. Estrutura de Páginas Alinhada com Meta API
+- **Status**: Resolvido
+- **Descrição**: A página /advertisers foi removida por não fazer sentido na estrutura da Meta API.
+- **Solução Implementada**: Removida página desnecessária. A estrutura agora segue o padrão Meta: campaigns → adsets → ads.
+- **Páginas Futuras Necessárias**:
+  - **/adsets**: Listar adsets por campanha com métricas (impressões, cliques, CTR, gastos, leads)
+  - **/ads**: Listar ads individuais com preview de criativos e métricas detalhadas
 
 ### 6. Dados desatualizados ou inexistentes em várias páginas
 - **Status**: Aberto
@@ -128,6 +131,11 @@
   - ✅ Filtro por status ativo em todas as requisições
   - ✅ Tratamento correto de tipos de dados
   - ✅ **Resultado**: Sincronização concluída com sucesso, paridade total alcançada
+
+### Observação Importante sobre Delay da Meta API
+- **Status**: Aberto
+- **Descrição**: Foi identificado que, mesmo solicitando dados para os dias mais recentes (ex: 19/06 e 20/06), a Meta API pode não retornar registros para essas datas imediatamente, apesar de os dados já aparecerem no painel da Meta. Isso pode ser causado por delay de atualização, diferenças de timezone ou limitações internas da API. O Supabase e o frontend estão corretos, mas dependem da disponibilidade dos dados na API da Meta.
+- **Ação Recomendada**: Repetir a sincronização após algumas horas ou no dia seguinte. Se o problema persistir, investigar com suporte da Meta.
 
 ## Próximos Passos
 

@@ -147,10 +147,72 @@ html, body, #__next {
   letter-spacing: 0.5px;
 }
 
+/* 📊 Tipografia responsiva específica para métricas */
+.text-metric-value {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.25rem, 2.5vw, 2.25rem);
+  line-height: clamp(1.5rem, 3vw, 2.5rem);
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.text-metric-label {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  font-size: clamp(0.75rem, 1vw, 0.875rem);
+  line-height: clamp(1rem, 1.25vw, 1.125rem);
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+.text-metric-subinfo {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 400;
+  font-size: clamp(0.65rem, 0.875vw, 0.75rem);
+  line-height: clamp(0.875rem, 1vw, 1rem);
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  opacity: 0.8;
+}
+
 /* 🎯 Utilitários para responsividade de cards */
 .card-responsive {
   padding: clamp(1.25rem, 2vw, 1.75rem);
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.card-metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  min-height: clamp(160px, 20vw, 180px);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  gap: clamp(0.5rem, 1vw, 0.75rem);
+}
+
+.card-metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.25rem, 0.5vw, 0.5rem);
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+.card-metric-icon {
+  margin-top: clamp(0.5rem, 1vw, 0.75rem);
+  flex-shrink: 0;
 }
 
 /* 🌟 Efeitos de hover refinados com nova paleta */

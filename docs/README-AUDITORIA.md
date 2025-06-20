@@ -202,3 +202,9 @@ Os principais tokens de design definidos em `tailwind.config.js` para o novo lay
 ```
 
 Consulte o arquivo `tailwind.config.js` para a lista completa e atualizada de tokens. 
+
+Para visualizar rapidamente as diferenças entre as duas pastas, recomendo rodar o comando abaixo diretamente no seu terminal (ele mostrará as 50 primeiras diferenças):
+
+```sh
+diff -qr . ~/Library/Mobile\ Documents/com~apple~CloudDocs/Downloads/frontend-leads-main | head -n 50
+``` 

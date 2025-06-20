@@ -1,23 +1,37 @@
-import React from 'react';
+'use client';
 
-export function LoadingState({ 
-  message = 'Carregando...', 
-  size = 'default',
-  className = '' 
-}) {
-  const sizes = {
-    sm: 'h-4 w-4',
-    default: 'h-8 w-8',
-    lg: 'h-12 w-12',
-    xl: 'h-16 w-16'
-  };
+import React from 'react';
+import { Card } from './card';
+
+export default function LoadingState({ type = 'metrics' }) {
+  if (type === 'table') {
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i} className="p-4 animate-pulse">
+            <div className="flex justify-between items-center">
+              <div className="h-6 bg-white/20 rounded w-1/4"></div>
+              <div className="h-6 bg-white/20 rounded w-1/6"></div>
+              <div className="h-6 bg-white/20 rounded w-1/6"></div>
+              <div className="h-6 bg-white/20 rounded w-1/6"></div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
-      <div className={`${sizes[size]} animate-spin rounded-full border-2 border-electric border-t-transparent`} />
-      {message && (
-        <p className="text-sublabel-refined text-white/70 text-center">{message}</p>
-      )}
+    <div data-testid="loading" className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="p-6 animate-pulse">
+            <div className="h-4 bg-white/20 rounded w-1/4 mb-4"></div>
+            <div className="h-8 bg-white/30 rounded w-1/2 mb-2"></div>
+            <div className="h-4 bg-white/10 rounded w-3/4"></div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 } 

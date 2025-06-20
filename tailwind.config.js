@@ -82,6 +82,22 @@ module.exports = {
           textShadow: '0 0 2px rgba(245, 247, 250, 0.1)',
           letterSpacing: '0.5px'
         }],
+        'metric-value': ['clamp(1.25rem, 2.5vw, 2.25rem)', { 
+          lineHeight: 'clamp(1.5rem, 3vw, 2.5rem)', 
+          fontWeight: '700',
+          textAlign: 'center'
+        }],
+        'metric-label': ['clamp(0.75rem, 1vw, 0.875rem)', { 
+          lineHeight: 'clamp(1rem, 1.25vw, 1.125rem)', 
+          fontWeight: '500',
+          textAlign: 'center'
+        }],
+        'metric-subinfo': ['clamp(0.65rem, 0.875vw, 0.75rem)', { 
+          lineHeight: 'clamp(0.875rem, 1vw, 1rem)', 
+          fontWeight: '400',
+          textAlign: 'center',
+          opacity: '0.8'
+        }],
       },
       // 📱 Responsividade de espaçamento
       spacing: {
