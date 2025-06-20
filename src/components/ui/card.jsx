@@ -1,72 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
+import { cn } from '../../lib/utils';
 
-export function Card({ 
-  className = '', 
-  interactive = false, 
-  expanded = false,
-  onToggle,
-  children,
-  variant = 'default', // 'default', 'strong', 'light'
+const Card = React.forwardRef(({ 
+  className, 
+  variant = 'default', 
+  children, 
   ...props 
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
-
-  const handleMouseEnter = () => {
-    if (interactive) setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (interactive) setIsHovered(false);
-  };
-
-  const handleClick = () => {
-    if (interactive && onToggle) {
-      onToggle(!expanded);
-    }
-  };
-
-  const handleMouseDown = () => {
-    if (interactive) setIsPressed(true);
-  };
-
-  const handleMouseUp = () => {
-    if (interactive) setIsPressed(false);
-  };
-
-  // Variantes de glassmorphism
+}, ref) => {
+  const baseClasses = 'glass-card rounded-2xl p-6 transition-all duration-300';
+  
   const variants = {
     light: 'glass-light',
-    default: 'glass-medium glass-hover glass-highlight',
-    strong: 'glass-strong glass-highlight'
+    default: 'glass-medium',
+    strong: 'glass-strong',
   };
-
-  const baseClasses = `
-    ${variants[variant]} rounded-2xl
-    text-white transition-all duration-500 ease-out
-    border border-white/10
-    ${interactive ? 'cursor-pointer transform-gpu' : ''}
-    ${interactive && isHovered ? 'scale-[1.02] shadow-2xl border-primary/30 glass-strong' : ''}
-    ${interactive && isPressed ? 'scale-[0.98]' : ''}
-    ${expanded ? 'ring-2 ring-primary/50 shadow-primary-glow' : ''}
-  `;
 
   return (
     <div
-      className={`${baseClasses} ${className}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      ref={ref}
+      className={cn(
+        baseClasses,
+        variants[variant],
+        className
+      )}
       {...props}
     >
       {children}
     </div>
   );
-}
+});
+
+Card.displayName = 'Card';
+
+export { Card };
 
 export function CardHeader({ className = '', children, ...props }) {
   return (

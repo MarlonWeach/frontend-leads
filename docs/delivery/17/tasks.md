@@ -16,7 +16,7 @@ This document lists all tasks associated with PBI 17.
 | 17-6 | Gráficos interativos e animados | Proposed | Gráficos de barras, pizza e linha animados |
 | 17-7 | [Filtros avançados e UI de seleção](./17-7.md) | Done | Implementar sistema de filtros avançados com glassmorphism |
 | 17-8 | [Glassmorphism e detalhes visuais](./17-8.md) | Done | Aplicar glassmorphism refinado e identidade visual unificada |
-| 17-9 | Testes de usabilidade e refinamento | Proposed | Validação em dispositivos, microinterações e performance |
+| 17-9 | [Testes de usabilidade e refinamento](./17-9.md) | Review | Validação de usabilidade, microinterações e performance |
 | 17-10 | Responsividade de fontes e encaixe nos cards | Review | Ajustar responsividade real das métricas nos cards, garantir legibilidade e centralização em todos os tamanhos |
 | 17-11 | Atualizar paleta de cores (remover menta, adicionar violeta) | Review | Garantir aplicação correta da cor violeta (#8A2BE2) como acento em títulos, métricas, botões ou elementos de destaque. Corrigir textos em preto ou branco puro para tons adequados ao dark mode e garantir contraste. |
 | 17-12 | Aplicar glassmorphism refinado nos cards de métricas | Done | Efeito glassmorphism com blur(12px), bordas e sombras específicas |

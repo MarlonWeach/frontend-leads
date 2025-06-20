@@ -16,7 +16,7 @@ import { Card } from './ui/card';
 
 function LoadingState() {
   return (
-    <div className="space-y-8">
+    <div data-testid="loading" className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="p-6 animate-pulse">
