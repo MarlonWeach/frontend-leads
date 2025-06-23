@@ -32,19 +32,11 @@ function formatNumberShort(num) {
 }
 
 export default function DashboardOverview() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [dateFrom, setDateFrom] = useState(null);
-  const [dateTo, setDateTo] = useState(null);
+  const router = useRouter();
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [currentPeriod, setCurrentPeriod] = useState('30d');
-
-  // Initialize dates from URL or set default
-  useEffect(() => {
-    const period = searchParams.get('period') || '30d';
-    setCurrentPeriod(period);
-    applyDateFilter(period);
-  }, [searchParams]);
 
   const applyDateFilter = useCallback((period) => {
     const endDate = new Date();
@@ -69,6 +61,12 @@ export default function DashboardOverview() {
     setDateFrom(startDate.toISOString());
     setDateTo(endDate.toISOString());
   }, []);
+
+  useEffect(() => {
+    const period = searchParams.get('period') || '30d';
+    setCurrentPeriod(period);
+    applyDateFilter(period);
+  }, [searchParams, applyDateFilter]);
 
   const handleFilterClick = useCallback((preset) => {
     setCurrentPeriod(preset);

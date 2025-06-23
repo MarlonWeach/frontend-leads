@@ -29,17 +29,10 @@ function CampaignsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [selectedPeriod, setSelectedPeriod] = useState('7d');
-  const [statusFilter, setStatusFilter] = useState('active');
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
-
-  // Initialize dates from URL or set default
-  useEffect(() => {
-    const period = searchParams.get('period') || '7d';
-    setSelectedPeriod(period);
-    applyDateFilter(period);
-  }, [searchParams]);
+  const [selectedPeriod, setSelectedPeriod] = useState('7d');
+  const [statusFilter, setStatusFilter] = useState('active');
 
   const applyDateFilter = useCallback((period) => {
     // Usar timezone brasileiro (UTC-3) para cálculos corretos
@@ -98,6 +91,12 @@ function CampaignsPage() {
     setDateFrom(startUTC.toISOString());
     setDateTo(endUTC.toISOString());
   }, []);
+
+  useEffect(() => {
+    const period = searchParams.get('period') || '7d';
+    setSelectedPeriod(period);
+    applyDateFilter(period);
+  }, [searchParams, applyDateFilter]);
 
   const handleFilterClick = useCallback((preset) => {
     setSelectedPeriod(preset);

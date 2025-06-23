@@ -22,6 +22,7 @@ export interface MetaAdset {
   targeting: any;
   optimization_goal: string;
   billing_event: string;
+  insights?: MetaAdsetInsights[];
 }
 
 export interface MetaAdsetInsights {

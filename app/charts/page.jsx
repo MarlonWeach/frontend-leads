@@ -1,10 +1,15 @@
 'use client';
 import ChartsDemo from '../../src/components/ui/ChartsDemo';
+import MainLayout from '../../src/components/MainLayout';
 
 export default function ChartsPage() {
+  const breadcrumbs = [
+    { name: 'Gráficos', href: '/charts' }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <MainLayout title="Gráficos" breadcrumbs={breadcrumbs}>
       <ChartsDemo />
-    </div>
+    </MainLayout>
   );
 } 

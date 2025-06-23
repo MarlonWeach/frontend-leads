@@ -11,6 +11,7 @@ export interface SyncStatus {
     endTime: string;
     durationMs: number;
     retryCount?: number;
+    message?: string;
   };
 }
 
@@ -23,7 +24,7 @@ export interface SyncOptions {
 
 export interface SyncResult {
   status: SyncStatus;
-  ads: MetaAd[];
+  data?: any;
 }
 
 export interface SyncError extends Error {

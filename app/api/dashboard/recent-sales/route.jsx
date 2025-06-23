@@ -8,22 +8,7 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Primeiro, buscar anúncios ativos
-    const { data: activeAds, error: adsError } = await supabase
-      .from('ads')
-      .select('id')
-      .eq('status', 'ACTIVE');
-    
-    if (adsError) throw adsError;
-    
-    const activeAdIds = (activeAds || []).map(ad => ad.id).filter(Boolean);
-    
-    // Se não houver anúncios ativos, retornar dados vazios
-    if (activeAdIds.length === 0) {
-      return NextResponse.json([]);
-    }
-    
-    // Buscar leads associados a anúncios ativos
+    // Buscar leads diretamente da tabela meta_leads
     const { data: metaLeads, error: metaLeadsError } = await supabase
       .from('meta_leads')
       .select(`
@@ -33,7 +18,7 @@ export async function GET() {
         spend, 
         created_time
       `)
-      .in('ad_id', activeAdIds)
+      .not('lead_count', 'is', null)
       .order('created_time', { ascending: false })
       .limit(5);
     

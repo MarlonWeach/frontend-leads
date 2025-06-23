@@ -2,7 +2,6 @@ import React from 'react';
 import '../styles/globals.css'
 import { Inter } from 'next/font/google'
 import { QueryProvider } from '../src/providers/query-provider'
-import MainLayout from '../src/components/MainLayout';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,9 +19,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`bg-gray-50 ${inter.className}`}>
         <QueryProvider enableDevtools={process.env.NODE_ENV === 'development'}>
-          <MainLayout>
-            {children}
-          </MainLayout>
+          {children}
         </QueryProvider>
         {/* Registrar Service Worker */}
         <script
