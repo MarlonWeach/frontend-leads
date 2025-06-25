@@ -1,0 +1,50 @@
+name: Sync Dados Meta e Supabase 3x ao dia
+
+on:
+  schedule:
+    - cron: '0 12,15,19 * * *'  # 9h, 12h, 16h horário de Brasília (UTC-3)
+  workflow_dispatch:
+
+jobs:
+  sync-dados:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      META_ACCOUNT_ID: ${{ secrets.META_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync campaigns
+        run: node scripts/sync-campaigns-once.js
+
+      - name: Sync adsets
+        run: node scripts/sync-adsets-once.js
+
+      - name: Sync ads (criativos)
+        run: node scripts/update-ad-creatives.js
+
+      - name: Sync adset insights
+        run: node scripts/sync-adset-insights.js
+
+      - name: Sync ad insights
+        run: node scripts/sync-ad-insights.js
+
+      - name: Sync meta leads
+        run: node scripts/import-meta-leads.js
+
+      - name: Log success
+        if: success()
+        run: echo "✅ Sincronização concluída com sucesso em $(date)" 
