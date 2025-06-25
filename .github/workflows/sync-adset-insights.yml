@@ -1,0 +1,75 @@
+name: Sync Adset Insights Daily
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Executa todos os dias às 6h da manhã (horário de São Paulo)
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  sync-adset-insights:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      META_ACCOUNT_ID: ${{ secrets.META_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync adset insights for last 7 days
+        run: |
+          echo "🚀 Iniciando sincronização de insights de adsets..."
+          
+          # Calcular datas (últimos 7 dias)
+          END_DATE=$(date -d "yesterday" +%Y-%m-%d)
+          START_DATE=$(date -d "7 days ago" +%Y-%m-%d)
+          
+          echo "📅 Sincronizando dados de $START_DATE até $END_DATE"
+          
+          node scripts/sync-adset-insights.js --start-date $START_DATE --end-date $END_DATE
+        continue-on-error: true
+
+      - name: Verify data sync
+        run: |
+          echo "🔍 Verificando dados sincronizados..."
+          
+          # Calcular datas para verificação
+          END_DATE=$(date -d "yesterday" +%Y-%m-%d)
+          START_DATE=$(date -d "7 days ago" +%Y-%m-%d)
+          
+          node scripts/sync-adset-insights.js --check-data --start-date $START_DATE --end-date $END_DATE
+        continue-on-error: true
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run_id = context.runId;
+            const run_url = `https://github.com/${owner}/${repo}/actions/runs/${run_id}`;
+            
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: '❌ Falha na sincronização de insights de adsets',
+              body: `A sincronização diária de insights de adsets falhou. Verifique os logs em: ${run_url}`,
+              labels: ['sync-error', 'adset-insights']
+            });
+
+      - name: Log success
+        if: success()
+        run: |
+          echo "✅ Sincronização de insights de adsets concluída com sucesso em $(date)"
+          echo "📊 Dados atualizados para a página de performance" 
