@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-const fetchAdsets = async ({ campaignId, startDate, endDate, status, hasImpressions }) => {
+const fetchAdsets = async ({ campaignId, startDate, endDate, status, limit = 100 }) => {
   try {
+    console.log('useAdsetsData: Fazendo requisição para API', { campaignId, startDate, endDate, status, limit });
+    
     const response = await fetch('/api/meta/adsets', {
       method: 'POST',
       headers: {
@@ -13,18 +15,25 @@ const fetchAdsets = async ({ campaignId, startDate, endDate, status, hasImpressi
         startDate,
         endDate,
         status,
-        hasImpressions
+        limit
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Erro ao buscar adsets: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Erro ao buscar adsets: ${response.status} - ${errorData.details || errorData.error || 'Erro desconhecido'}`);
     }
 
     const data = await response.json();
+    console.log('useAdsetsData: Dados recebidos', { 
+      count: data.adsets?.length || 0, 
+      responseTime: data.meta?.responseTime,
+      filters: data.meta?.filters 
+    });
+    
     return data.adsets || [];
   } catch (error) {
-    console.error('Erro ao buscar adsets:', error);
+    console.error('useAdsetsData: Erro ao buscar adsets:', error);
     throw error;
   }
 };
@@ -34,7 +43,7 @@ export const useAdsetsData = ({
   startDate = null, 
   endDate = null,
   status = null,
-  hasImpressions = true // Por padrão, mostrar apenas adsets com impressões nos últimos 30 dias
+  limit = 100
 } = {}) => {
   const [adsets, setAdsets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,20 +54,24 @@ export const useAdsetsData = ({
     data: adsetsData,
     isLoading,
     error: queryError,
-    refetch
+    refetch,
+    isFetching
   } = useQuery({
-    queryKey: ['adsets', campaignId, startDate, endDate, status, hasImpressions],
-    queryFn: () => fetchAdsets({ campaignId, startDate, endDate, status, hasImpressions }),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    retry: 2,
+    queryKey: ['adsets', campaignId, startDate, endDate, status, limit],
+    queryFn: () => fetchAdsets({ campaignId, startDate, endDate, status, limit }),
+    staleTime: 2 * 60 * 1000, // 2 minutos (dados podem mudar frequentemente)
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Atualizar estado local quando os dados mudarem
   useEffect(() => {
     if (adsetsData) {
       setAdsets(adsetsData);
+      console.log('useAdsetsData: Estado atualizado', { count: adsetsData.length });
     }
   }, [adsetsData]);
 
@@ -69,45 +82,40 @@ export const useAdsetsData = ({
   useEffect(() => {
     if (queryError) {
       setError(queryError);
+      console.error('useAdsetsData: Erro do React Query:', queryError);
     }
   }, [queryError]);
 
   // Função para atualizar manualmente
   const refreshAdsets = async () => {
     try {
+      console.log('useAdsetsData: Atualização manual solicitada');
       setLoading(true);
       setError(null);
       await refetch();
     } catch (err) {
       setError(err);
+      console.error('useAdsetsData: Erro na atualização manual:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Calcular métricas agregadas
+  // Calcular métricas agregadas dos dados já agregados da API
   const aggregatedMetrics = adsets.reduce((acc, adset) => {
-    const insights = adset.insights || [];
-    const totalInsights = insights.reduce((sum, insight) => ({
-      spend: sum.spend + (insight.spend || 0),
-      impressions: sum.impressions + (insight.impressions || 0),
-      clicks: sum.clicks + (insight.clicks || 0),
-      results: sum.results + (insight.results || 0),
-    }), { spend: 0, impressions: 0, clicks: 0, results: 0 });
-
     return {
       totalAdsets: acc.totalAdsets + 1,
-      totalSpend: acc.totalSpend + totalInsights.spend,
-      totalImpressions: acc.totalImpressions + totalInsights.impressions,
-      totalClicks: acc.totalClicks + totalInsights.clicks,
-      totalResults: acc.totalResults + totalInsights.results,
+      totalSpend: acc.totalSpend + (parseFloat(adset.spend) || 0),
+      totalImpressions: acc.totalImpressions + (parseInt(adset.impressions) || 0),
+      totalClicks: acc.totalClicks + (parseInt(adset.clicks) || 0),
+      totalLeads: acc.totalLeads + (parseInt(adset.leads) || 0),
     };
   }, {
     totalAdsets: 0,
     totalSpend: 0,
     totalImpressions: 0,
     totalClicks: 0,
-    totalResults: 0,
+    totalLeads: 0,
   });
 
   // Calcular métricas derivadas
@@ -123,17 +131,18 @@ export const useAdsetsData = ({
       ? (aggregatedMetrics.spend / aggregatedMetrics.impressions) * 1000 
       : 0,
     conversionRate: aggregatedMetrics.clicks > 0 
-      ? (aggregatedMetrics.results / aggregatedMetrics.clicks) * 100 
+      ? (aggregatedMetrics.totalLeads / aggregatedMetrics.clicks) * 100 
       : 0,
   };
 
   return {
     adsets,
-    loading,
+    loading: loading || isFetching,
     error,
     metrics,
     refreshAdsets,
     refetch,
+    isFetching,
   };
 };
 

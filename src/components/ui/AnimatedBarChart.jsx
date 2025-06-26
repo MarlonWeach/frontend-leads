@@ -23,6 +23,54 @@ function formatNumberShort(num) {
 const DEFAULT_COLORS = ["#2E5FF2", "#8A2BE2", "#F29D35", "#00E6C0"];
 
 const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
+  // Verificar se os dados são válidos
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado disponível</p>
+      </div>
+    );
+  }
+
+  // Verificar se as chaves são válidas
+  if (!keys || !Array.isArray(keys) || keys.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Configuração de chaves inválida</p>
+      </div>
+    );
+  }
+
+  // Filtrar dados com valores válidos
+  const validData = data.filter(item => 
+    item && 
+    keys.some(key => 
+      typeof item[key] === 'number' && 
+      !isNaN(item[key]) && 
+      item[key] >= 0
+    )
+  );
+
+  if (validData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado válido para exibir</p>
+      </div>
+    );
+  }
+
+  // Verificar se há pelo menos um valor maior que zero
+  const hasValidValues = validData.some(item => 
+    keys.some(key => item[key] > 0)
+  );
+  if (!hasValidValues) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum valor positivo para exibir</p>
+      </div>
+    );
+  }
+
   // Tema personalizado para Apple Vision Pro + Baremetrics
   const theme = {
     background: 'transparent',
@@ -104,7 +152,7 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
       style={{ height }}
     >
       <ResponsiveBar
-        data={data}
+        data={validData}
         keys={keys}
         indexBy={indexBy}
         margin={{ top: 20, right: 20, bottom: 50, left: 60 }}

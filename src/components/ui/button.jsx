@@ -1,12 +1,12 @@
 import React from 'react';
 
-export function Button({ 
+const Button = React.forwardRef(function Button({ 
   children, 
   variant = 'default', 
   size = 'default', 
   className = '', 
   ...props 
-}) {
+}, ref) {
   const baseClasses = 'inline-flex items-center justify-center rounded-2xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-electric focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
@@ -26,8 +26,10 @@ export function Button({
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
   
   return (
-    <button className={classes} {...props}>
+    <button ref={ref} className={classes} {...props}>
       {children}
     </button>
   );
-} 
+});
+
+export default Button; 

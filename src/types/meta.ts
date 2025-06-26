@@ -100,4 +100,31 @@ export interface MetaAdsServiceConfig {
   baseUrl?: string;
   retryAttempts?: number;
   retryDelay?: number;
+}
+
+export interface DbCampaign {
+  id: string;
+  name: string;
+  status: string;
+  objective: string | null;
+  created_at: string;
+  advertiser_id: string | null;
+  daily_budget: string;
+  budget: string;
+  spend: string;
+  impressions: string;
+  clicks: string;
+  updated_at: string;
+  leads: string;
+  data_start_date: string | null;
+  data_end_date: string | null;
+  sync_date: string | null;
+  meta_campaign_id?: string | null;
+  account_id?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  currency?: string | null;
+  adset_count?: number | null;
+  ad_count?: number | null;
+  last_meta_sync?: string | null;
 } 

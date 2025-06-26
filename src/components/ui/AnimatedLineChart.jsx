@@ -3,7 +3,57 @@ import React from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { motion } from 'framer-motion';
 
+// Função para abreviar números
+function formatNumberShort(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  return Math.round(num).toLocaleString('pt-BR');
+}
+
 const AnimatedLineChart = ({ data, height = 300 }) => {
+  // Verificar se os dados são válidos
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado disponível</p>
+      </div>
+    );
+  }
+
+  // Filtrar dados com valores válidos
+  const validData = data.filter(series => 
+    series && 
+    Array.isArray(series.data) && 
+    series.data.length > 0 &&
+    series.data.some(point => 
+      point && 
+      typeof point.y === 'number' && 
+      !isNaN(point.y)
+    )
+  );
+
+  if (validData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado válido para exibir</p>
+      </div>
+    );
+  }
+
+  // Verificar se há pelo menos um valor maior que zero
+  const hasValidValues = validData.some(series => 
+    series.data.some(point => point.y > 0)
+  );
+  if (!hasValidValues) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum valor positivo para exibir</p>
+      </div>
+    );
+  }
+
   // Tema personalizado para Apple Vision Pro + Baremetrics
   const theme = {
     background: 'transparent',
@@ -70,6 +120,9 @@ const AnimatedLineChart = ({ data, height = 300 }) => {
     '#00CED1', // Azul turquesa
     '#9370DB', // Violeta médio
     '#4169E1', // Azul royal
+    '#FF6B6B', // Vermelho coral
+    '#4ECDC4', // Verde menta
+    '#45B7D1', // Azul claro
   ];
 
   return (
@@ -85,65 +138,70 @@ const AnimatedLineChart = ({ data, height = 300 }) => {
       style={{ height }}
     >
       <ResponsiveLine
-        data={data}
-        margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+        data={validData}
+        margin={{ top: 20, right: 110, bottom: 50, left: 60 }}
         xScale={{ type: 'point' }}
-        yScale={{ 
-          type: 'linear', 
-          min: 'auto', 
-          max: 'auto', 
-          stacked: false 
+        yScale={{
+          type: 'linear',
+          min: 'auto',
+          max: 'auto',
+          stacked: false,
+          reverse: false,
         }}
+        yFormat=" >-.0f"
         axisTop={null}
         axisRight={null}
         axisBottom={{
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: '',
-          legendPosition: 'middle',
+          legend: 'Período',
           legendOffset: 36,
+          legendPosition: 'middle',
         }}
         axisLeft={{
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: '',
-          legendPosition: 'middle',
+          legend: 'Valor',
           legendOffset: -40,
+          legendPosition: 'middle',
         }}
-        pointSize={8}
+        pointSize={10}
         pointColor={{ theme: 'background' }}
         pointBorderWidth={2}
         pointBorderColor={{ from: 'serieColor' }}
         pointLabelYOffset={-12}
         useMesh={true}
-        colors={colors}
-        lineWidth={2}
+        legends={[
+          {
+            anchor: 'bottom-right',
+            direction: 'column',
+            justify: false,
+            translateX: 100,
+            translateY: 0,
+            itemsSpacing: 0,
+            itemDirection: 'left-to-right',
+            itemWidth: 80,
+            itemHeight: 20,
+            symbolSize: 12,
+            symbolShape: 'circle',
+            symbolBorderColor: 'rgba(0, 0, 0, .5)',
+            effects: [
+              {
+                on: 'hover',
+                style: {
+                  itemBackground: 'rgba(0, 0, 0, .03)',
+                  itemOpacity: 1,
+                },
+              },
+            ],
+          },
+        ]}
         theme={theme}
         animate={true}
         motionStiffness={90}
         motionDamping={15}
-        enableArea={true}
-        areaOpacity={0.15}
-        areaBlendMode="multiply"
-        enableGridX={false}
-        enableGridY={true}
-        gridYValues={[0, 25, 50, 75, 100]}
-        curve="monotoneX"
-        enablePoints={true}
-        pointSymbol={({ size, color, borderWidth, borderColor }) => (
-          <motion.circle
-            r={size / 2}
-            fill={color}
-            stroke={borderColor}
-            strokeWidth={borderWidth}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.3 }}
-            whileHover={{ scale: 1.5 }}
-          />
-        )}
         tooltip={({ point }) => (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
             <div className="flex items-center gap-2 mb-1">
@@ -156,36 +214,13 @@ const AnimatedLineChart = ({ data, height = 300 }) => {
               </span>
             </div>
             <div className="text-gray-300 text-sm font-satoshi">
-              Data: <span className="text-white font-semibold">{point.data.x}</span>
+              Período: <span className="text-white font-semibold">{point.data.x}</span>
             </div>
             <div className="text-gray-300 text-sm font-satoshi">
-              Valor: <span className="text-white font-semibold">{point.data.y}</span>
+              Valor: <span className="text-white font-semibold">{formatNumberShort(point.data.y)}</span>
             </div>
           </div>
         )}
-        legends={[
-          {
-            anchor: 'bottom',
-            direction: 'row',
-            justify: false,
-            translateX: 0,
-            translateY: 50,
-            itemsSpacing: 2,
-            itemWidth: 100,
-            itemHeight: 20,
-            itemDirection: 'left-to-right',
-            itemOpacity: 0.85,
-            symbolSize: 20,
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemOpacity: 1,
-                },
-              },
-            ],
-          },
-        ]}
       />
     </motion.div>
   );

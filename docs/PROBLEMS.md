@@ -137,6 +137,9 @@
 - **Descrição**: Foi identificado que, mesmo solicitando dados para os dias mais recentes (ex: 19/06 e 20/06), a Meta API pode não retornar registros para essas datas imediatamente, apesar de os dados já aparecerem no painel da Meta. Isso pode ser causado por delay de atualização, diferenças de timezone ou limitações internas da API. O Supabase e o frontend estão corretos, mas dependem da disponibilidade dos dados na API da Meta.
 - **Ação Recomendada**: Repetir a sincronização após algumas horas ou no dia seguinte. Se o problema persistir, investigar com suporte da Meta.
 
+## Observação Técnica Importante
+- Ao buscar insights diários da Meta API para um adset, o objeto retornado NÃO inclui os campos de identificação (`adset_id`, `adset_name`, `campaign_id`, etc). É obrigatório injetar manualmente esses campos no momento do processamento, usando o contexto do adset no loop principal do script de sincronização.
+
 ## Próximos Passos
 
 1. **Testes**

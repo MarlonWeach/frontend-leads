@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   BarChart3, TrendingUp, Target, Layers, Settings, Menu, X,
-  Home, Users, Building2, FileText, Download, User, LogOut, HelpCircle
+  Home, Users, Building2, FileText, Download, User, LogOut, HelpCircle, Image
 } from 'lucide-react';
 import SyncStatus from './SyncStatus';
 
@@ -33,6 +33,12 @@ const navigation = [
     href: '/adsets',
     icon: Layers,
     description: 'Conjuntos de anúncios'
+  },
+  {
+    name: 'Ads',
+    href: '/ads',
+    icon: Image,
+    description: 'Anúncios individuais'
   },
   {
     name: 'Leads',

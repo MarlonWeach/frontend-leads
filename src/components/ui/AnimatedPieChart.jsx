@@ -3,7 +3,51 @@ import React from 'react';
 import { ResponsivePie } from '@nivo/pie';
 import { motion } from 'framer-motion';
 
+// Função para abreviar números
+function formatNumberShort(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  return Math.round(num).toLocaleString('pt-BR');
+}
+
 const AnimatedPieChart = ({ data, height = 300 }) => {
+  // Verificar se os dados são válidos
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado disponível</p>
+      </div>
+    );
+  }
+
+  // Filtrar dados com valores válidos
+  const validData = data.filter(item => 
+    item && 
+    typeof item.value === 'number' && 
+    !isNaN(item.value) && 
+    item.value > 0
+  );
+
+  if (validData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum dado válido para exibir</p>
+      </div>
+    );
+  }
+
+  // Verificar se há pelo menos um valor maior que zero
+  const hasValidValues = validData.some(item => item.value > 0);
+  if (!hasValidValues) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <p>Nenhum valor positivo para exibir</p>
+      </div>
+    );
+  }
+
   // Tema personalizado para Apple Vision Pro + Baremetrics
   const theme = {
     background: 'transparent',
@@ -38,7 +82,7 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
     '#9370DB', // Violeta médio
     '#4169E1', // Azul royal
     '#FF6B6B', // Vermelho coral
-    '#4ECDC4', // Verde água
+    '#4ECDC4', // Verde menta
     '#45B7D1', // Azul claro
   ];
 
@@ -55,7 +99,7 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
       style={{ height }}
     >
       <ResponsivePie
-        data={data}
+        data={validData}
         margin={{ top: 20, right: 80, bottom: 20, left: 80 }}
         innerRadius={0.5}
         padAngle={0.7}
@@ -80,25 +124,31 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
         animate={true}
         motionStiffness={90}
         motionDamping={15}
-        tooltip={({ datum }) => (
-          <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
-            <div className="flex items-center gap-2 mb-1">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: datum.color }}
-              />
-              <span className="text-white font-medium font-satoshi">
-                {datum.label}
-              </span>
+        tooltip={({ datum }) => {
+          // Calcular porcentagem manualmente se não estiver disponível
+          const total = validData.reduce((sum, item) => sum + (item.value || 0), 0);
+          const percentage = total > 0 ? ((datum.value || 0) / total) * 100 : 0;
+          
+          return (
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
+              <div className="flex items-center gap-2 mb-1">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: datum.color }}
+                />
+                <span className="text-white font-medium font-satoshi">
+                  {datum.label}
+                </span>
+              </div>
+              <div className="text-gray-300 text-sm font-satoshi">
+                Valor: <span className="text-white font-semibold">{formatNumberShort(datum.value)}</span>
+              </div>
+              <div className="text-gray-300 text-sm font-satoshi">
+                Percentual: <span className="text-white font-semibold">{percentage.toFixed(1)}%</span>
+              </div>
             </div>
-            <div className="text-gray-300 text-sm font-satoshi">
-              Valor: <span className="text-white font-semibold">{datum.value}</span>
-            </div>
-            <div className="text-gray-300 text-sm font-satoshi">
-              {((datum.value / data.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%
-            </div>
-          </div>
-        )}
+          );
+        }}
         legends={[
           {
             anchor: 'bottom',
@@ -111,14 +161,14 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
             itemHeight: 18,
             itemTextColor: '#9CA3AF',
             itemDirection: 'left-to-right',
-            itemOpacity: 1,
+            itemOpacity: 0.85,
             symbolSize: 18,
             symbolShape: 'circle',
             effects: [
               {
                 on: 'hover',
                 style: {
-                  itemTextColor: '#ffffff',
+                  itemOpacity: 1,
                 },
               },
             ],
