@@ -45,6 +45,9 @@ jobs:
       - name: Sync meta leads
         run: node scripts/import-meta-leads.js
 
+      - name: Atualizar relacionamentos entre tabelas
+        run: node scripts/update-table-relationships.js
+
       - name: Log success
         if: success()
         run: echo "✅ Sincronização concluída com sucesso em $(date)" 

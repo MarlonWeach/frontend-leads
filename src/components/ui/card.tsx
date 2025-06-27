@@ -1,9 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
-import { cn } from '../../lib/utils.ts';
+import React, { useState, forwardRef } from 'react';
+import { cn } from '../../lib/utils';
 
-const Card = React.forwardRef(({ 
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'light' | 'default' | 'strong';
+  children?: React.ReactNode;
+}
+
+interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode;
+}
+
+interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children?: React.ReactNode;
+}
+
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode;
+  expanded?: boolean;
+}
+
+interface CardExpandableProps extends React.HTMLAttributes<HTMLDivElement> {
+  title: string;
+  children?: React.ReactNode;
+  defaultExpanded?: boolean;
+}
+
+const Card = forwardRef<HTMLDivElement, CardProps>(({ 
   className, 
   variant = 'default', 
   children, 
@@ -36,7 +60,7 @@ Card.displayName = 'Card';
 
 export { Card };
 
-export function CardHeader({ className = '', children, ...props }) {
+export function CardHeader({ className = '', children, ...props }: CardHeaderProps) {
   return (
     <div
       className={`flex flex-col space-y-2 p-6 ${className}`}
@@ -47,7 +71,7 @@ export function CardHeader({ className = '', children, ...props }) {
   );
 }
 
-export function CardTitle({ className = '', children, ...props }) {
+export function CardTitle({ className = '', children, ...props }: CardTitleProps) {
   return (
     <h3
       className={`text-header font-bold text-white ${className}`}
@@ -63,7 +87,7 @@ export function CardContent({
   children, 
   expanded = false,
   ...props 
-}) {
+}: CardContentProps) {
   return (
     <div 
       className={`
@@ -84,14 +108,11 @@ export function CardExpandable({
   defaultExpanded = false,
   className = '',
   ...props 
-}) {
+}: CardExpandableProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
     <Card 
-      interactive 
-      expanded={isExpanded}
-      onToggle={setIsExpanded}
       className={className}
       {...props}
     >

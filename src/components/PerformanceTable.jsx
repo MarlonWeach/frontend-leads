@@ -18,7 +18,7 @@ function formatValue(key, value, campaign) {
     case 'campaign_name':
       return value || 'N/A';
     
-    case 'status':
+    case 'status': {
       const statusColors = {
         ACTIVE: 'bg-green-500/20 text-green-400',
         PAUSED: 'bg-yellow-500/20 text-yellow-400',
@@ -34,11 +34,13 @@ function formatValue(key, value, campaign) {
           {statusLabels[value] || value}
         </span>
       );
+    }
     
     case 'leads':
     case 'impressions':
-    case 'clicks':
+    case 'clicks': {
       return (value || 0).toLocaleString('pt-BR');
+    }
     
     case 'spend':
     case 'cpl':

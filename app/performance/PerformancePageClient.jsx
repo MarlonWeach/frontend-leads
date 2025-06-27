@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import Button from '../../src/components/ui/button.jsx';
+import Button from '../../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Calendar, TrendingUp, Eye, MousePointer, DollarSign, Users, TrendingDown } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import ReactDOM from 'react-dom';
 import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
 import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
 import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
+import { AIPanel } from '../../src/components/ai/AIPanel';
+import { OpenAIBillingWidget } from '../../src/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
 
 // Função para abreviar números grandes (igual ao dashboard)
@@ -116,7 +118,7 @@ export default function PerformancePageClient() {
       startDate: range.start,
       endDate: range.end
     }));
-  }, []);
+  }, []); // Array vazio para executar apenas uma vez
 
   const applyDatePreset = (presetIndex) => {
     const preset = datePresets[presetIndex];
@@ -138,7 +140,7 @@ export default function PerformancePageClient() {
     }));
   };
 
-  const fetchRealData = async () => {
+  const fetchRealData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -163,15 +165,20 @@ export default function PerformancePageClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.page, filters.limit, filters.status, filters.startDate, filters.endDate]);
 
   // Carregar dados quando filtros mudarem
   useEffect(() => {
     fetchRealData();
-  }, [filters]);
+  }, [fetchRealData]);
 
   const campaigns = data?.campaigns || [];
   const metrics = data?.metrics;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return formatInTimeZone(new Date(dateString), 'America/Sao_Paulo', 'dd/MM/yyyy');
+  };
 
   // Função para exibir label resumida do filtro de data
   const getDateLabel = () => {
@@ -187,10 +194,31 @@ export default function PerformancePageClient() {
     return 'Selecionar período';
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return formatInTimeZone(new Date(dateString), 'America/Sao_Paulo', 'dd/MM/yyyy');
-  };
+  // Memoizar props do AIPanel para evitar re-renders desnecessários
+  const aiPanelData = useMemo(() => {
+    return campaigns.map(campaign => ({
+      campaign_id: campaign.campaign_id || campaign.id,
+      name: campaign.campaign_name || 'Nome não disponível',
+      status: campaign.status,
+      spend: campaign.spend || 0,
+      impressions: campaign.impressions || 0,
+      clicks: campaign.clicks || 0,
+      leads: campaign.leads || 0,
+      ctr: campaign.ctr || 0,
+      cpl: campaign.cpl || 0,
+      conversion_rate: campaign.conversion_rate || 0,
+      created_time: campaign.created_time || new Date().toISOString()
+    }));
+  }, [campaigns]);
+
+  const aiPanelFilters = useMemo(() => ({
+    dateRange: {
+      startDate: filters.startDate || '',
+      endDate: filters.endDate || ''
+    },
+    status: filters.status,
+    period: getDateLabel()
+  }), [filters.startDate, filters.endDate, filters.status, selectedPreset]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -281,7 +309,7 @@ export default function PerformancePageClient() {
   }
 
   return (
-    <div data-testid="performance-page" className="space-y-8">
+    <div className="flex flex-col gap-8">
       {/* Filtros de período - SEGUINDO PADRÃO DO DASHBOARD */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -301,7 +329,7 @@ export default function PerformancePageClient() {
             ))}
           </div>
           {/* Período selecionado */}
-          <div className="text-sublabel-refined text-glow glass-light px-3 py-2 rounded-2xl">
+          <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
             <span className="font-medium text-white">Período:</span> {
               filters.startDate && filters.endDate 
                 ? `${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`
@@ -314,9 +342,9 @@ export default function PerformancePageClient() {
         </div>
       </div>
 
-      {/* Métricas agregadas expandidas (7 cards) - COM CORES E HOVER EFFECTS */}
+      {/* Métricas agregadas expandidas (6 cards) - COM CORES E HOVER EFFECTS */}
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
           {/* Total de Leads */}
           <motion.div 
             whileHover={{ scale: 1.04 }}
@@ -342,7 +370,7 @@ export default function PerformancePageClient() {
               <div className="text-green-400 text-sm font-medium">Total de Gastos</div>
               <DollarSign className="w-4 h-4 text-green-400" />
             </div>
-            <div className="text-2xl font-bold text-white">{formatCurrency(metrics.totalSpend)}</div>
+            <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.totalSpend)}</div>
           </motion.div>
 
           {/* Total de Impressões */}
@@ -398,21 +426,7 @@ export default function PerformancePageClient() {
               <div className="text-orange-400 text-sm font-medium">CPL Médio</div>
               <DollarSign className="w-4 h-4 text-orange-400" />
             </div>
-            <div className="text-2xl font-bold text-white">{formatCurrency(metrics.averageCPL)}</div>
-          </motion.div>
-
-          {/* ROI Médio */}
-          <motion.div 
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="bg-emerald-900/30 rounded-lg p-4 border border-emerald-500/20 hover:bg-emerald-900/40 hover:border-emerald-500/40 transition-all duration-300"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-emerald-400 text-sm font-medium">ROI Médio</div>
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl font-bold text-white">{formatPercentage(metrics.averageROI)}</div>
+            <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.averageCPL)}</div>
           </motion.div>
         </div>
       )}
@@ -487,6 +501,16 @@ export default function PerformancePageClient() {
               />
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Painel de Análise Inteligente */}
+      {!loading && campaigns.length > 0 && (
+        <div className="mb-6">
+          <AIPanel 
+            data={aiPanelData}
+            filters={aiPanelFilters}
+          />
         </div>
       )}
 
@@ -581,6 +605,17 @@ export default function PerformancePageClient() {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      {/* Footer - Widget de Monitoramento OpenAI */}
+      <div className="mt-8 pt-6 border-t border-white/10">
+        <div className="max-w-md mx-auto">
+          <OpenAIBillingWidget 
+            days={7}
+            autoRefresh={true}
+            className="w-full"
+          />
+        </div>
       </div>
     </div>
   );

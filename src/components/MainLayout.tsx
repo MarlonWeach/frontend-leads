@@ -9,6 +9,17 @@ import {
 } from 'lucide-react';
 import SyncStatus from './SyncStatus';
 
+interface Breadcrumb {
+  name: string;
+  href: string;
+}
+
+interface MainLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+  breadcrumbs?: Breadcrumb[];
+}
+
 const navigation = [
   {
     name: 'Dashboard',
@@ -57,11 +68,11 @@ const secondaryNavigation = [
   }
 ];
 
-export default function MainLayout({ children, title, breadcrumbs = [] }) {
+export default function MainLayout({ children, title, breadcrumbs = [] }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  const isActive = (href) => {
+  const isActive = (href: string) => {
     if (href === '/dashboard') {
       return pathname === '/' || pathname === '/dashboard';
     }
@@ -78,7 +89,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
 
   const pageInfo = getPageInfo();
 
-  const NavItem = ({ item, isSecondary = false }) => {
+  const NavItem = ({ item, isSecondary = false }: { item: any; isSecondary?: boolean }) => {
     const active = isActive(item.href);
     const Icon = item.icon;
 
@@ -100,7 +111,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }) {
     );
   };
 
-  const Sidebar = ({ isMobile = false }) => (
+  const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="flex-1 h-full flex flex-col">
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-white/10 glass-medium">

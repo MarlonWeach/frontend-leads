@@ -234,3 +234,45 @@
 ## Status do Token Meta
 - **Status**: Confirmado
 - **Descrição**: O token de acesso do Meta (`META_ACCESS_TOKEN`) possui todas as permissões necessárias para acessar os dados de campanhas, anúncios e métricas de conversão. Especificamente, o token tem acesso às permissões: `ads_read`, `ads_management`, `
+
+## Sincronização e Relacionamento Automático entre Tabelas (adset_insights, ads, meta_leads)
+
+### Contexto
+
+Para garantir a integridade dos dados e o correto funcionamento dos relatórios e APIs, é fundamental que os relacionamentos entre as tabelas de campanhas, adsets, ads e leads estejam sempre sincronizados. Muitas vezes, durante a ingestão de dados vindos da Meta API, alguns registros podem ser inseridos sem todos os IDs de relacionamento preenchidos (ex: um adset_insight sem campaign_id, um ad sem campaign_id, um meta_lead sem adset_id ou campaign_id, etc).
+
+### Lógica Empregada
+
+- **adset_insights:**
+  - Se faltar o campaign_id, ele é preenchido automaticamente buscando o campaign_id correspondente ao adset_id na tabela adsets.
+- **ads:**
+  - Se faltar o campaign_id, ele é preenchido automaticamente buscando o campaign_id correspondente ao adset_id na tabela adsets.
+- **meta_leads:**
+  - Se faltar o adset_id, ele é preenchido automaticamente buscando o adset_id correspondente ao ad_id na tabela ads.
+  - Se faltar o campaign_id, ele é preenchido automaticamente buscando primeiro pelo ad_id na tabela ads, e se não encontrar, pelo adset_id na tabela adsets.
+
+### Automação
+
+- Um script Node.js (`scripts/update-table-relationships.js`) foi criado para automatizar todo esse processo.
+- O script pode ser executado manualmente ou automaticamente (está integrado ao workflow do GitHub Actions que roda 3x ao dia após a sincronização dos dados).
+- O script é idempotente: pode ser rodado quantas vezes for necessário, sempre atualizando apenas os registros que precisam.
+- O script processa em lotes de 100 registros por vez para evitar sobrecarga, mas pode ser ajustado conforme a necessidade.
+- Logs detalhados são gerados a cada execução, facilitando auditoria e troubleshooting.
+
+### Motivo
+
+Sem essa sincronização automática, dados podem ficar inconsistentes, impactando relatórios, dashboards e APIs que dependem desses relacionamentos para agregação e filtragem correta.
+
+### Como rodar manualmente
+
+```bash
+node scripts/update-table-relationships.js
+```
+
+### Como funciona no CI
+
+Após cada sincronização de dados (3x ao dia), o workflow do GitHub Actions executa automaticamente o script para garantir que todos os relacionamentos estejam atualizados.
+
+### Observação
+
+Se novas tabelas forem criadas ou a estrutura mudar, o script deve ser revisado para garantir que todos os relacionamentos necessários continuem sendo atualizados corretamente.

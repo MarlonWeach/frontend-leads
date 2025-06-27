@@ -111,7 +111,7 @@ export async function syncAdsStatusCore(
       },
     };
 
-    return { status, ads: activeAds };
+    return { status, data: activeAds };
   }
 
   // Preparar dados para upsert
@@ -159,7 +159,7 @@ export async function syncAdsStatusCore(
     },
   };
 
-  return { status, ads: activeAds };
+  return { status, data: activeAds };
 }
 
 // Função principal com retry logic e dependências injetáveis
@@ -207,7 +207,7 @@ export async function syncAdsStatus(
             durationMs: endTime.getTime() - startTime.getTime(),
           },
         };
-        return { status, ads: activeAds };
+        return { status, data: activeAds };
       }
 
       // Para lista vazia, retorna sucesso diretamente sem chamar syncAdsStatusCore
@@ -224,7 +224,7 @@ export async function syncAdsStatus(
             durationMs: endTime.getTime() - startTime.getTime(),
           },
         };
-        return { status, ads: [] };
+        return { status, data: [] };
       }
 
       // Usar a função core simplificada para listas não vazias
@@ -250,7 +250,7 @@ export async function syncAdsStatus(
             retryCount: currentRetryCount,
           },
         };
-        return { status, ads: [] };
+        return { status, data: [] };
       }
 
       currentRetryCount++;
@@ -288,5 +288,5 @@ export async function syncAdsStatus(
     },
   };
 
-  return { status, ads: [] };
+  return { status, data: [] };
 } 

@@ -4,9 +4,12 @@ import { logger } from '../../../../src/utils/logger';
 
 // Inicializa o cliente Supabase
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Forçar rota dinâmica para evitar erro de renderização estática
+export const dynamic = 'force-dynamic';
 
 // Constantes para validação
 const VALID_STATUSES = ['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED', 'PENDING_REVIEW', 'DISAPPROVED', 'PREAPPROVED', 'PENDING_BILLING_INFO', 'CAMPAIGN_PAUSED', 'ADSET_PAUSED'];
@@ -27,7 +30,7 @@ async function handleRequest(request: NextRequest, isPost: boolean) {
       endDate = body.endDate;
       limit = body.limit || 100;
     } else {
-      const { searchParams } = new URL(request.url);
+      const searchParams = request.nextUrl.searchParams;
       campaignId = searchParams.get('campaignId');
       status = searchParams.get('status');
       startDate = searchParams.get('startDate');

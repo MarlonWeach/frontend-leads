@@ -6,6 +6,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+// Forçar rota dinâmica para evitar erro de renderização estática
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     console.log('Buscando dados do dashboard...');

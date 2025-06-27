@@ -5,7 +5,7 @@ import { useAdsData } from '../../src/hooks/useAdsData';
 import { useCampaignsList } from '../../src/hooks/useCampaignsList';
 import { useAdsetsList } from '../../src/hooks/useAdsetsList';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import Button from '../../src/components/ui/button.jsx';
+import Button from '../../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Image, Video, FileText, Eye, MousePointer, DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
 import AdCreativePreview from '../../src/components/ui/AdCreativePreview';

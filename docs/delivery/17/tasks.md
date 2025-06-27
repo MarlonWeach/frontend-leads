@@ -13,7 +13,7 @@ This document lists all tasks associated with PBI 17.
 | 17-3 | Refatorar layout base e containers | Done | Containers, cartões e painéis com novo padrão visual |
 | 17-4 | Sidebar minimalista e elegante | Done | Sidebar só com ícones, brilho ao hover, animação de expansão - Acessibilidade corrigida com nova paleta |
 | 17-5 | Cartões interativos e animações | Done | Cartões expansíveis, tooltips fade-in, transições de seção |
-| 17-6 | [Gráficos interativos e animados](./17-6.md) | InProgress | Gráficos de barras, pizza e linha animados |
+| 17-6 | [Gráficos interativos e animados](./17-6.md) | Done | Gráficos de barras, pizza e linha animados |
 | 17-7 | [Filtros avançados e UI de seleção](./17-7.md) | Done | Implementar sistema de filtros avançados com glassmorphism |
 | 17-8 | [Glassmorphism e detalhes visuais](./17-8.md) | Done | Aplicar glassmorphism refinado e identidade visual unificada |
 | 17-9 | [Testes de usabilidade e refinamento](./17-9.md) | Done | Validação de usabilidade, microinterações e performance |

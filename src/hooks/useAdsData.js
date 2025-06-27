@@ -14,21 +14,17 @@ function isCacheValid(cacheEntry) {
 }
 
 const fetchAds = async ({ campaignId, adsetId, startDate, endDate, status, limit = 1000 }) => {
-  try {
-    const response = await fetch('/api/meta/ads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campaignId, adsetId, startDate, endDate, status, limit })
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Erro ao buscar ads: ${response.status} - ${errorData.details || errorData.error || 'Erro desconhecido'}`);
-    }
-    const data = await response.json();
-    return data.ads || [];
-  } catch (error) {
-    throw error;
+  const response = await fetch('/api/meta/ads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ campaignId, adsetId, startDate, endDate, status, limit })
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`Erro ao buscar ads: ${response.status} - ${errorData.details || errorData.error || 'Erro desconhecido'}`);
   }
+  const data = await response.json();
+  return data.ads || [];
 };
 
 export const useAdsData = (filters = {}) => {

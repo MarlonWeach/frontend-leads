@@ -7,6 +7,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Forçar rota dinâmica para evitar erro de renderização estática
+export const dynamic = 'force-dynamic';
+
 async function handleRequest(request: NextRequest, isPost: boolean) {
   const startTime = Date.now();
   

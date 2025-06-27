@@ -14,7 +14,7 @@ import { MetaAdset } from '../types/meta';
 // Configurações de ambiente
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const META_ACCESS_TOKEN = process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN;
+const META_ACCESS_TOKEN = process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN!;
 const META_ACCOUNT_ID = process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID;
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !META_ACCESS_TOKEN || !META_ACCOUNT_ID) {
@@ -184,7 +184,7 @@ export async function syncAdsetsJob() {
       // Buscar insights do adset para o período desejado (exemplo: últimos 7 dias)
       const startDate = '2024-07-15'; // TODO: parametrizar datas
       const endDate = '2024-07-21';
-      let insights = [];
+      let insights: any[] = [];
       try {
         insights = await adsetsService.getAdsetInsights(adset.id, startDate, endDate);
         logger.info({ adsetId: adset.id, insightsCount: insights.length }, 'Insights buscados para o adset.');
@@ -197,7 +197,7 @@ export async function syncAdsetsJob() {
         acc.spend += Number(i.spend || 0);
         acc.impressions += Number(i.impressions || 0);
         acc.clicks += Number(i.clicks || 0);
-        acc.leads += Number(i.results?.find(r => r.indicator === 'actions:onsite_conversion.lead_grouped')?.values?.[0]?.value || 0);
+        acc.leads += Number(i.results?.find((r: any) => r.indicator === 'actions:onsite_conversion.lead_grouped')?.values?.[0]?.value || 0);
         acc.ctr += Number(i.ctr || 0);
         acc.cpc += Number(i.cpc || 0);
         acc.cpm += Number(i.cpm || 0);
