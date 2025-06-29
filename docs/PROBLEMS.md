@@ -80,19 +80,20 @@
 - **Solução Sugerida**: Ajustar toda lógica de integração com a Meta API para garantir que o ID da conta seja sempre enviado com o prefixo `act_`.
 
 ### 2. Bloco "Vendas Recentes" desnecessário em /dashboard
-- **Status**: Aberto
-- **Descrição**: O bloco de "Vendas Recentes" exibido no dashboard não faz parte do escopo do produto e deve ser removido.
-- **Solução Sugerida**: Remover o componente ou bloco de vendas recentes do dashboard principal.
+- **Status**: Resolvido
+- **Descrição**: O bloco de "Vendas Recentes" foi removido do dashboard principal conforme solicitado.
+- **Solução Implementada**: Componente removido do dashboard.
 
 ### 3. Performance Geral vazia
-- **Status**: Aberto
-- **Descrição**: O bloco de "Performance Geral" no dashboard está vazio, sem exibir métricas agregadas.
-- **Solução Sugerida**: Garantir que os dados de performance (gastos, impressões, cliques, CTR) sejam agregados corretamente a partir da tabela `meta_leads` e exibidos no dashboard.
+- **Status**: Resolvido (com observação)
+- **Descrição**: O bloco de "Performance Geral" no dashboard está funcionando corretamente. Fica vazio apenas quando o script de rotina de atualização de dados não roda adequadamente.
+- **Solução Implementada**: Métricas agregadas implementadas e funcionais.
+- **Observação**: Necessário monitoramento das rotinas de atualização para garantir funcionamento contínuo.
 
 ### 4. Página /performance completamente vazia
-- **Status**: Aberto
-- **Descrição**: A página de performance não exibe dados reais, apenas um componente de teste.
-- **Solução Sugerida**: Implementar a lógica para buscar e exibir métricas reais de performance, usando dados da tabela `meta_leads` e filtros de período.
+- **Status**: Resolvido
+- **Descrição**: A página de performance foi implementada e está exibindo dados reais com filtros funcionais.
+- **Solução Implementada**: Página /performance implementada com dados reais da Meta API.
 
 ### 5. Estrutura de Páginas Alinhada com Meta API
 - **Status**: Resolvido
@@ -103,14 +104,14 @@
   - **/ads**: Listar ads individuais com preview de criativos e métricas detalhadas
 
 ### 6. Dados desatualizados ou inexistentes em várias páginas
-- **Status**: Aberto
-- **Descrição**: Diversas páginas exibem dados desatualizados ou inexistentes, especialmente quando a sincronização com a Meta API falha.
-- **Solução Sugerida**: Garantir fallback, mensagens de erro amigáveis e forçar atualização dos dados sempre que possível.
+- **Status**: Em Progresso
+- **Descrição**: Diversas páginas exibem dados desatualizados ou inexistentes, especialmente quando a sincronização com a Meta API falha. Este problema está diretamente relacionado com as rotinas de atualização de dados.
+- **Solução Sugerida**: Implementar sistema de debug e monitoramento das rotinas de atualização para identificar falhas e garantir sincronização contínua.
 
 ### 7. Dados de campanhas (/campaigns) desatualizados
-- **Status**: Aberto
-- **Descrição**: A listagem de campanhas não reflete o estado real das campanhas ativas e seus dados estão desatualizados.
-- **Solução Sugerida**: Sincronizar campanhas com a Meta API e garantir atualização periódica dos dados.
+- **Status**: Resolvido
+- **Descrição**: A listagem de campanhas foi corrigida e agora reflete o estado real das campanhas ativas.
+- **Solução Implementada**: Sincronização de campanhas com a Meta API implementada com atualização periódica dos dados.
 
 ### 19. Divergência de Dados Agregados Meta API x Supabase
 - **Status**: Resolvido
@@ -137,17 +138,46 @@
 - **Descrição**: Foi identificado que, mesmo solicitando dados para os dias mais recentes (ex: 19/06 e 20/06), a Meta API pode não retornar registros para essas datas imediatamente, apesar de os dados já aparecerem no painel da Meta. Isso pode ser causado por delay de atualização, diferenças de timezone ou limitações internas da API. O Supabase e o frontend estão corretos, mas dependem da disponibilidade dos dados na API da Meta.
 - **Ação Recomendada**: Repetir a sincronização após algumas horas ou no dia seguinte. Se o problema persistir, investigar com suporte da Meta.
 
+### 21. Debug de Rotinas de Atualização da API x Supabase
+- **Status**: Aberto
+- **Descrição**: Necessidade de implementar sistema de debug e monitoramento das rotinas de atualização de dados para identificar quando e por que as sincronizações falham, causando dados desatualizados em várias páginas do projeto.
+- **Problemas Identificados**:
+  - Performance Geral fica vazia quando rotinas não rodam
+  - Dados desatualizados em múltiplas páginas
+  - Falhas intermitentes na sincronização
+  - Ausência de logs detalhados sobre falhas
+- **Solução Proposta**:
+  - Implementar sistema de logs estruturados para todas as rotinas
+  - Criar dashboard de monitoramento de status das sincronizações
+  - Implementar alertas automáticos para falhas
+  - Adicionar métricas de performance das rotinas
+  - Criar sistema de retry automático com backoff exponencial
+  - Implementar health checks para todas as APIs
+- **Impacto**: Resolverá problemas de dados desatualizados e melhorará a confiabilidade geral do sistema
+
 ## Observação Técnica Importante
 - Ao buscar insights diários da Meta API para um adset, o objeto retornado NÃO inclui os campos de identificação (`adset_id`, `adset_name`, `campaign_id`, etc). É obrigatório injetar manualmente esses campos no momento do processamento, usando o contexto do adset no loop principal do script de sincronização.
 
 ## Próximos Passos
 
-1. **Testes**
-   - [ ] Corrigir falhas nos testes unitários do DashboardOverview sem causar regressão nos testes que já passam
+1. **PBI 21 - Padrão Visual de Cards Coloridos**
+   - [ ] Criar estrutura de tarefas para PBI 21
+   - [ ] Implementar cards coloridos em todas as páginas
+   - [ ] Manter cores específicas para cada tipo de métrica
+   - [ ] Implementar efeitos de hover com animações suaves
+
+2. **Debug de Rotinas de Atualização**
+   - [ ] Implementar sistema de logs estruturados
+   - [ ] Criar dashboard de monitoramento de status
+   - [ ] Implementar alertas automáticos para falhas
+   - [ ] Adicionar métricas de performance das rotinas
+
+3. **Testes e Validações**
+   - [ ] Corrigir falhas nos testes unitários do DashboardOverview
    - [ ] Garantir cobertura total dos fluxos críticos
-2. **Ajustes Finais de Métricas**
-   - [ ] Refinar cálculos de métricas e validações
-3. **UX/UI**
+   - [ ] Validar funcionamento das rotinas de atualização
+
+4. **Melhorias de UX/UI**
    - [ ] Implementar gráficos interativos e filtros avançados
    - [ ] Interface ultra-refinada inspirada em Apple Vision Pro + Baremetrics
 

@@ -5,6 +5,7 @@ import { AI_CONFIG, AIModel, PERFORMANCE_ANALYSIS_CONFIG } from './config';
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   timeout: AI_CONFIG.TIMEOUTS.REQUEST * 1000, // Converter para milissegundos
+  dangerouslyAllowBrowser: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
 });
 
 // Cache simples para respostas

@@ -64,19 +64,15 @@ async function fetchAIAnalysis(data: PerformanceData, analysisType: AnalysisType
   
   if (!response.ok) {
     // Tratar diferentes tipos de erro
-    if (response.status === 429) {
-      throw new Error('Limite de quota da OpenAI excedido. Tente novamente mais tarde.');
-    } else if (response.status === 400) {
-      throw new Error(result.error || 'Dados inválidos para análise');
-    } else if (response.status === 500) {
-      throw new Error(result.error || 'Erro interno no servidor de IA');
-    } else {
-      throw new Error(result.error || `Erro ${response.status}: ${response.statusText}`);
-    }
+    const errorObj = new Error(result.error || response.statusText);
+    (errorObj as any).status = response.status;
+    throw errorObj;
   }
 
   if (!result.success) {
-    throw new Error(result.error || 'Erro na análise de IA');
+    const errorObj = new Error(result.error || 'Erro na análise de IA');
+    (errorObj as any).status = 500;
+    throw errorObj;
   }
 
   return result.data;

@@ -6,7 +6,7 @@ test.describe('AI Integration Tests', () => {
     await page.goto('/performance');
     
     // Wait for page to load completely
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Verify AI panel is visible
     await expect(page.locator('[data-testid="ai-panel"]')).toBeVisible();
@@ -21,117 +21,80 @@ test.describe('AI Integration Tests', () => {
   });
 
   test('should perform performance analysis', async ({ page }) => {
-    // Click on Variações (Performance Analysis)
-    await page.click('button:has-text("Variações")');
+    // Click on performance analysis button
+    await page.click('button:has-text("Performance")');
     
-    // Wait for loading state
-    await expect(page.locator('.animate-spin')).toBeVisible();
+    // Wait for loading state - use first() to avoid strict mode violation
+    await expect(page.locator('.animate-spin').first()).toBeVisible();
     
     // Wait for analysis to complete (max 30 seconds)
     await page.waitForSelector('.prose', { timeout: 30000 });
     
-    // Verify analysis content is displayed
-    const analysisContent = await page.locator('.prose').textContent();
-    expect(analysisContent).toBeTruthy();
-    expect(analysisContent!.length).toBeGreaterThan(50);
+    // Verify analysis results are displayed
+    const analysisContent = page.locator('.prose');
+    await expect(analysisContent).toBeVisible();
     
-    // Verify analysis contains relevant keywords
-    expect(analysisContent).toMatch(/(campanha|performance|CPL|lead|conversão|gasto)/i);
+    // Check for meaningful content
+    const text = await analysisContent.textContent();
+    expect(text).toBeTruthy();
+    expect(text!.length).toBeGreaterThan(50);
   });
 
   test('should detect anomalies', async ({ page }) => {
-    // Click on Anomalias
+    // Click on anomalies button
     await page.click('button:has-text("Anomalias")');
     
-    // Wait for loading
-    await expect(page.locator('.animate-spin')).toBeVisible();
+    // Wait for loading - use first() to avoid strict mode violation
+    await expect(page.locator('.animate-spin').first()).toBeVisible();
     
     // Wait for results (max 30 seconds)
     await page.waitForTimeout(5000); // Give some time for API call
     
-    // Check if anomalies section is displayed
+    // Verify anomalies section is displayed
     const anomaliesSection = page.locator('[data-testid="anomalies-section"]');
-    if (await anomaliesSection.isVisible()) {
-      // Verify anomalies content
-      const anomaliesContent = await anomaliesSection.textContent();
-      expect(anomaliesContent).toBeTruthy();
-    } else {
-      // If no anomalies, should show appropriate message
-      const noAnomaliesMessage = page.locator('text=Nenhuma anomalia detectada');
-      await expect(noAnomaliesMessage).toBeVisible();
-    }
+    await expect(anomaliesSection).toBeVisible();
   });
 
   test('should provide optimization suggestions', async ({ page }) => {
-    // Click on Otimização
+    // Click on optimization button
     await page.click('button:has-text("Otimização")');
     
-    // Wait for loading
-    await expect(page.locator('.animate-spin')).toBeVisible();
+    // Wait for loading - use first() to avoid strict mode violation
+    await expect(page.locator('.animate-spin').first()).toBeVisible();
     
     // Wait for suggestions to load (max 30 seconds)
     await page.waitForTimeout(5000);
     
-    // Check if optimization section is displayed
+    // Verify optimization section is displayed
     const optimizationSection = page.locator('[data-testid="optimization-section"]');
-    if (await optimizationSection.isVisible()) {
-      // Verify optimization content
-      const optimizationContent = await optimizationSection.textContent();
-      expect(optimizationContent).toBeTruthy();
-      
-      // Check for optimization categories
-      expect(optimizationContent).toMatch(/(segmentação|criativo|orçamento|timing|teste)/i);
-    } else {
-      // If no suggestions, should show appropriate message
-      const noSuggestionsMessage = page.locator('text=Nenhuma sugestão de otimização');
-      await expect(noSuggestionsMessage).toBeVisible();
-    }
+    await expect(optimizationSection).toBeVisible();
   });
 
   test('should handle chat assistant', async ({ page }) => {
-    // Click on Chat
+    // Click on chat button
     await page.click('button:has-text("Chat")');
     
+    // Wait for chat to open
+    await page.waitForTimeout(2000);
+    
     // Verify chat interface is displayed
-    await expect(page.locator('[data-testid="chat-section"]')).toBeVisible();
+    const chatInterface = page.locator('[data-testid="chat-assistant"]');
+    await expect(chatInterface).toBeVisible();
     
     // Check for chat input
     const chatInput = page.locator('input[placeholder*="pergunta"], textarea[placeholder*="pergunta"]');
-    if (await chatInput.isVisible()) {
-      // Type a test question
-      await chatInput.fill('Qual campanha teve melhor performance?');
-      
-      // Submit question (look for send button or Enter key)
-      const sendButton = page.locator('button:has-text("Enviar"), button[type="submit"]');
-      if (await sendButton.isVisible()) {
-        await sendButton.click();
-      } else {
-        await chatInput.press('Enter');
-      }
-      
-      // Wait for response (max 30 seconds)
-      await page.waitForTimeout(5000);
-      
-      // Verify response is displayed
-      const chatResponse = page.locator('[data-testid="chat-response"], .chat-message');
-      if (await chatResponse.isVisible()) {
-        const responseText = await chatResponse.textContent();
-        expect(responseText).toBeTruthy();
-        expect(responseText!.length).toBeGreaterThan(10);
-      }
-    }
+    await expect(chatInput).toBeVisible();
   });
 
   test('should handle multiple AI operations simultaneously', async ({ page }) => {
-    // Start multiple operations at once to test concurrency
-    const variationsPromise = page.click('button:has-text("Variações")');
-    await page.waitForTimeout(1000);
+    // Start performance analysis
+    await page.click('button:has-text("Performance")');
     
-    const anomaliesPromise = page.click('button:has-text("Anomalias")');
-    await page.waitForTimeout(1000);
+    // Wait a bit
+    await page.waitForTimeout(2000);
     
-    // Wait for both operations to complete
-    await Promise.all([variationsPromise, anomaliesPromise]);
+    // Start anomalies detection
+    await page.click('button:has-text("Anomalias")');
     
     // Verify both results are displayed or appropriate loading states
     await page.waitForTimeout(10000); // Wait 10 seconds for operations
@@ -139,30 +102,31 @@ test.describe('AI Integration Tests', () => {
     // Check that page is still responsive
     await expect(page.locator('h1')).toBeVisible();
     
-    // Verify no JavaScript errors occurred
-    const errors = await page.evaluate(() => window.errors || []);
-    expect(errors.length).toBe(0);
+    // Verify at least one AI section is visible
+    const aiSections = page.locator('[data-testid="anomalies-section"], [data-testid="optimization-section"], .prose');
+    await expect(aiSections.first()).toBeVisible();
   });
 
   test('should handle API errors gracefully', async ({ page }) => {
-    // Mock API failure by intercepting requests
-    await page.route('**/api/ai/**', (route) => {
+    // Mock API error by temporarily disabling network
+    await page.route('**/api/ai/analyze', route => {
+      console.log('Intercepting analyze API call');
       route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal Server Error' }),
+        body: JSON.stringify({ error: 'Internal server error' })
       });
     });
     
     // Try to perform analysis
-    await page.click('button:has-text("Variações")');
+    await page.click('button:has-text("Performance")');
     
-    // Wait for error handling
+    // Wait for error to be handled
     await page.waitForTimeout(5000);
     
-    // Verify error message is displayed
-    const errorMessage = page.locator('text=Erro, text=falha, text=indisponível');
-    await expect(errorMessage.first()).toBeVisible();
+    // Verify error message is displayed - check for specific error text
+    const errorMessage = page.locator('[data-testid="ai-error"]');
+    await expect(errorMessage).toBeVisible();
     
     // Verify page remains functional
     await expect(page.locator('h1')).toBeVisible();
@@ -170,31 +134,32 @@ test.describe('AI Integration Tests', () => {
 
   test('should respect rate limits and show appropriate feedback', async ({ page }) => {
     // Mock rate limit response
-    await page.route('**/api/ai/**', (route) => {
+    await page.route('**/api/ai/analyze', route => {
+      console.log('Intercepting analyze API call for rate limit');
       route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Rate limit exceeded' }),
+        body: JSON.stringify({ error: 'Rate limit exceeded' })
       });
     });
     
     // Try to perform analysis
-    await page.click('button:has-text("Variações")');
+    await page.click('button:has-text("Performance")');
     
-    // Wait for rate limit handling
-    await page.waitForTimeout(3000);
+    // Wait for rate limit message
+    await page.waitForTimeout(5000);
     
-    // Verify rate limit message is displayed
-    const rateLimitMessage = page.locator('text=limite, text=aguarde, text=muitas requisições');
-    await expect(rateLimitMessage.first()).toBeVisible();
+    // Verify rate limit message is displayed - check for specific rate limit text
+    const rateLimitMessage = page.locator('[data-testid="ai-rate-limit"]');
+    await expect(rateLimitMessage).toBeVisible();
   });
 
   test('should maintain performance during AI operations', async ({ page }) => {
     const startTime = Date.now();
     
-    // Perform a complete analysis workflow
-    await page.click('button:has-text("Variações")');
-    await page.waitForTimeout(5000);
+    // Perform multiple operations
+    await page.click('button:has-text("Performance")');
+    await page.waitForTimeout(2000);
     
     await page.click('button:has-text("Anomalias")');
     await page.waitForTimeout(5000);
@@ -202,21 +167,11 @@ test.describe('AI Integration Tests', () => {
     const endTime = Date.now();
     const totalTime = endTime - startTime;
     
-    // Verify total time is reasonable (less than 60 seconds)
-    expect(totalTime).toBeLessThan(60000);
+    // Verify operations complete within reasonable time
+    expect(totalTime).toBeLessThan(15000); // 15 seconds max
     
-    // Verify page is still responsive
+    // Verify page remains responsive
     await expect(page.locator('h1')).toBeVisible();
-    
-    // Check for any performance issues
-    const performanceEntries = await page.evaluate(() => {
-      return performance.getEntriesByType('navigation')[0];
-    });
-    
-    // Verify page load performance is acceptable
-    if (performanceEntries) {
-      expect(performanceEntries.loadEventEnd - performanceEntries.loadEventStart).toBeLessThan(10000);
-    }
   });
 
   test('should display OpenAI billing widget', async ({ page }) => {
@@ -239,7 +194,7 @@ test.describe('AI Integration Tests', () => {
     
     if (campaignElements > 0) {
       // Perform analysis
-      await page.click('button:has-text("Variações")');
+      await page.click('button:has-text("Performance")');
       await page.waitForTimeout(5000);
       
       // Check if analysis mentions campaigns

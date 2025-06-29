@@ -13,7 +13,9 @@ import {
   Settings,
   RefreshCw,
   CheckCircle,
-  XCircle
+  XCircle,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { useAIAnalysis } from '../../hooks/useAIAnalysis';
 import { useAnomalyDetection } from '../../hooks/useAnomalyDetection';
@@ -35,27 +37,66 @@ const analysisTypes = [
     id: 'variations',
     label: 'Variações',
     icon: TrendingUp,
-    description: 'Identifica mudanças significativas nas métricas'
+    description: 'Identifica mudanças significativas nas métricas',
+    color: 'blue'
   },
   {
     id: 'anomalies',
     label: 'Anomalias',
     icon: AlertTriangle,
-    description: 'Detecta padrões suspeitos e irregularidades'
+    description: 'Detecta padrões suspeitos e irregularidades',
+    color: 'orange'
   },
   {
     id: 'performance',
     label: 'Performance',
     icon: Brain,
-    description: 'Análise geral de performance das campanhas'
+    description: 'Análise geral de performance das campanhas',
+    color: 'purple'
   },
   {
     id: 'optimization',
     label: 'Otimização',
     icon: Zap,
-    description: 'Sugere melhorias para campanhas'
+    description: 'Sugere melhorias para campanhas',
+    color: 'green'
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: Search,
+    description: 'Assistente virtual para dúvidas',
+    color: 'indigo'
   }
 ];
+
+// Função para obter classes de cor baseadas no tipo de análise
+const getAnalysisColorClasses = (color: string, isSelected: boolean) => {
+  const colorMap = {
+    blue: {
+      selected: 'bg-blue-900/30 border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 text-blue-400',
+      unselected: 'bg-blue-900/20 border-blue-500/10 hover:bg-blue-900/30 hover:border-blue-500/30 text-blue-300'
+    },
+    orange: {
+      selected: 'bg-orange-900/30 border-orange-500/20 hover:bg-orange-900/40 hover:border-orange-500/40 text-orange-400',
+      unselected: 'bg-orange-900/20 border-orange-500/10 hover:bg-orange-900/30 hover:border-orange-500/30 text-orange-300'
+    },
+    purple: {
+      selected: 'bg-purple-900/30 border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 text-purple-400',
+      unselected: 'bg-purple-900/20 border-purple-500/10 hover:bg-purple-900/30 hover:border-purple-500/30 text-purple-300'
+    },
+    green: {
+      selected: 'bg-green-900/30 border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 text-green-400',
+      unselected: 'bg-green-900/20 border-green-500/10 hover:bg-green-900/30 hover:border-green-500/30 text-green-300'
+    },
+    indigo: {
+      selected: 'bg-indigo-900/30 border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 text-indigo-400',
+      unselected: 'bg-indigo-900/20 border-indigo-500/10 hover:bg-indigo-900/30 hover:border-indigo-500/30 text-indigo-300'
+    }
+  };
+
+  return colorMap[color as keyof typeof colorMap]?.[isSelected ? 'selected' : 'unselected'] || colorMap.blue.unselected;
+};
 
 function AIPanel({ data, filters }: AIPanelProps) {
   const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null);
@@ -63,6 +104,11 @@ function AIPanel({ data, filters }: AIPanelProps) {
   const [showOptimizations, setShowOptimizations] = useState(false);
   const [anomalySensitivity, setAnomalySensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // Estados para filtros
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('');
+  const [selectedAdset, setSelectedAdset] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Hook para análise de IA
   const {
@@ -93,6 +139,44 @@ function AIPanel({ data, filters }: AIPanelProps) {
     refreshInterval: 0
   });
 
+  // Estado de erro para IA
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [rateLimit, setRateLimit] = useState<boolean>(false);
+
+  // Extrair campanhas e adsets únicos dos dados
+  const uniqueCampaigns = [...new Set(data.map(item => item.campaign_name || item.name || 'Sem nome'))];
+  const uniqueAdsets = [...new Set(data.map(item => item.adset_name || '').filter(Boolean))];
+
+  // Função genérica para tratar erros de IA
+  function handleAIError(error: any) {
+    console.log('AI Error received:', error);
+    if (error?.code === 'rate_limit_exceeded' || error?.status === 429) {
+      setRateLimit(true);
+      setAIError('Limite de uso da IA atingido. Aguarde alguns minutos e tente novamente.');
+    } else {
+      setAIError('Erro ao processar análise de IA. Tente novamente em instantes.');
+    }
+  }
+
+  // Filtrar dados baseado nas seleções
+  const getFilteredData = () => {
+    let filtered = data;
+    
+    if (selectedCampaign) {
+      filtered = filtered.filter(item => 
+        (item.campaign_name || item.name || '') === selectedCampaign
+      );
+    }
+    
+    if (selectedAdset) {
+      filtered = filtered.filter(item => 
+        (item.adset_name || '') === selectedAdset
+      );
+    }
+    
+    return filtered;
+  };
+
   const handleAnalysisClick = async (analysisType: string) => {
     if (selectedAnalysis === analysisType) {
       setSelectedAnalysis(null);
@@ -101,6 +185,8 @@ function AIPanel({ data, filters }: AIPanelProps) {
     }
 
     setSelectedAnalysis(analysisType);
+    setAIError(null);
+    setRateLimit(false);
     
     if (analysisType === 'anomalies') {
       setShowAnomalies(true);
@@ -110,21 +196,45 @@ function AIPanel({ data, filters }: AIPanelProps) {
       setShowOptimizations(true);
       setShowAnomalies(false);
       // Otimizações são carregadas automaticamente pelo componente OptimizationSuggestions
+    } else if (analysisType === 'chat') {
+      setIsChatOpen(true);
+      setShowAnomalies(false);
+      setShowOptimizations(false);
     } else {
       setShowAnomalies(false);
       setShowOptimizations(false);
+      
+      // Usar dados filtrados
+      const filteredData = getFilteredData();
+      
       // Converter dados para formato esperado pelo hook
       const performanceData = {
-        campaigns: data,
+        campaigns: filteredData,
         metrics: {
-          totalLeads: data.reduce((sum, item) => sum + (item.leads || 0), 0),
-          totalSpend: data.reduce((sum, item) => sum + (item.spend || 0), 0),
-          totalImpressions: data.reduce((sum, item) => sum + (item.impressions || 0), 0),
-          totalClicks: data.reduce((sum, item) => sum + (item.clicks || 0), 0),
+          totalLeads: filteredData.reduce((sum, item) => sum + (item.leads || 0), 0),
+          totalSpend: filteredData.reduce((sum, item) => sum + (item.spend || 0), 0),
+          totalImpressions: filteredData.reduce((sum, item) => sum + (item.impressions || 0), 0),
+          totalClicks: filteredData.reduce((sum, item) => sum + (item.clicks || 0), 0),
         },
-        period: `${filters.dateRange.startDate} - ${filters.dateRange.endDate}`
+        period: `${filters.dateRange.startDate} - ${filters.dateRange.endDate}`,
+        filters: {
+          campaign: selectedCampaign,
+          adset: selectedAdset
+        }
       };
-      await analyzeSpecific(performanceData, analysisType as any);
+      
+      try {
+        await analyzeSpecific(performanceData, analysisType as any);
+      } catch (error: any) {
+        // Tentar extrair status HTTP do erro
+        let status = error?.status;
+        if (!status && error?.message) {
+          if (error.message.includes('429')) status = 429;
+          if (error.message.includes('quota') || error.message.includes('limite')) status = 429;
+          if (error.message.includes('500')) status = 500;
+        }
+        handleAIError({ ...error, status });
+      }
     }
   };
 
@@ -135,9 +245,25 @@ function AIPanel({ data, filters }: AIPanelProps) {
     }
   };
 
+  const clearFilters = () => {
+    setSelectedCampaign('');
+    setSelectedAdset('');
+  };
+
   return (
     <>
-      <Card className="glass-card overflow-x-auto min-h-[200px] w-full flex flex-col justify-between">
+      {/* Mensagem de erro global IA */}
+      {aiError && (
+        <div data-testid="ai-error" className="my-2 p-2 bg-red-900 text-red-200 rounded text-sm">
+          {aiError}
+        </div>
+      )}
+      {rateLimit && (
+        <div data-testid="ai-rate-limit" className="my-2 p-2 bg-yellow-900 text-yellow-200 rounded text-sm">
+          Limite de requisições da IA atingido. Aguarde alguns minutos e tente novamente.
+        </div>
+      )}
+      <Card className="glass-card overflow-x-auto min-h-[200px] w-full flex flex-col justify-between" data-testid="ai-panel">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
             <Brain className="w-6 h-6 text-blue-400" />
@@ -149,21 +275,82 @@ function AIPanel({ data, filters }: AIPanelProps) {
         </CardHeader>
 
       <CardContent className="flex-1 flex flex-col justify-between w-full">
-        {/* Botões de Análise */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* Filtros */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+            >
+              <Filter className="w-4 h-4" />
+              <span className="text-sm">Filtros</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+            {(selectedCampaign || selectedAdset) && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-white/60 hover:text-white/80 transition-colors"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
+          
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
+              {/* Filtro de Campanha */}
+              <div>
+                <label className="block text-xs text-white/70 mb-1">Campanha</label>
+                <select
+                  value={selectedCampaign}
+                  onChange={(e) => setSelectedCampaign(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-white/40"
+                >
+                  <option value="">Todas as campanhas</option>
+                  {uniqueCampaigns.map((campaign, index) => (
+                    <option key={index} value={campaign}>
+                      {campaign}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Filtro de Adset */}
+              <div>
+                <label className="block text-xs text-white/70 mb-1">Adset</label>
+                <select
+                  value={selectedAdset}
+                  onChange={(e) => setSelectedAdset(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-white/40"
+                >
+                  <option value="">Todos os adsets</option>
+                  {uniqueAdsets.map((adset, index) => (
+                    <option key={index} value={adset}>
+                      {adset}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Botões de Análise com cores dos cards de métricas */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           {analysisTypes.map((type) => {
             const Icon = type.icon;
             const isSelected = selectedAnalysis === type.id;
             const isButtonLoading = (type.id === 'anomalies' ? anomaliesLoading : isLoading) && isSelected;
+            const colorClasses = getAnalysisColorClasses(type.color, isSelected);
             
             return (
               <Button
                 key={type.id}
-                variant={isSelected ? "default" : "outline"}
-                className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
+                variant="outline"
+                className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-300 border rounded-lg ${
                   isSelected 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500' 
-                    : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                    ? colorClasses
+                    : `${colorClasses} hover:scale-105`
                 }`}
                 onClick={() => handleAnalysisClick(type.id)}
                 disabled={isButtonLoading}
@@ -184,7 +371,7 @@ function AIPanel({ data, filters }: AIPanelProps) {
 
         {/* Seção de Anomalias */}
         {showAnomalies && (
-          <div className="w-full">
+          <div data-testid="anomalies-section">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <AlertTriangleIcon className="w-5 h-5 text-orange-400" />
@@ -247,10 +434,10 @@ function AIPanel({ data, filters }: AIPanelProps) {
 
         {/* Seção de Otimizações */}
         {showOptimizations && (
-          <div className="w-full">
+          <div data-testid="optimization-section">
             <OptimizationSuggestions
               dateRange={filters.dateRange}
-              campaignIds={data.map(campaign => campaign.campaign_id || campaign.id).filter(Boolean)}
+              campaignIds={getFilteredData().map(campaign => campaign.campaign_id || campaign.id).filter(Boolean)}
               className="mt-4"
             />
           </div>
@@ -294,9 +481,9 @@ function AIPanel({ data, filters }: AIPanelProps) {
       </CardContent>
     </Card>
 
-    {/* Chat Assistant */}
-    <ChatAssistant
-      data={data}
+    {/* Chat Assistant visível imediatamente ao abrir */}
+    <ChatAssistant 
+      data={getFilteredData()}
       filters={filters}
       isOpen={isChatOpen}
       onToggle={() => setIsChatOpen(!isChatOpen)}

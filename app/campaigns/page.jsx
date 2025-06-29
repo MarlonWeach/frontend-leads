@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { SectionTransition } from '../../src/components/ui/transitions';
-import { BarChart3, Info, Eye, MousePointer, DollarSign, AlertCircle, Clock, RefreshCw } from 'lucide-react';
+import { BarChart3, Info, Eye, MousePointer, DollarSign, AlertCircle, Clock, RefreshCw, Brain } from 'lucide-react';
 import { Tooltip } from '../../src/components/Tooltip';
 import { Card } from '../../src/components/ui/card';
 import MainLayout from '../../src/components/MainLayout';
 import { useCampaignsData } from '../../src/hooks/useCampaignsData';
+import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 
 const periodOptions = [
   { value: 'today', label: 'Hoje' },
@@ -33,6 +34,10 @@ function CampaignsPage() {
   const [dateTo, setDateTo] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
   const [statusFilter, setStatusFilter] = useState('active');
+  
+  // Estado para análise individual
+  const [analysisItem, setAnalysisItem] = useState(null);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
   const applyDateFilter = useCallback((period) => {
     // Usar timezone brasileiro (UTC-3) para cálculos corretos
@@ -103,6 +108,17 @@ function CampaignsPage() {
     router.push(`/campaigns?period=${preset}`);
     applyDateFilter(preset);
   }, [router, applyDateFilter]);
+
+  // Função para abrir análise individual
+  const handleAnalysisClick = (campaign) => {
+    setAnalysisItem({
+      id: campaign.id,
+      name: campaign.name,
+      type: 'campaign',
+      data: campaign
+    });
+    setIsAnalysisOpen(true);
+  };
 
   // Usar o novo hook para buscar dados da Meta API
   const { campaigns: allCampaigns, loading, error, lastUpdate, refetch } = useCampaignsData(dateFrom, dateTo);
@@ -259,12 +275,24 @@ function CampaignsPage() {
           {campaigns.map((campaign) => (
             <motion.div
               key={campaign.id}
-              className="glass-card card-metric cursor-pointer"
+              className="glass-card card-metric cursor-pointer relative group"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               data-testid={`campaign-${campaign.name.replace(/\s+/g, '-').toLowerCase()}`}
             >
+              {/* Botão de análise de IA */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAnalysisClick(campaign);
+                }}
+                className="absolute top-2 right-2 p-2 bg-blue-900/30 border border-blue-500/20 text-blue-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-blue-900/40 hover:border-blue-500/40 hover:scale-110 z-10"
+                title="Análise de IA"
+              >
+                <Brain className="w-4 h-4" />
+              </button>
+              
               <div className="card-metric-content">
                 <div className="flex items-center justify-between w-full mb-2">
                   <span className="text-metric-label text-primary-text truncate flex-1">
@@ -347,6 +375,22 @@ function CampaignsPage() {
           </Card>
         )}
       </SectionTransition>
+
+      {/* Modal de Análise Individual */}
+      {analysisItem && (
+        <IndividualAnalysis
+          isOpen={isAnalysisOpen}
+          onClose={() => {
+            setIsAnalysisOpen(false);
+            setAnalysisItem(null);
+          }}
+          item={analysisItem}
+          dateRange={{
+            startDate: dateFrom,
+            endDate: dateTo
+          }}
+        />
+      )}
     </MainLayout>
   );
 } 

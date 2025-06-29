@@ -8,7 +8,12 @@ export enum AnomalyType {
   DUPLICATE_LEADS = 'DUPLICATE_LEADS',
   COST_SPIKE = 'COST_SPIKE',
   PERFORMANCE_DROP = 'PERFORMANCE_DROP',
-  UNUSUAL_PATTERN = 'UNUSUAL_PATTERN'
+  UNUSUAL_PATTERN = 'UNUSUAL_PATTERN',
+  // Novos tipos específicos do setor automotivo
+  LOW_CPL_SUSPICIOUS = 'LOW_CPL_SUSPICIOUS',
+  HIGH_VOLUME_SUSPICIOUS = 'HIGH_VOLUME_SUSPICIOUS',
+  QUALITY_DROP = 'QUALITY_DROP',
+  SEASONAL_ANOMALY = 'SEASONAL_ANOMALY'
 }
 
 // Níveis de severidade
@@ -33,6 +38,15 @@ export interface DetectedAnomaly {
   detectedAt: Date;
 }
 
+// Benchmarks automotivos específicos
+export interface AutomotiveBenchmarks {
+  economic: { cplRange: [number, number]; conversionRate: [number, number] };
+  premium: { cplRange: [number, number]; conversionRate: [number, number] };
+  suv: { cplRange: [number, number]; conversionRate: [number, number] };
+  commercial: { cplRange: [number, number]; conversionRate: [number, number] };
+  luxury: { cplRange: [number, number]; conversionRate: [number, number] };
+}
+
 // Configuração de detecção
 export interface DetectionConfig {
   sensitivity: 'low' | 'medium' | 'high';
@@ -41,7 +55,29 @@ export interface DetectionConfig {
   minDataPoints: number;
   costSpikeThreshold: number;
   performanceDropThreshold: number;
+  // Novos parâmetros automotivos
+  automotiveBenchmarks: AutomotiveBenchmarks;
+  qualityThresholds: {
+    excellent: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  redFlagThresholds: {
+    cplTooLow: number;
+    volumeTooHigh: number;
+    qualityTooLow: number;
+  };
 }
+
+// Benchmarks automotivos padrão
+export const DEFAULT_AUTOMOTIVE_BENCHMARKS: AutomotiveBenchmarks = {
+  economic: { cplRange: [15, 35], conversionRate: [0.08, 0.15] },
+  premium: { cplRange: [45, 80], conversionRate: [0.15, 0.25] },
+  suv: { cplRange: [35, 60], conversionRate: [0.12, 0.20] },
+  commercial: { cplRange: [25, 50], conversionRate: [0.20, 0.35] },
+  luxury: { cplRange: [80, 150], conversionRate: [0.25, 0.40] }
+};
 
 // Configurações por nível de sensibilidade
 export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'medium'): DetectionConfig {
@@ -52,7 +88,19 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       conversionRateThreshold: 0.20,
       minDataPoints: 10,
       costSpikeThreshold: 3.0,
-      performanceDropThreshold: 0.40
+      performanceDropThreshold: 0.40,
+      automotiveBenchmarks: DEFAULT_AUTOMOTIVE_BENCHMARKS,
+      qualityThresholds: {
+        excellent: 90,
+        high: 75,
+        medium: 50,
+        low: 25
+      },
+      redFlagThresholds: {
+        cplTooLow: 0.3, // 30% do benchmark
+        volumeTooHigh: 4.0, // 400% do normal
+        qualityTooLow: 0.3 // 30% de qualidade
+      }
     },
     medium: {
       sensitivity: 'medium' as const,
@@ -60,7 +108,19 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       conversionRateThreshold: 0.15,
       minDataPoints: 5,
       costSpikeThreshold: 2.5,
-      performanceDropThreshold: 0.30
+      performanceDropThreshold: 0.30,
+      automotiveBenchmarks: DEFAULT_AUTOMOTIVE_BENCHMARKS,
+      qualityThresholds: {
+        excellent: 90,
+        high: 75,
+        medium: 50,
+        low: 25
+      },
+      redFlagThresholds: {
+        cplTooLow: 0.5, // 50% do benchmark
+        volumeTooHigh: 3.0, // 300% do normal
+        qualityTooLow: 0.5 // 50% de qualidade
+      }
     },
     high: {
       sensitivity: 'high' as const,
@@ -68,11 +128,47 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       conversionRateThreshold: 0.10,
       minDataPoints: 3,
       costSpikeThreshold: 2.0,
-      performanceDropThreshold: 0.20
+      performanceDropThreshold: 0.20,
+      automotiveBenchmarks: DEFAULT_AUTOMOTIVE_BENCHMARKS,
+      qualityThresholds: {
+        excellent: 90,
+        high: 75,
+        medium: 50,
+        low: 25
+      },
+      redFlagThresholds: {
+        cplTooLow: 0.7, // 70% do benchmark
+        volumeTooHigh: 2.0, // 200% do normal
+        qualityTooLow: 0.7 // 70% de qualidade
+      }
     }
   };
 
   return configs[sensitivity];
+}
+
+// Função para determinar categoria de veículo baseado no nome da campanha
+export function detectVehicleCategory(campaignName: string): keyof AutomotiveBenchmarks {
+  const name = campaignName.toLowerCase();
+  
+  if (name.includes('econômico') || name.includes('economico') || name.includes('popular')) {
+    return 'economic';
+  }
+  if (name.includes('premium') || name.includes('luxo') || name.includes('executivo')) {
+    return 'premium';
+  }
+  if (name.includes('suv') || name.includes('4x4') || name.includes('utilitário')) {
+    return 'suv';
+  }
+  if (name.includes('comercial') || name.includes('frota') || name.includes('empresarial')) {
+    return 'commercial';
+  }
+  if (name.includes('luxury') || name.includes('exclusivo') || name.includes('importado')) {
+    return 'luxury';
+  }
+  
+  // Padrão para SUV se não conseguir identificar
+  return 'suv';
 }
 
 // Função principal de detecção
@@ -91,7 +187,10 @@ export async function detectAnomalies(
     // 2. Detecção de padrões específicos
     anomalies.push(...detectPatternAnomalies(data, fullConfig));
 
-    // 3. Análise com IA (se dados suficientes)
+    // 3. Detecção específica do setor automotivo
+    anomalies.push(...detectAutomotiveAnomalies(data, fullConfig));
+
+    // 4. Análise com IA (se dados suficientes)
     if (data.length >= fullConfig.minDataPoints) {
       const aiAnomalies = await detectAIAnomalies(data, fullConfig);
       anomalies.push(...aiAnomalies);
@@ -266,6 +365,113 @@ function detectPatternAnomalies(data: any[], config: DetectionConfig): DetectedA
       });
     }
   }
+
+  return anomalies;
+}
+
+// Detecção específica do setor automotivo
+function detectAutomotiveAnomalies(data: any[], config: DetectionConfig): DetectedAnomaly[] {
+  const anomalies: DetectedAnomaly[] = [];
+
+  data.forEach(campaign => {
+    const campaignName = campaign.campaign_name || campaign.name || '';
+    const category = detectVehicleCategory(campaignName);
+    const benchmarks = config.automotiveBenchmarks[category];
+    
+    const cpl = campaign.cpl || 0;
+    const conversionRate = campaign.conversion_rate || 0;
+    const volume = campaign.leads || 0;
+    const quality = campaign.quality_score || 0;
+
+    // CPL muito baixo (suspeita de fraude)
+    if (cpl > 0 && cpl < benchmarks.cplRange[0] * config.redFlagThresholds.cplTooLow) {
+      anomalies.push({
+        id: `low-cpl-${campaign.campaign_id}`,
+        type: AnomalyType.LOW_CPL_SUSPICIOUS,
+        severity: AnomalySeverity.HIGH,
+        title: 'CPL Suspeitamente Baixo',
+        description: `Campanha "${campaignName}" tem CPL de R$ ${cpl.toFixed(2)}, muito abaixo do benchmark de R$ ${benchmarks.cplRange[0]}-${benchmarks.cplRange[1]} para ${category}`,
+        confidence: 0.85,
+        affectedCampaigns: [campaignName],
+        metrics: { cpl, benchmark: benchmarks.cplRange, category },
+        recommendations: [
+          'Verificar se há tráfego incentivado',
+          'Analisar qualidade dos leads recebidos',
+          'Confirmar se dados são legítimos',
+          'Revisar configurações de segmentação'
+        ],
+        detectedAt: new Date()
+      });
+    }
+
+    // Volume muito alto (suspeita de fraude)
+    const avgVolume = data.reduce((sum, c) => sum + (c.leads || 0), 0) / data.length;
+    if (volume > avgVolume * config.redFlagThresholds.volumeTooHigh) {
+      anomalies.push({
+        id: `high-volume-${campaign.campaign_id}`,
+        type: AnomalyType.HIGH_VOLUME_SUSPICIOUS,
+        severity: AnomalySeverity.HIGH,
+        title: 'Volume Suspeitamente Alto',
+        description: `Campanha "${campaignName}" gerou ${volume} leads, muito acima da média de ${avgVolume.toFixed(0)} leads`,
+        confidence: 0.80,
+        affectedCampaigns: [campaignName],
+        metrics: { volume, average: avgVolume, ratio: volume / avgVolume },
+        recommendations: [
+          'Verificar origem do tráfego',
+          'Analisar qualidade dos leads',
+          'Confirmar se não há bots ou tráfego incentivado',
+          'Revisar configurações de campanha'
+        ],
+        detectedAt: new Date()
+      });
+    }
+
+    // Qualidade muito baixa
+    if (quality > 0 && quality < config.qualityThresholds.low) {
+      anomalies.push({
+        id: `low-quality-${campaign.campaign_id}`,
+        type: AnomalyType.QUALITY_DROP,
+        severity: AnomalySeverity.MEDIUM,
+        title: 'Qualidade de Leads Muito Baixa',
+        description: `Campanha "${campaignName}" tem qualidade de ${quality} pontos, muito abaixo do aceitável (${config.qualityThresholds.low}+)`,
+        confidence: 0.75,
+        affectedCampaigns: [campaignName],
+        metrics: { quality, threshold: config.qualityThresholds.low },
+        recommendations: [
+          'Revisar segmentação de público',
+          'Otimizar copy e criativos',
+          'Analisar horários de veiculação',
+          'Considerar ajustar targeting'
+        ],
+        detectedAt: new Date()
+      });
+    }
+
+    // Anomalia sazonal
+    const currentMonth = new Date().getMonth() + 1;
+    const isLowSeason = currentMonth >= 7 && currentMonth <= 9; // Julho-Setembro
+    const isHighSeason = (currentMonth >= 1 && currentMonth <= 3) || (currentMonth >= 10 && currentMonth <= 12);
+    
+    if (isLowSeason && conversionRate > benchmarks.conversionRate[1]) {
+      anomalies.push({
+        id: `seasonal-${campaign.campaign_id}`,
+        type: AnomalyType.SEASONAL_ANOMALY,
+        severity: AnomalySeverity.LOW,
+        title: 'Performance Acima do Esperado para Baixa Temporada',
+        description: `Campanha "${campaignName}" tem conversão de ${(conversionRate * 100).toFixed(1)}% em período de baixa temporada (Julho-Setembro)`,
+        confidence: 0.70,
+        affectedCampaigns: [campaignName],
+        metrics: { conversionRate, season: 'low', benchmark: benchmarks.conversionRate },
+        recommendations: [
+          'Aproveitar o momento para otimizar campanha',
+          'Analisar fatores que estão gerando boa performance',
+          'Considerar aumentar investimento',
+          'Documentar estratégias de sucesso'
+        ],
+        detectedAt: new Date()
+      });
+    }
+  });
 
   return anomalies;
 }

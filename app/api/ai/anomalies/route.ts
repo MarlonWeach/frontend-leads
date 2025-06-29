@@ -151,32 +151,39 @@ export async function GET(request: NextRequest) {
 async function fetchCampaignData(dateRange: any, campaignIds?: string[]) {
   try {
     let query = supabase
-      .from('campaigns')
+      .from('adset_insights')
       .select(`
-        id,
-        name,
-        status,
-        daily_budget,
-        created_time,
-        updated_time
+        adset_id,
+        campaign_id,
+        date,
+        leads,
+        spend,
+        impressions,
+        clicks,
+        ctr,
+        cpc,
+        cpm,
+        cpl,
+        reach,
+        frequency
       `)
-      .gte('created_time', dateRange.startDate)
-      .lte('created_time', dateRange.endDate);
+      .gte('date', dateRange.startDate)
+      .lte('date', dateRange.endDate);
 
     if (campaignIds && campaignIds.length > 0) {
-      query = query.in('id', campaignIds);
+      query = query.in('campaign_id', campaignIds);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar dados de campanhas:', error);
+      console.error('Erro ao buscar dados de adset_insights:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Erro na consulta de campanhas:', error);
+    console.error('Erro na consulta de adset_insights:', error);
     return [];
   }
 }

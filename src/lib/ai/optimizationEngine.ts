@@ -14,6 +14,9 @@ export interface OptimizationSuggestion {
   reasoning: string;
   implementable: boolean;
   estimatedROI?: number;
+  vehicleCategory?: string;
+  seasonalContext?: string;
+  qualityImpact?: string;
 }
 
 export interface OptimizationAnalysis {
@@ -30,6 +33,13 @@ export interface OptimizationAnalysis {
     avgCTR: number;
     avgCPL: number;
     avgConversionRate: number;
+    automotiveBenchmarks: {
+      economic: { cplRange: [number, number]; conversionRate: [number, number] };
+      premium: { cplRange: [number, number]; conversionRate: [number, number] };
+      suv: { cplRange: [number, number]; conversionRate: [number, number] };
+      commercial: { cplRange: [number, number]; conversionRate: [number, number] };
+      luxury: { cplRange: [number, number]; conversionRate: [number, number] };
+    };
   };
 }
 
@@ -61,51 +71,108 @@ export interface CampaignData {
   };
 }
 
+const AUTOMOTIVE_OPTIMIZATION_CONTEXT = `
+CONTEXTO AUTOMOTIVO PARA OTIMIZAÇÃO:
+
+BENCHMARKS POR CATEGORIA:
+- Econômicos (até R$ 80k): CPL R$ 15-35, conversão 8-15%
+- Premium (R$ 80k-200k): CPL R$ 45-80, conversão 15-25%
+- SUVs (todas faixas): CPL R$ 35-60, conversão 12-20%
+- Comerciais: CPL R$ 25-50, conversão 20-35%
+- Luxo (acima R$ 200k): CPL R$ 80-150, conversão 25-40%
+
+SAZONALIDADE AUTOMOTIVA:
+- Alta Temporada: Janeiro-Março (13º salário), Outubro-Dezembro (férias)
+- Média Temporada: Abril-Junho
+- Baixa Temporada: Julho-Setembro (inverno, férias escolares)
+
+MELHORES PRÁTICAS AUTOMOTIVAS:
+- Test Drive: Foco principal para conversão
+- Financiamento: Opção importante para decisão
+- Segurança: Diferencial para famílias
+- Tecnologia: Atração para público premium
+- Economia: Foco para veículos econômicos
+
+SEGMENTAÇÃO EFETIVA:
+- Idade: 25-45 anos (maior poder de compra)
+- Interesses: Marca específica, categoria, financiamento
+- Comportamento: Compradores online, pesquisadores
+- Localização: Raio de 50km da concessionária
+
+COPY E CRIATIVOS OTIMIZADOS:
+- Urgência: "Últimas unidades", "Oferta por tempo limitado"
+- Benefícios: "Economia de combustível", "Segurança familiar"
+- Social Proof: "Mais vendido da categoria"
+- CTA: "Agende seu test drive grátis"
+`;
+
 const OPTIMIZATION_PROMPTS = {
   SEGMENTACAO: `
-Analise os dados de campanha e sugira otimizações de segmentação:
-- Identifique públicos com melhor performance
-- Sugira exclusões ou inclusões de audiências
-- Recomende ajustes demográficos
-- Considere interesses de alta conversão
+${AUTOMOTIVE_OPTIMIZATION_CONTEXT}
+
+Analise os dados de campanha e sugira otimizações de segmentação específicas para o setor automotivo:
+- Identifique públicos com melhor performance para test drive
+- Sugira exclusões ou inclusões de audiências baseadas em categoria de veículo
+- Recomende ajustes demográficos específicos do setor
+- Considere interesses automotivos de alta conversão
+- Analise padrões de localização próximos à concessionária
 `,
 
   CRIATIVO: `
-Analise a performance de criativos e sugira melhorias:
-- Identifique elementos de alta performance
-- Sugira variações de copy e imagens
-- Recomende testes A/B específicos
-- Considere tendências do setor automotivo
+${AUTOMOTIVE_OPTIMIZATION_CONTEXT}
+
+Analise a performance de criativos e sugira melhorias específicas para o setor automotivo:
+- Identifique elementos de alta performance para test drive
+- Sugira variações de copy focadas em benefícios automotivos
+- Recomende testes A/B específicos para diferentes categorias
+- Considere tendências do setor automotivo (SUV, elétricos, etc.)
+- Otimize CTAs para agendamento de test drive
 `,
 
   ORCAMENTO: `
-Analise a distribuição de orçamento e sugira otimizações:
-- Identifique campanhas com melhor ROI
-- Sugira realocação de verba
-- Recomende ajustes de lance
-- Considere sazonalidade e performance
+${AUTOMOTIVE_OPTIMIZATION_CONTEXT}
+
+Analise a distribuição de orçamento e sugira otimizações considerando o contexto automotivo:
+- Identifique campanhas com melhor ROI para test drive
+- Sugira realocação de verba baseada em sazonalidade automotiva
+- Recomende ajustes de lance por categoria de veículo
+- Considere performance por região geográfica
+- Otimize investimento em horários de maior conversão
 `,
 
   TIMING: `
-Analise padrões temporais e sugira otimizações de timing:
-- Identifique melhores horários e dias
-- Sugira ajustes de programação
-- Recomende pausas estratégicas
-- Considere comportamento do público-alvo
+${AUTOMOTIVE_OPTIMIZATION_CONTEXT}
+
+Analise padrões temporais e sugira otimizações de timing específicas para o setor automotivo:
+- Identifique melhores horários para agendamento de test drive
+- Sugira ajustes de programação baseados em sazonalidade
+- Recomende pausas estratégicas em baixa temporada
+- Considere comportamento do público automotivo
+- Otimize horários de contato com leads
 `,
 
   ABTEST: `
-Sugira testes A/B estratégicos baseados nos dados:
-- Identifique elementos para testar
-- Sugira variações específicas
-- Recomende métricas de sucesso
-- Considere significância estatística
+${AUTOMOTIVE_OPTIMIZATION_CONTEXT}
+
+Sugira testes A/B estratégicos específicos para o setor automotivo:
+- Identifique elementos para testar (copy, criativos, segmentação)
+- Sugira variações específicas para test drive
+- Recomende métricas de sucesso automotivas
+- Considere significância estatística para o setor
+- Foque em conversão para agendamento
 `
 };
 
 export class OptimizationEngine {
   private campaigns: CampaignData[] = [];
   private benchmarks: any = {};
+  private automotiveBenchmarks = {
+    economic: { cplRange: [15, 35], conversionRate: [0.08, 0.15] },
+    premium: { cplRange: [45, 80], conversionRate: [0.15, 0.25] },
+    suv: { cplRange: [35, 60], conversionRate: [0.12, 0.20] },
+    commercial: { cplRange: [25, 50], conversionRate: [0.20, 0.35] },
+    luxury: { cplRange: [80, 150], conversionRate: [0.25, 0.40] }
+  };
 
   constructor(campaigns: CampaignData[]) {
     this.campaigns = campaigns;
@@ -116,27 +183,69 @@ export class OptimizationEngine {
     const activeCampaigns = this.campaigns.filter(c => c.status === 'ACTIVE');
     
     if (activeCampaigns.length === 0) {
-      this.benchmarks = { avgCTR: 0, avgCPL: 0, avgConversionRate: 0 };
+      this.benchmarks = { 
+        avgCTR: 0, 
+        avgCPL: 0, 
+        avgConversionRate: 0,
+        automotiveBenchmarks: this.automotiveBenchmarks
+      };
       return;
     }
 
     this.benchmarks = {
       avgCTR: activeCampaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / activeCampaigns.length,
       avgCPL: activeCampaigns.reduce((sum, c) => sum + (c.cpl || 0), 0) / activeCampaigns.length,
-      avgConversionRate: activeCampaigns.reduce((sum, c) => sum + (c.conversion_rate || 0), 0) / activeCampaigns.length
+      avgConversionRate: activeCampaigns.reduce((sum, c) => sum + (c.conversion_rate || 0), 0) / activeCampaigns.length,
+      automotiveBenchmarks: this.automotiveBenchmarks
     };
+  }
+
+  private detectVehicleCategory(campaignName: string): keyof typeof this.automotiveBenchmarks {
+    const name = campaignName.toLowerCase();
+    
+    if (name.includes('econômico') || name.includes('economico') || name.includes('popular')) {
+      return 'economic';
+    }
+    if (name.includes('premium') || name.includes('luxo') || name.includes('executivo')) {
+      return 'premium';
+    }
+    if (name.includes('suv') || name.includes('4x4') || name.includes('utilitário')) {
+      return 'suv';
+    }
+    if (name.includes('comercial') || name.includes('frota') || name.includes('empresarial')) {
+      return 'commercial';
+    }
+    if (name.includes('luxury') || name.includes('exclusivo') || name.includes('importado')) {
+      return 'luxury';
+    }
+    
+    return 'suv';
+  }
+
+  private getSeasonalContext(): string {
+    const currentMonth = new Date().getMonth() + 1;
+    
+    if (currentMonth >= 1 && currentMonth <= 3) {
+      return 'Alta temporada - 13º salário e férias';
+    }
+    if (currentMonth >= 7 && currentMonth <= 9) {
+      return 'Baixa temporada - Inverno e férias escolares';
+    }
+    if (currentMonth >= 10 && currentMonth <= 12) {
+      return 'Alta temporada - Férias e Black Friday';
+    }
+    
+    return 'Média temporada - Período estável';
   }
 
   async generateOptimizations(): Promise<OptimizationAnalysis> {
     const suggestions: OptimizationSuggestion[] = [];
 
-    // Gerar sugestões para cada tipo
     for (const type of ['SEGMENTACAO', 'CRIATIVO', 'ORCAMENTO', 'TIMING', 'ABTEST'] as const) {
       const typeSuggestions = await this.generateSuggestionsByType(type);
       suggestions.push(...typeSuggestions);
     }
 
-    // Ordenar por prioridade e impacto
     suggestions.sort((a, b) => {
       if (a.impact !== b.impact) {
         const impactOrder = { 'ALTO': 3, 'MEDIO': 2, 'BAIXO': 1 };
@@ -146,7 +255,7 @@ export class OptimizationEngine {
     });
 
     return {
-      suggestions: suggestions.slice(0, 10), // Top 10 sugestões
+      suggestions: suggestions.slice(0, 10),
       summary: this.calculateSummary(suggestions),
       benchmarks: this.benchmarks
     };
@@ -162,9 +271,29 @@ export class OptimizationEngine {
         messages: [
           {
             role: 'system',
-            content: `Você é um especialista em otimização de campanhas de Lead Ads para o setor automotivo. 
-            Analise os dados fornecidos e gere sugestões específicas e acionáveis.
-            Retorne APENAS um JSON válido com array de sugestões no formato especificado.`
+            content: `Você é um especialista em otimização de campanhas de Lead Ads para o setor automotivo brasileiro. 
+            Analise os dados fornecidos e gere sugestões específicas e acionáveis considerando o contexto automotivo.
+            Retorne APENAS um JSON válido com array de sugestões no formato especificado.
+            
+            Formato esperado:
+            [
+              {
+                "title": "Título da sugestão",
+                "description": "Descrição detalhada",
+                "impact": "ALTO|MEDIO|BAIXO",
+                "confidence": 85,
+                "expectedImprovement": "Redução de 20% no CPL",
+                "actionItems": ["Ação 1", "Ação 2"],
+                "campaignId": "id_da_campanha",
+                "priority": 8,
+                "reasoning": "Justificativa baseada em dados",
+                "implementable": true,
+                "estimatedROI": 150,
+                "vehicleCategory": "suv",
+                "seasonalContext": "Alta temporada",
+                "qualityImpact": "Melhoria na qualidade de leads"
+              }
+            ]`
           },
           {
             role: 'user',
@@ -178,7 +307,6 @@ export class OptimizationEngine {
       const content = response.choices[0]?.message?.content;
       if (!content) return [];
 
-      // Parse da resposta da IA
       const aiSuggestions = JSON.parse(content);
       
       return aiSuggestions.map((suggestion: any, index: number) => ({
@@ -194,11 +322,14 @@ export class OptimizationEngine {
         priority: Math.min(10, Math.max(1, suggestion.priority || 5)),
         reasoning: suggestion.reasoning || '',
         implementable: suggestion.implementable !== false,
-        estimatedROI: suggestion.estimatedROI
+        estimatedROI: suggestion.estimatedROI,
+        vehicleCategory: suggestion.vehicleCategory,
+        seasonalContext: suggestion.seasonalContext,
+        qualityImpact: suggestion.qualityImpact
       }));
 
     } catch (error) {
-      console.error(`Erro ao gerar sugestões para ${type}:`, error);
+      console.error(`Erro ao gerar sugestões de ${type}:`, error);
       return this.generateFallbackSuggestions(type);
     }
   }
@@ -332,18 +463,13 @@ Gere entre 1-3 sugestões específicas e acionáveis para o tipo ${type}.
     return summary;
   }
 
-  // Método para aplicar sugestão automaticamente
   async applySuggestion(suggestionId: string): Promise<{ success: boolean; message: string }> {
-    // TODO: Implementar aplicação automática baseada no tipo de sugestão
-    // Por enquanto, apenas simular
-    
     return {
       success: true,
       message: `Sugestão ${suggestionId} foi aplicada com sucesso. Monitoramento iniciado.`
     };
   }
 
-  // Método para rastrear resultados de sugestões aplicadas
   async trackSuggestionResults(suggestionId: string, beforeMetrics: any, afterMetrics: any) {
     // TODO: Implementar tracking de resultados
     // Comparar métricas antes e depois da aplicação

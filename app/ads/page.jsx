@@ -6,10 +6,11 @@ import { useCampaignsList } from '../../src/hooks/useCampaignsList';
 import { useAdsetsList } from '../../src/hooks/useAdsetsList';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
 import Button from '../../src/components/ui/button';
-import { ArrowUpDown, Filter, RefreshCw, Image, Video, FileText, Eye, MousePointer, DollarSign, TrendingUp, Calendar } from 'lucide-react';
+import { ArrowUpDown, Filter, RefreshCw, Image, Video, FileText, Eye, MousePointer, DollarSign, TrendingUp, Calendar, Brain } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
 import AdCreativePreview from '../../src/components/ui/AdCreativePreview';
 import AdCreativeModal from '../../src/components/ui/AdCreativeModal';
+import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 import { formatInTimeZone } from 'date-fns-tz';
 import ReactDOM from 'react-dom';
 
@@ -35,6 +36,10 @@ export default function AdsPage() {
   const dateMenuRef = useRef(null);
   const campaignMenuRef = useRef(null);
   const adsetMenuRef = useRef(null);
+  
+  // Estado para análise individual
+  const [analysisItem, setAnalysisItem] = useState(null);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
   const { ads, loading, error, metrics, refreshAds, isFetching } = useAdsData(filters);
   const { campaigns, loading: campaignsLoading } = useCampaignsList();
@@ -96,6 +101,17 @@ export default function AdsPage() {
       adsetId: ''
     }));
   }, [filters.campaignId]);
+
+  // Função para abrir análise individual
+  const handleAnalysisClick = (ad) => {
+    setAnalysisItem({
+      id: ad.id,
+      name: ad.name,
+      type: 'ad',
+      data: ad
+    });
+    setIsAnalysisOpen(true);
+  };
 
   const applyDatePreset = (presetIndex) => {
     const preset = datePresets[presetIndex];
@@ -202,331 +218,228 @@ export default function AdsPage() {
     return adset ? adset.name : filters.adsetId;
   };
 
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const statusOptions = [
-    { value: 'ACTIVE', label: 'Ativo' },
-    { value: 'INACTIVE', label: 'Inativo' },
-    { value: 'PAUSED', label: 'Pausado' },
-  ];
-
-  const statusLabel = {
-    'ACTIVE': 'Ativo',
-    'INACTIVE': 'Inativo',
-    'PAUSED': 'Pausado',
-  };
-
-  const statusBtnRef = useRef(null);
-  const presetBtnRef = useRef(null);
-  const campaignBtnRef = useRef(null);
-  const adsetBtnRef = useRef(null);
-  const [statusMenuPos, setStatusMenuPos] = useState(null);
-  const [presetMenuPos, setPresetMenuPos] = useState(null);
-  const [campaignMenuPos, setCampaignMenuPos] = useState(null);
-  const [adsetMenuPos, setAdsetMenuPos] = useState(null);
-  const [pendingStatusMenu, setPendingStatusMenu] = useState(false);
-  const [pendingPresetMenu, setPendingPresetMenu] = useState(false);
-  const [pendingCampaignMenu, setPendingCampaignMenu] = useState(false);
-  const [pendingAdsetMenu, setPendingAdsetMenu] = useState(false);
-
-  // Ao clicar, apenas marca como pendente
+  // Funções para abrir menus
   const openStatusMenu = () => {
-    setPendingStatusMenu(true);
+    setShowDateMenu(false);
+    setShowCampaignMenu(false);
+    setShowAdsetMenu(false);
   };
+
   const openPresetMenu = () => {
-    setPendingPresetMenu(true);
+    setShowDateMenu(!showDateMenu);
+    setShowCampaignMenu(false);
+    setShowAdsetMenu(false);
   };
+
   const openCampaignMenu = () => {
-    setPendingCampaignMenu(true);
+    setShowDateMenu(false);
+    setShowCampaignMenu(!showCampaignMenu);
+    setShowAdsetMenu(false);
   };
+
   const openAdsetMenu = () => {
-    setPendingAdsetMenu(true);
+    setShowDateMenu(false);
+    setShowCampaignMenu(false);
+    setShowAdsetMenu(!showAdsetMenu);
   };
 
-  // Quando pendente, calcula a posição e só então mostra o menu
+  // Fechar menus quando clicar fora
   useEffect(() => {
-    if (pendingStatusMenu && statusBtnRef.current) {
-      const rect = statusBtnRef.current.getBoundingClientRect();
-      setStatusMenuPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
-      setShowStatusMenu(true);
-      setPendingStatusMenu(false);
-    }
-  }, [pendingStatusMenu]);
+    const handleClickOutside = (event) => {
+      if (dateMenuRef.current && !dateMenuRef.current.contains(event.target)) {
+        setShowDateMenu(false);
+      }
+      if (campaignMenuRef.current && !campaignMenuRef.current.contains(event.target)) {
+        setShowCampaignMenu(false);
+      }
+      if (adsetMenuRef.current && !adsetMenuRef.current.contains(event.target)) {
+        setShowAdsetMenu(false);
+      }
+    };
 
-  useEffect(() => {
-    if (pendingPresetMenu && presetBtnRef.current) {
-      const rect = presetBtnRef.current.getBoundingClientRect();
-      setPresetMenuPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
-      setShowDateMenu(true);
-      setPendingPresetMenu(false);
-    }
-  }, [pendingPresetMenu]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  useEffect(() => {
-    if (pendingCampaignMenu && campaignBtnRef.current) {
-      const rect = campaignBtnRef.current.getBoundingClientRect();
-      setCampaignMenuPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
-      setShowCampaignMenu(true);
-      setPendingCampaignMenu(false);
-    }
-  }, [pendingCampaignMenu]);
-
-  useEffect(() => {
-    if (pendingAdsetMenu && adsetBtnRef.current) {
-      const rect = adsetBtnRef.current.getBoundingClientRect();
-      setAdsetMenuPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
-      setShowAdsetMenu(true);
-      setPendingAdsetMenu(false);
-    }
-  }, [pendingAdsetMenu]);
-
-  // Ao fechar, limpa a posição
-  useEffect(() => {
-    if (!showStatusMenu) setStatusMenuPos(null);
-  }, [showStatusMenu]);
-  useEffect(() => {
-    if (!showDateMenu) setPresetMenuPos(null);
-  }, [showDateMenu]);
-  useEffect(() => {
-    if (!showCampaignMenu) setCampaignMenuPos(null);
-  }, [showCampaignMenu]);
-  useEffect(() => {
-    if (!showAdsetMenu) setAdsetMenuPos(null);
-  }, [showAdsetMenu]);
+  if (error) {
+    return (
+      <MainLayout title="Anúncios" breadcrumbs={[{ name: 'Anúncios', href: '/ads' }]}>
+        <div className="text-center py-8">
+          <div className="text-red-400 text-lg font-medium mb-4">{error}</div>
+          <Button onClick={() => refreshAds()}>
+            Tentar novamente
+          </Button>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Anúncios</h1>
-            <p className="text-white/70 text-lg">Análise detalhada de anúncios individuais</p>
+    <MainLayout title="Anúncios" breadcrumbs={[{ name: 'Anúncios', href: '/ads' }]}>
+      <div className="space-y-6">
+        <div className="mb-6">
+          <h1 className="text-header text-white mb-2">Anúncios</h1>
+          <p className="text-sublabel-refined text-white/70">Gerencie e analise seus anúncios</p>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Filtro de Status */}
+          <div className="relative">
+            <Button
+              onClick={openStatusMenu}
+              className="flex items-center gap-2 glass-medium"
+            >
+              <Filter className="w-4 h-4" />
+              Status: {filters.status || 'Todos'}
+            </Button>
+            {showDateMenu && (
+              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[200px]">
+                <div className="p-2">
+                  {['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED'].map((status) => (
+                    <button
+                      key={status}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
+                        filters.status === status ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      }`}
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, status }));
+                        setShowDateMenu(false);
+                      }}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <Button 
-            onClick={refreshAds} 
+
+          {/* Filtro de Data */}
+          <div className="relative" ref={dateMenuRef}>
+            <Button
+              onClick={openPresetMenu}
+              className="flex items-center gap-2 glass-medium"
+            >
+              <Calendar className="w-4 h-4" />
+              {getDateLabel()}
+            </Button>
+            {showDateMenu && (
+              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px]">
+                <div className="p-2">
+                  {datePresets.map((preset, index) => (
+                    <button
+                      key={preset.label}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
+                        selectedPreset === index ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      }`}
+                      onClick={() => applyDatePreset(index)}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Filtro de Campanha */}
+          <div className="relative" ref={campaignMenuRef}>
+            <Button
+              onClick={openCampaignMenu}
+              className="flex items-center gap-2 glass-medium"
+              disabled={campaignsLoading}
+            >
+              <Filter className="w-4 h-4" />
+              {getCampaignLabel()}
+            </Button>
+            {showCampaignMenu && (
+              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px] max-h-[400px] overflow-y-auto">
+                <div className="p-2">
+                  <button
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-800 hover:bg-blue-100"
+                    onClick={() => {
+                      setFilters(prev => ({ ...prev, campaignId: '' }));
+                      setShowCampaignMenu(false);
+                    }}
+                  >
+                    Todas as campanhas
+                  </button>
+                  {campaigns.map((campaign) => (
+                    <button
+                      key={campaign.id}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
+                        filters.campaignId === campaign.id ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      }`}
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, campaignId: campaign.id }));
+                        setShowCampaignMenu(false);
+                      }}
+                    >
+                      {campaign.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Filtro de AdSet */}
+          <div className="relative" ref={adsetMenuRef}>
+            <Button
+              onClick={openAdsetMenu}
+              className="flex items-center gap-2 glass-medium"
+              disabled={adsetsLoading || !filters.campaignId}
+            >
+              <Filter className="w-4 h-4" />
+              {getAdsetLabel()}
+            </Button>
+            {showAdsetMenu && (
+              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px] max-h-[400px] overflow-y-auto">
+                <div className="p-2">
+                  <button
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-800 hover:bg-blue-100"
+                    onClick={() => {
+                      setFilters(prev => ({ ...prev, adsetId: '' }));
+                      setShowAdsetMenu(false);
+                    }}
+                  >
+                    Todos os adsets
+                  </button>
+                  {adsets.map((adset) => (
+                    <button
+                      key={adset.id}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
+                        filters.adsetId === adset.id ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      }`}
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, adsetId: adset.id }));
+                        setShowAdsetMenu(false);
+                      }}
+                    >
+                      {adset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Botão de Atualizar */}
+          <Button
+            onClick={() => refreshAds()}
             disabled={loading || isFetching}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 glass-medium"
           >
             <RefreshCw className={`w-4 h-4 ${loading || isFetching ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
         </div>
 
-        {/* Filtros */}
-        <Card className="backdrop-blur-md bg-white/10 border border-white/20 overflow-visible">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <Filter className="w-5 h-5 text-blue-400" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-              {/* Status */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Status
-                </label>
-                <Button
-                  ref={statusBtnRef}
-                  onClick={openStatusMenu}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 flex items-center justify-between backdrop-blur-sm relative"
-                >
-                  <span>{statusLabel[filters.status] || 'Todos'}</span>
-                  <ArrowUpDown className="w-4 h-4" />
-                </Button>
-                
-                {showStatusMenu && statusMenuPos !== null && ReactDOM.createPortal(
-                  <div
-                    className="bg-gray-800 border border-white/20 rounded-lg shadow-xl z-50 backdrop-blur-md"
-                    style={{
-                      position: 'absolute',
-                      top: statusMenuPos.top,
-                      left: statusMenuPos.left,
-                      width: statusMenuPos.width,
-                      minWidth: 180,
-                      zIndex: 9999
-                    }}
-                  >
-                    {statusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => { setFilters(prev => ({ ...prev, status: option.value })); setShowStatusMenu(false); }}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>,
-                  document.body
-                )}
-              </div>
-
-              {/* Campanha */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Campanha
-                </label>
-                <Button
-                  ref={campaignBtnRef}
-                  onClick={openCampaignMenu}
-                  disabled={campaignsLoading}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 flex items-center justify-between backdrop-blur-sm relative"
-                >
-                  <span className="truncate">{getCampaignLabel()}</span>
-                  <ArrowUpDown className="w-4 h-4 flex-shrink-0" />
-                </Button>
-                
-                {showCampaignMenu && campaignMenuPos !== null && ReactDOM.createPortal(
-                  <div
-                    className="bg-gray-800 border border-white/20 rounded-lg shadow-xl z-50 backdrop-blur-md max-h-60 overflow-y-auto"
-                    style={{
-                      position: 'absolute',
-                      top: campaignMenuPos.top,
-                      left: campaignMenuPos.left,
-                      width: campaignMenuPos.width,
-                      minWidth: 200,
-                      zIndex: 9999
-                    }}
-                  >
-                    <button
-                      onClick={() => { setFilters(prev => ({ ...prev, campaignId: '' })); setShowCampaignMenu(false); }}
-                      className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors first:rounded-t-lg"
-                    >
-                      Todas as campanhas
-                    </button>
-                    {campaigns.map((campaign) => (
-                      <button
-                        key={campaign.id}
-                        onClick={() => { setFilters(prev => ({ ...prev, campaignId: campaign.id })); setShowCampaignMenu(false); }}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors last:rounded-b-lg"
-                      >
-                        {campaign.name}
-                      </button>
-                    ))}
-                  </div>,
-                  document.body
-                )}
-              </div>
-
-              {/* AdSet */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  AdSet
-                </label>
-                <Button
-                  ref={adsetBtnRef}
-                  onClick={openAdsetMenu}
-                  disabled={adsetsLoading || !filters.campaignId}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 flex items-center justify-between backdrop-blur-sm relative"
-                >
-                  <span className="truncate">{getAdsetLabel()}</span>
-                  <ArrowUpDown className="w-4 h-4 flex-shrink-0" />
-                </Button>
-                
-                {showAdsetMenu && adsetMenuPos !== null && ReactDOM.createPortal(
-                  <div
-                    className="bg-gray-800 border border-white/20 rounded-lg shadow-xl z-50 backdrop-blur-md max-h-60 overflow-y-auto"
-                    style={{
-                      position: 'absolute',
-                      top: adsetMenuPos.top,
-                      left: adsetMenuPos.left,
-                      width: adsetMenuPos.width,
-                      minWidth: 200,
-                      zIndex: 9999
-                    }}
-                  >
-                    <button
-                      onClick={() => { setFilters(prev => ({ ...prev, adsetId: '' })); setShowAdsetMenu(false); }}
-                      className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors first:rounded-t-lg"
-                    >
-                      Todos os adsets
-                    </button>
-                    {adsets.map((adset) => (
-                      <button
-                        key={adset.id}
-                        onClick={() => { setFilters(prev => ({ ...prev, adsetId: adset.id })); setShowAdsetMenu(false); }}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors last:rounded-b-lg"
-                      >
-                        {adset.name}
-                      </button>
-                    ))}
-                  </div>,
-                  document.body
-                )}
-              </div>
-
-              {/* Data Início */}
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Data Início
-                </label>
-                <input
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
-                />
-              </div>
-
-              {/* Data Fim */}
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Data Fim
-                </label>
-                <input
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
-                />
-              </div>
-
-              {/* Presets de Data */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Presets
-                </label>
-                <Button
-                  ref={presetBtnRef}
-                  onClick={openPresetMenu}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 flex items-center justify-between backdrop-blur-sm relative"
-                >
-                  <span>{getDateLabel()}</span>
-                  <Calendar className="w-4 h-4" />
-                </Button>
-                
-                {showDateMenu && presetMenuPos !== null && ReactDOM.createPortal(
-                  <div
-                    className="bg-gray-800 border border-white/20 rounded-lg shadow-xl z-50 backdrop-blur-md"
-                    style={{
-                      position: 'absolute',
-                      top: presetMenuPos.top,
-                      left: presetMenuPos.left,
-                      width: presetMenuPos.width,
-                      minWidth: 180,
-                      zIndex: 9999
-                    }}
-                  >
-                    {datePresets.map((preset, index) => (
-                      <button
-                        key={index}
-                        onClick={() => applyDatePreset(index)}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>,
-                  document.body
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Métricas Agregadas */}
-        <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(240px,1fr))] overflow-visible">
+        {/* Cards de Métricas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/15 transition-all duration-200 hover:scale-105">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -675,15 +588,18 @@ export default function AdsPage() {
                         <ArrowUpDown className="w-4 h-4" />
                       </div>
                     </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      IA
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
                   {loading ? (
-                    <tr><td colSpan={12} className="text-center py-12 text-white/70">Carregando...</td></tr>
+                    <tr><td colSpan={13} className="text-center py-12 text-white/70">Carregando...</td></tr>
                   ) : error ? (
-                    <tr><td colSpan={12} className="text-center py-12 text-red-400">Erro: {error}</td></tr>
+                    <tr><td colSpan={13} className="text-center py-12 text-red-400">Erro: {error}</td></tr>
                   ) : sortedAds.length === 0 ? (
-                    <tr><td colSpan={12} className="text-center py-12 text-white/70">Nenhum ad encontrado</td></tr>
+                    <tr><td colSpan={13} className="text-center py-12 text-white/70">Nenhum ad encontrado</td></tr>
                   ) : (
                     sortedAds.map((ad) => (
                       <tr key={ad.id} className="hover:bg-white/5 transition-colors">
@@ -726,6 +642,15 @@ export default function AdsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
                           {formatCurrency(ad.cpm)}
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleAnalysisClick(ad)}
+                            className="p-1 bg-blue-900/30 border border-blue-500/20 text-blue-400 rounded hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-200"
+                            title="Análise de IA"
+                          >
+                            <Brain className="w-3 h-3" />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -741,6 +666,22 @@ export default function AdsPage() {
             ad={selectedAd}
             isOpen={showModal}
             onClose={handleCloseModal}
+          />
+        )}
+
+        {/* Modal de Análise Individual */}
+        {analysisItem && (
+          <IndividualAnalysis
+            isOpen={isAnalysisOpen}
+            onClose={() => {
+              setIsAnalysisOpen(false);
+              setAnalysisItem(null);
+            }}
+            item={analysisItem}
+            dateRange={{
+              startDate: filters.startDate,
+              endDate: filters.endDate
+            }}
           />
         )}
       </div>

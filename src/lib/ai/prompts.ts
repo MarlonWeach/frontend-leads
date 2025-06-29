@@ -18,6 +18,53 @@ export interface PerformanceData {
 }
 
 /**
+ * Premissas Heurísticas Automotivas para IA
+ * Baseado em docs/ai/automotive-heuristics.md
+ */
+const AUTOMOTIVE_HEURISTICS = `
+CONTEXTO AUTOMOTIVO - PREMISSAS HEURÍSTICAS:
+
+SETOR AUTOMOTIVO BRASILEIRO:
+- Foco: Lead Ads para test drive e compra de veículos
+- Jornada: Lead → Contato → Agendamento → Test Drive → Negociação → Venda
+- Plataforma: Meta (Facebook/Instagram) Lead Ads
+- Formulário: Instantâneo, sem redirecionamento
+
+BENCHMARKS POR CATEGORIA:
+- Econômicos (até R$ 80k): CPL R$ 15-35, conversão 8-15%
+- Premium (R$ 80k-200k): CPL R$ 45-80, conversão 15-25%
+- SUVs (todas faixas): CPL R$ 35-60, conversão 12-20%
+- Comerciais: CPL R$ 25-50, conversão 20-35%
+- Luxo (acima R$ 200k): CPL R$ 80-150, conversão 25-40%
+
+SAZONALIDADE:
+- Alta: Janeiro-Março (13º salário), Outubro-Dezembro (férias)
+- Média: Abril-Junho
+- Baixa: Julho-Setembro (inverno, férias escolares)
+
+INDICADORES DE QUALIDADE:
+- Excelente (90-100 pts): Conversão 25-40%, contato < 5 min
+- Alta (75-89 pts): Conversão 15-25%, contato < 15 min
+- Média (50-74 pts): Conversão 8-15%, contato < 30 min
+- Baixa (25-49 pts): Conversão 3-8%, contato < 2h
+- Muito Baixa (0-24 pts): Conversão < 3%, verificação manual
+
+RED FLAGS AUTOMOTIVAS:
+- CPL < 50% do benchmark (suspeita de fraude)
+- Volume > 300% do normal (tráfego incentivado)
+- Horários 2h-6h (menor intenção real)
+- Dados genéricos ("teste", "abc", "123")
+- Emails temporários (10minutemail, temp-mail)
+
+TERMINOLOGIA ESPECÍFICA:
+- CPL: Custo Por Lead (métrica principal)
+- Test Drive: Experiência de direção do veículo
+- Financiamento: Opções de pagamento parcelado
+- Seminovo: Veículo usado com garantia
+- Concessionária: Revendedora autorizada da marca
+`;
+
+/**
  * Prompts para análise de performance em linguagem natural
  */
 export class PerformancePrompts {
@@ -40,9 +87,9 @@ export class PerformancePrompts {
       (current.cpl || 0) > (worst.cpl || 0) ? current : worst, campaigns[0]);
     
     return `
-Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo.
+${AUTOMOTIVE_HEURISTICS}
 
-ANÁLISE DE PERFORMANCE - Período: ${period}
+ANÁLISE DE PERFORMANCE AUTOMOTIVA - Período: ${period}
 
 CONTEXTO DOS DADOS:
 - Total de campanhas: ${totalCampaigns}
@@ -68,28 +115,31 @@ MÉTRICAS AGREGADAS:
 CAMPANHA COM MELHOR CPL: ${bestCampaign?.campaign_name || bestCampaign?.name || 'N/A'} (R$ ${(bestCampaign?.cpl || 0).toFixed(2)})
 CAMPANHA COM PIOR CPL: ${worstCampaign?.campaign_name || worstCampaign?.name || 'N/A'} (R$ ${(worstCampaign?.cpl || 0).toFixed(2)})
 
-INSTRUÇÕES PARA ANÁLISE:
-Forneça uma análise detalhada em português brasileiro natural e conversacional, incluindo:
+INSTRUÇÕES PARA ANÁLISE AUTOMOTIVA:
+Forneça uma análise detalhada em português brasileiro natural e conversacional, considerando o contexto automotivo:
 
 1. **RESUMO EXECUTIVO** (2-3 frases)
    - Principais conquistas e desafios do período
+   - Comparação com benchmarks do setor automotivo
 
 2. **INSIGHTS PRINCIPAIS** (3-4 pontos)
-   - O que está funcionando bem
-   - O que precisa de atenção
-   - Tendências observadas
+   - O que está funcionando bem (test drives, leads qualificados)
+   - O que precisa de atenção (CPL alto, baixa conversão)
+   - Tendências observadas (sazonalidade, comportamento)
 
 3. **ANÁLISE DETALHADA**
    - Performance por campanha (destaque as melhores e piores)
-   - Comparação de métricas (CTR, CPL, conversões)
+   - Comparação com benchmarks automotivos por categoria
+   - Análise de qualidade de leads (score, red flags)
    - Padrões de gasto e eficiência
 
 4. **RECOMENDAÇÕES ACIONÁVEIS** (3-5 sugestões)
-   - O que fazer imediatamente
-   - O que monitorar
-   - O que testar
+   - Otimizações específicas para o setor automotivo
+   - Ajustes de segmentação por categoria de veículo
+   - Melhorias de copy e criativos para test drive
+   - Estratégias de qualificação de leads
 
-Use linguagem clara, específica e acionável. Seja direto e objetivo, mas mantenha um tom profissional e amigável.
+Use linguagem específica do setor automotivo (test drive, concessionária, financiamento, etc.) e sempre compare com os benchmarks estabelecidos.
 `;
   }
 
@@ -101,7 +151,9 @@ Use linguagem clara, específica e acionável. Seja direto e objetivo, mas mante
     const metrics = data.metrics || {};
     
     return `
-ANÁLISE DE TENDÊNCIAS - Período: ${period}
+${AUTOMOTIVE_HEURISTICS}
+
+ANÁLISE DE TENDÊNCIAS AUTOMOTIVAS - Período: ${period}
 
 DADOS PARA ANÁLISE TEMPORAL:
 ${campaigns.map(c => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL`).join('\n')}
@@ -112,14 +164,14 @@ MÉTRICAS AGREGADAS:
 - CTR médio: ${metrics.averageCTR || 0}%
 - CPL médio: R$ ${metrics.averageCPL || 0}
 
-ANALISE E IDENTIFIQUE:
-1. Tendências de crescimento ou declínio
-2. Padrões sazonais ou cíclicos
-3. Correlações entre métricas
-4. Pontos de inflexão importantes
-5. Projeções para próximos períodos
+ANALISE E IDENTIFIQUE CONSIDERANDO O CONTEXTO AUTOMOTIVO:
+1. **Tendências de crescimento ou declínio** (comparar com sazonalidade)
+2. **Padrões sazonais automotivos** (13º salário, férias, Black Friday)
+3. **Correlações entre métricas** (CPL vs qualidade de leads)
+4. **Pontos de inflexão importantes** (lançamentos, promoções)
+5. **Projeções para próximos períodos** (baseado em sazonalidade)
 
-Responda em português brasileiro, explicando as tendências de forma clara e acionável.
+Responda em português brasileiro, explicando as tendências de forma clara e acionável, sempre considerando o contexto específico do setor automotivo.
 `;
   }
 
@@ -131,7 +183,7 @@ Responda em português brasileiro, explicando as tendências de forma clara e ac
     
     if (campaigns.length < 2) {
       return `
-COMPARAÇÃO DE CAMPANHAS
+COMPARAÇÃO DE CAMPANHAS AUTOMOTIVAS
 
 Dados insuficientes para comparação. É necessário pelo menos 2 campanhas para realizar uma análise comparativa.
 
@@ -146,7 +198,9 @@ Campanhas disponíveis: ${campaigns.length}
     const bySpend = [...campaigns].sort((a, b) => (b.spend || 0) - (a.spend || 0));
     
     return `
-COMPARAÇÃO DETALHADA ENTRE CAMPANHAS
+${AUTOMOTIVE_HEURISTICS}
+
+COMPARAÇÃO DETALHADA ENTRE CAMPANHAS AUTOMOTIVAS
 
 DADOS DAS CAMPANHAS:
 ${campaigns.map((c, index) => `${index + 1}. ${c.campaign_name || c.name || 'Campanha sem nome'}: 
@@ -162,14 +216,14 @@ RANKINGS:
 • Melhor CTR: ${byCTR[0]?.campaign_name || byCTR[0]?.name || 'N/A'} (${(byCTR[0]?.ctr || 0).toFixed(2)}%)
 • Maior gasto: ${bySpend[0]?.campaign_name || bySpend[0]?.name || 'N/A'} (R$ ${(bySpend[0]?.spend || 0).toFixed(2)})
 
-ANALISE E COMPARE:
-1. **Performance relativa** entre as campanhas
-2. **Diferenças significativas** em métricas-chave
-3. **Fatores que explicam** as variações de performance
-4. **Oportunidades de otimização** baseadas na comparação
-5. **Lições aprendidas** das campanhas de sucesso
+ANALISE E COMPARE CONSIDERANDO O CONTEXTO AUTOMOTIVO:
+1. **Performance relativa** entre as campanhas (comparar com benchmarks)
+2. **Diferenças significativas** em métricas-chave (CPL, conversão)
+3. **Fatores que explicam** as variações (categoria de veículo, segmentação)
+4. **Oportunidades de otimização** baseadas na comparação (copy, criativos)
+5. **Lições aprendidas** das campanhas de sucesso (test drive, qualificação)
 
-Forneça insights específicos sobre por que algumas campanhas performam melhor que outras.
+Forneça insights específicos sobre por que algumas campanhas performam melhor que outras, sempre considerando o contexto automotivo e os benchmarks do setor.
 `;
   }
 
@@ -181,7 +235,9 @@ Forneça insights específicos sobre por que algumas campanhas performam melhor 
     const metrics = data.metrics || {};
     
     return `
-ANÁLISE DE VARIAÇÕES E MUDANÇAS - Período: ${period}
+${AUTOMOTIVE_HEURISTICS}
+
+ANÁLISE DE VARIAÇÕES E MUDANÇAS AUTOMOTIVAS - Período: ${period}
 
 DADOS PARA ANÁLISE DE VARIAÇÕES:
 ${campaigns.map(c => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL`).join('\n')}
@@ -192,14 +248,14 @@ MÉTRICAS AGREGADAS:
 - CTR médio: ${metrics.averageCTR || 0}%
 - CPL médio: R$ ${metrics.averageCPL || 0}
 
-IDENTIFIQUE E EXPLIQUE:
-1. **Variações significativas** em métricas-chave
-2. **Mudanças de tendência** no período
-3. **Fatores que podem explicar** as variações
-4. **Impacto das mudanças** na performance geral
-5. **Ações recomendadas** para lidar com variações
+IDENTIFIQUE E EXPLIQUE CONSIDERANDO O CONTEXTO AUTOMOTIVO:
+1. **Variações significativas** em métricas-chave (comparar com benchmarks)
+2. **Mudanças de tendência** no período (sazonalidade, lançamentos)
+3. **Fatores que podem explicar** as variações (promoções, concorrência)
+4. **Impacto das mudanças** na performance geral (qualidade de leads)
+5. **Ações recomendadas** para lidar com variações (otimizações específicas)
 
-Explique as variações de forma clara, identificando possíveis causas e sugerindo ações corretivas quando necessário.
+Responda em português brasileiro, sempre considerando o contexto automotivo e os padrões do setor.
 `;
   }
 

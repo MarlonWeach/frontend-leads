@@ -138,7 +138,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[600px] z-50">
+    <div data-testid="chat-assistant" className="fixed bottom-6 right-6 w-96 h-[600px] z-50">
       <Card className="h-full glass-strong border border-white/20 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">

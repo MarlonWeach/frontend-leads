@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useAdsetsData } from '../../src/hooks/useAdsetsData';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
 import Button from '../../src/components/ui/button';
-import { ArrowUpDown, Filter, RefreshCw } from 'lucide-react';
+import { ArrowUpDown, Filter, RefreshCw, Brain } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
 import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
+import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 
 export default function AdsetsPage() {
   const [filters, setFilters] = useState({
@@ -20,6 +21,10 @@ export default function AdsetsPage() {
   const ITEMS_PER_PAGE = 20;
   const [showDateMenu, setShowDateMenu] = useState(false);
   const dateMenuRef = useRef(null);
+  
+  // Estado para análise individual
+  const [analysisItem, setAnalysisItem] = useState(null);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
   const breadcrumbs = [
     { name: 'AdSets', href: '/adsets' }
@@ -115,6 +120,17 @@ export default function AdsetsPage() {
     setSelectedPreset(1);
   }, []);
 
+  // Função para abrir análise individual
+  const handleAnalysisClick = (adset) => {
+    setAnalysisItem({
+      id: adset.id,
+      name: adset.name,
+      type: 'adset',
+      data: adset
+    });
+    setIsAnalysisOpen(true);
+  };
+
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -198,27 +214,23 @@ export default function AdsetsPage() {
   // Função para exibir label resumida do filtro de data
   const getDateLabel = () => {
     if (selectedPreset !== null) {
-      const preset = datePresets[selectedPreset];
-      const range = preset.getRange();
-      // Usar formatInTimeZone para garantir o timezone correto
-      const startLabel = formatInTimeZone(new Date(range.start + 'T00:00:00-03:00'), SAO_PAULO_TZ, 'dd/MM/yyyy');
-      const endLabel = formatInTimeZone(new Date(range.end + 'T00:00:00-03:00'), SAO_PAULO_TZ, 'dd/MM/yyyy');
-      if (range.start === range.end) {
-        return `${preset.label}: ${startLabel}`;
-      }
-      return `${preset.label}: ${startLabel} - ${endLabel}`;
+      return datePresets[selectedPreset].label;
     }
-    return 'Selecione o período';
+    if (filters.startDate && filters.endDate) {
+      if (filters.startDate === filters.endDate) {
+        return filters.startDate;
+      }
+      return `${filters.startDate} - ${filters.endDate}`;
+    }
+    return 'Selecionar período';
   };
 
   if (error) {
     return (
       <MainLayout title="AdSets" breadcrumbs={breadcrumbs}>
         <div className="text-center py-8">
-          <h2 className="text-header text-error mb-2">Erro ao carregar adsets</h2>
-          <p className="text-sublabel-refined text-white/70 mb-4">{error.message}</p>
-          <Button onClick={() => refreshAdsets()} className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" />
+          <div className="text-red-400 text-lg font-medium mb-4">{error}</div>
+          <Button onClick={() => refreshAdsets()}>
             Tentar novamente
           </Button>
         </div>
@@ -384,6 +396,7 @@ export default function AdsetsPage() {
                     <th className="w-20 p-1 md:p-3 font-semibold text-white whitespace-nowrap text-xs md:text-sm truncate">Leads</th>
                     <th className="w-16 p-1 md:p-3 font-semibold text-white whitespace-nowrap text-xs md:text-sm truncate">CTR</th>
                     <th className="w-20 p-1 md:p-3 font-semibold text-white whitespace-nowrap text-xs md:text-sm truncate">CPM</th>
+                    <th className="w-16 p-1 md:p-3 font-semibold text-white whitespace-nowrap text-xs md:text-sm truncate">IA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -400,6 +413,15 @@ export default function AdsetsPage() {
                       <td className="w-20 p-1 md:p-3 text-white truncate max-w-xs">{formatNumber(adset.leads)}</td>
                       <td className="w-16 p-1 md:p-3 text-white truncate max-w-xs">{adset.ctr ? `${parseFloat(adset.ctr).toFixed(2)}%` : '-'}</td>
                       <td className="w-20 p-1 md:p-3 text-white truncate max-w-xs">{adset.cpm ? formatCurrency(adset.cpm) : '-'}</td>
+                      <td className="w-16 p-1 md:p-3">
+                        <button
+                          onClick={() => handleAnalysisClick(adset)}
+                          className="p-1 bg-blue-900/30 border border-blue-500/20 text-blue-400 rounded hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-200"
+                          title="Análise de IA"
+                        >
+                          <Brain className="w-3 h-3" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -416,6 +438,22 @@ export default function AdsetsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Análise Individual */}
+      {analysisItem && (
+        <IndividualAnalysis
+          isOpen={isAnalysisOpen}
+          onClose={() => {
+            setIsAnalysisOpen(false);
+            setAnalysisItem(null);
+          }}
+          item={analysisItem}
+          dateRange={{
+            startDate: filters.startDate,
+            endDate: filters.endDate
+          }}
+        />
+      )}
     </MainLayout>
   );
 } 

@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 // Configuração da OpenAI
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  dangerouslyAllowBrowser: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
 });
 
 // Configuração da integração com OpenAI
