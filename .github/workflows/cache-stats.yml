@@ -69,7 +69,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"action": "invalidate"}' | jq .
 
-      - name: Cache Stats Report
+      - name: Gerar relatório de Cache Stats
         run: |
           echo "📊 Gerando relatório de Cache Stats..."
           
