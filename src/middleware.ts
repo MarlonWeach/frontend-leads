@@ -12,8 +12,9 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Verifica autenticação para rotas protegidas
-  if (request.nextUrl.pathname.startsWith('/api/sync')) {
+  // Verifica autenticação para rotas protegidas (exceto status)
+  if (request.nextUrl.pathname.startsWith('/api/sync') && 
+      !request.nextUrl.pathname.startsWith('/api/sync/status')) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(

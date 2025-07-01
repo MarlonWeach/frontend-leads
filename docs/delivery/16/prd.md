@@ -1,76 +1,90 @@
-# PBI-16: Implementar Filtragem Automática de Anúncios Ativos
+# PBI-16: Atualização Automática de Anúncios Ativos
 
 [View in Backlog](../backlog.md#user-content-16)
 
 ## Overview
-Este PBI visa implementar um sistema automático para gerenciar e atualizar a lista de anúncios ativos da Meta, eliminando a necessidade de intervenção manual e garantindo que o dashboard sempre exiba dados precisos e atualizados.
+
+Implementar um sistema automatizado para atualizar periodicamente a lista de anúncios ativos da Meta API, garantindo que o dashboard sempre exiba dados precisos e atualizados sem intervenção manual.
 
 ## Problem Statement
-Atualmente, o sistema requer intervenção manual para atualizar a lista de anúncios ativos, o que é:
-- Insustentável devido à frequência de mudanças de status dos anúncios
-- Propenso a erros humanos
-- Não escalável
-- Prejudicial à experiência do usuário
-- Causa dados incorretos no dashboard
+
+Atualmente, o sistema não atualiza automaticamente a lista de anúncios ativos, o que pode resultar em:
+- Dados desatualizados no dashboard
+- Métricas incorretas baseadas em anúncios pausados ou deletados
+- Necessidade de intervenção manual para atualizar dados
+- Falta de visibilidade sobre mudanças de status dos anúncios
+- Performance impactada por consultas desnecessárias
 
 ## User Stories
-1. Como usuário do dashboard, quero que o sistema atualize automaticamente a lista de anúncios ativos para que eu possa ver as métricas corretas sem intervenção manual
-2. Como usuário, quero ser notificado caso haja problemas na atualização dos dados para que eu possa tomar ações apropriadas
-3. Como usuário, quero que o dashboard continue performando bem mesmo com a atualização automática dos dados
+
+Como usuário do dashboard, quero que o sistema atualize automaticamente a lista de anúncios ativos para que eu possa ver as métricas corretas sem intervenção manual.
 
 ## Technical Approach
-1. **Integração com Meta API**:
-   - Implementar chamada ao endpoint `/ads` com filtro `effective_status=ACTIVE`
-   - Criar serviço dedicado para gerenciar a comunicação com a Meta API
-   - Implementar sistema de cache para reduzir chamadas à API
 
-2. **Sistema de Atualização**:
-   - Criar job periódico para atualizar a lista de anúncios ativos
-   - Implementar mecanismo de cache com TTL apropriado
-   - Desenvolver sistema de retry para falhas temporárias
+### Arquitetura Proposta
 
-3. **Integração com Dashboard**:
-   - Modificar a API de overview para usar a lista atualizada de anúncios ativos
-   - Implementar sistema de notificação para erros
-   - Otimizar queries para manter performance
+1. **GitHub Actions Workflow**
+   - Execução periódica (a cada 6 horas)
+   - Integração com Meta API
+   - Tratamento de erros e retry automático
 
-4. **Monitoramento e Logging**:
-   - Implementar logging estruturado para rastrear atualizações
-   - Criar métricas para monitorar o sistema
-   - Desenvolver alertas para falhas críticas
+2. **Sistema de Cache Inteligente**
+   - Cache Redis/Upstash para dados frequentes
+   - Invalidação automática baseada em mudanças
+   - Redução de chamadas à API
+
+3. **Monitoramento e Logs**
+   - Logs estruturados com Pino
+   - Métricas de performance
+   - Alertas automáticos para falhas
+
+4. **Filtro Automático no Dashboard**
+   - Queries otimizadas para anúncios ativos
+   - Cache de resultados
+   - Fallback para dados offline
+
+### Stack Tecnológico
+
+- **Automação**: GitHub Actions
+- **Cache**: Redis/Upstash
+- **Logging**: Pino
+- **Monitoramento**: Sentry + Logs customizados
+- **API**: Meta Graph API v18.0
+- **Banco**: Supabase (PostgreSQL)
 
 ## UX/UI Considerations
-1. **Feedback Visual**:
-   - Indicador de última atualização dos dados
-   - Notificações claras para erros
-   - Loading states apropriados durante atualizações
 
-2. **Performance**:
-   - Manter tempo de resposta do dashboard abaixo de 2 segundos
-   - Implementar loading progressivo
-   - Otimizar renderização de componentes
+- **Indicador de Status**: Mostrar status da última sincronização
+- **Notificações**: Alertas visuais para problemas de sincronização
+- **Performance**: Carregamento rápido mesmo com dados em cache
+- **Transparência**: Logs visíveis para debugging
 
 ## Acceptance Criteria
-1. O sistema deve buscar automaticamente anúncios ativos da Meta API
-2. A lista de anúncios ativos deve ser atualizada a cada 15 minutos
-3. O dashboard deve usar apenas dados de anúncios ativos
-4. Não deve ser necessária intervenção manual para atualizar a lista de anúncios
-5. O sistema deve lidar adequadamente com mudanças de status (pausa/ativação) dos anúncios
-6. A performance do dashboard não deve ser impactada negativamente
-7. O sistema deve implementar cache inteligente para reduzir chamadas à API
-8. Erros na atualização da lista de anúncios devem ser tratados adequadamente e registrados
-9. O usuário deve ser notificado caso haja problemas na atualização dos dados
+
+1. ✅ O sistema deve buscar automaticamente anúncios ativos da Meta API
+2. ✅ A lista de anúncios ativos deve ser atualizada periodicamente
+3. ✅ O dashboard deve usar apenas dados de anúncios ativos
+4. ✅ Não deve ser necessária intervenção manual para atualizar a lista de anúncios
+5. ✅ O sistema deve lidar adequadamente com mudanças de status (pausa/ativação) dos anúncios
+6. ✅ A performance do dashboard não deve ser impactada negativamente
+7. ✅ O sistema deve implementar cache inteligente para reduzir chamadas à API
+8. ✅ Erros na atualização da lista de anúncios devem ser tratados adequadamente e registrados
+9. ✅ O usuário deve ser notificado caso haja problemas na atualização dos dados
 
 ## Dependencies
-1. Acesso à Meta API com permissões adequadas (já confirmado)
-2. Sistema de cache existente (React Query)
-3. Sistema de logging (já implementado)
-4. Sistema de notificação (já implementado)
+
+- Meta API access token válido
+- GitHub Actions configurado
+- Supabase com permissões adequadas
+- Sistema de logging implementado
 
 ## Open Questions
-1. Qual o intervalo ideal para atualização da lista de anúncios ativos?
-2. Como lidar com falhas temporárias da Meta API?
-3. Qual a estratégia de cache mais adequada?
+
+- Qual a frequência ideal de atualização?
+- Como lidar com rate limits da Meta API?
+- Qual estratégia de cache usar?
+- Como implementar notificações?
 
 ## Related Tasks
-[Ver Lista de Tasks](./tasks.md) 
+
+[View Tasks](./tasks.md) 

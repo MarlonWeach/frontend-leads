@@ -553,12 +553,28 @@ export async function POST(request: NextRequest) {
     const totalTokens = inputTokens + outputTokens;
     const estimatedCost = calculateEstimatedCost(inputTokens, outputTokens, AI_CONFIG.DEFAULT_MODEL);
 
+    // Converter period string para objeto date_range se necessário
+    let dateRange;
+    if (typeof performanceData.period === 'string') {
+      // Se period é uma string, criar um objeto com startDate e endDate
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7); // Assumir últimos 7 dias como padrão
+      
+      dateRange = {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: today.toISOString().split('T')[0]
+      };
+    } else {
+      dateRange = performanceData.period;
+    }
+
     await logAIUsage({
       analysis_type: analysisType === 'anomaly' ? 'anomalies' : 
                     analysisType === 'optimization' ? 'optimization' : 
-                    analysisType === 'insights' ? 'insights' : 'performance',
+                    analysisType === 'insights' ? 'performance' : 'performance',
       campaign_ids: campaignIds,
-      date_range: performanceData.dateRange,
+      date_range: dateRange,
       tokens_used: totalTokens,
       cost_estimated: estimatedCost,
       model_used: AI_CONFIG.DEFAULT_MODEL,

@@ -120,6 +120,12 @@ export default function AdsetsPage() {
     setSelectedPreset(1);
   }, []);
 
+  // Ordenação padrão por investimento (spend) decrescente
+  useEffect(() => {
+    setSortField('spend');
+    setSortDirection('desc');
+  }, []);
+
   // Função para abrir análise individual
   const handleAnalysisClick = (adset) => {
     setAnalysisItem({
@@ -329,31 +335,68 @@ export default function AdsetsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="glass-medium">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">{formatNumber(metrics.totalAdsets)}</div>
-              <div className="text-sm text-white/70">Total de AdSets</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-medium">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">{formatCurrency(metrics.totalSpend)}</div>
-              <div className="text-sm text-white/70">Gasto Total</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-medium">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">{formatNumber(metrics.totalLeads)}</div>
-              <div className="text-sm text-white/70">Leads Totais</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-medium">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">{formatNumber(metrics.totalImpressions)}</div>
-              <div className="text-sm text-white/70">Impressões Totais</div>
-            </CardContent>
-          </Card>
+        {/* Bloco de métricas agregadas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+          {/* Total de Leads */}
+          <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-blue-400 text-sm font-medium">Total de Leads</div>
+              <span className="text-blue-400 font-bold">🔵</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalLeads || 0)}
+            </div>
+          </div>
+          {/* Investimento */}
+          <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-green-400 text-sm font-medium">Investimento</div>
+              <span className="text-green-400 font-bold">💸</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              R$ {metrics?.totalSpend ? metrics.totalSpend.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '0'}
+            </div>
+          </div>
+          {/* Impressões */}
+          <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-purple-400 text-sm font-medium">Impressões</div>
+              <span className="text-purple-400 font-bold">👁️</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalImpressions || 0)}
+            </div>
+          </div>
+          {/* Cliques */}
+          <div className="bg-indigo-900/30 rounded-lg p-4 border border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-indigo-400 text-sm font-medium">Cliques</div>
+              <span className="text-indigo-400 font-bold">🖱️</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalClicks || 0)}
+            </div>
+          </div>
+          {/* CTR Médio */}
+          <div className="bg-cyan-900/30 rounded-lg p-4 border border-cyan-500/20 hover:bg-cyan-900/40 hover:border-cyan-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-cyan-400 text-sm font-medium">CTR Médio</div>
+              <span className="text-cyan-400 font-bold">📈</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {metrics?.averageCTR ? metrics.averageCTR.toFixed(2) + '%' : '0%'}
+            </div>
+          </div>
+          {/* CPL Médio */}
+          <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-500/20 hover:bg-orange-900/40 hover:border-orange-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-orange-400 text-sm font-medium">CPL Médio</div>
+              <span className="text-orange-400 font-bold">💰</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {metrics?.averageCPL ? 'R$ ' + metrics.averageCPL.toFixed(2) : 'R$ 0,00'}
+            </div>
+          </div>
         </div>
 
         <Card className="glass-medium">

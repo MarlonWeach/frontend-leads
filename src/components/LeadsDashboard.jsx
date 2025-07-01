@@ -310,36 +310,70 @@ export default function LeadsDashboard() {
         </div>
       </div>
 
-      {/* Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <MetricCard
-          title="Total de Leads"
-          value={metrics.total_leads}
-          subtitle="Todos os períodos"
-          icon={Users}
-          color="primary"
-        />
-        <MetricCard
-          title="Novos Leads"
-          value={metrics.new_leads}
-          subtitle="Aguardando contato"
-          icon={Clock}
-          color="primary"
-        />
-        <MetricCard
-          title="Convertidos"
-          value={metrics.converted_leads}
-          subtitle={`${metrics.conversion_rate}% taxa de conversão`}
-          icon={CheckCircle}
-          color="primary"
-        />
-        <MetricCard
-          title="Esta Semana"
-          value={metrics.this_week}
-          subtitle={`${metrics.today} hoje`}
-          icon={TrendingUp}
-          color="primary"
-        />
+      {/* Métricas - Cards Coloridos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
+        {/* Total de Leads */}
+        <motion.div 
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-blue-400 text-sm font-medium">Total de Leads</div>
+            <Users className="w-4 h-4 text-blue-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {metrics.total_leads}
+          </div>
+        </motion.div>
+        {/* Novos Leads */}
+        <motion.div 
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-green-400 text-sm font-medium">Novos Leads</div>
+            <Clock className="w-4 h-4 text-green-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {metrics.new_leads}
+          </div>
+        </motion.div>
+        {/* Convertidos */}
+        <motion.div 
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-purple-400 text-sm font-medium">Convertidos</div>
+            <CheckCircle className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {metrics.converted_leads}
+          </div>
+          <div className="text-xs text-purple-200 mt-1">{metrics.conversion_rate}% taxa de conversão</div>
+        </motion.div>
+        {/* Esta Semana */}
+        <motion.div 
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="bg-indigo-900/30 rounded-lg p-4 border border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-indigo-400 text-sm font-medium">Esta Semana</div>
+            <TrendingUp className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {metrics.this_week}
+          </div>
+          <div className="text-xs text-indigo-200 mt-1">{metrics.today} hoje</div>
+        </motion.div>
       </div>
 
       {/* Filtros */}

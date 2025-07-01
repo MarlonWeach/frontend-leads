@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '@/utils/logger';
+import { logger } from "@/utils/logger";
 import { serverCache, CacheType } from '@/utils/server-cache';
 
 const supabase = createClient(

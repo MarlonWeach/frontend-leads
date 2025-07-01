@@ -1,0 +1,110 @@
+name: Cache Stats - Vercel Integration
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # A cada 6 horas
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/api/cache-stats/**'
+      - 'src/lib/cache.ts'
+      - 'src/utils/cache.ts'
+
+jobs:
+  cache-stats:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_URL: ${{ secrets.VERCEL_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test Cache Stats API locally
+        run: |
+          echo "🧪 Testando API localmente..."
+          npm run dev &
+          sleep 10
+          node scripts/test-cache-stats.js
+          pkill -f "next dev"
+
+      - name: Deploy to Vercel
+        run: |
+          echo "🚀 Fazendo deploy para Vercel..."
+          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Test Cache Stats API on Vercel
+        run: |
+          echo "🧪 Testando API no Vercel..."
+          sleep 30  # Aguardar deploy
+          
+          # Testar GET
+          echo "📡 Testando GET..."
+          curl -s "${{ secrets.VERCEL_URL }}/api/cache-stats" | jq .
+          
+          # Testar POST - stats
+          echo "📡 Testando POST (stats)..."
+          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "stats", "data": {"cacheType": "general"}}' | jq .
+          
+          # Testar POST - update
+          echo "📡 Testando POST (update)..."
+          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "update", "data": {"cacheType": "workflow", "hits": 200, "misses": 15, "sizeBytes": 750000}}' | jq .
+          
+          # Testar POST - invalidate
+          echo "📡 Testando POST (invalidate)..."
+          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "invalidate"}' | jq .
+
+      - name: Cache Stats Report
+        run: |
+          echo "📊 Gerando relatório de Cache Stats..."
+          
+          # Buscar estatísticas atuais
+          RESPONSE=$(curl -s "${{ secrets.VERCEL_URL }}/api/cache-stats")
+          
+          echo "## Cache Stats Report" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Endpoint:** ${{ secrets.VERCEL_URL }}/api/cache-stats" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Response:" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          echo "$RESPONSE" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Verificar se a API está funcionando
+          if echo "$RESPONSE" | jq -e '.success' > /dev/null; then
+            echo "✅ **Status:** API funcionando corretamente" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** API com problemas" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Cache Stats workflow executado com sucesso!"
+          echo "📊 API disponível em: ${{ secrets.VERCEL_URL }}/api/cache-stats"
+          echo "⏰ Próxima execução: $(date -d '+6 hours' '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Cache Stats workflow falhou!"
+          echo "🔍 Verificar logs para mais detalhes"
+          echo "📧 Notificar equipe de desenvolvimento" 

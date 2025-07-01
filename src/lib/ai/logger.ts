@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 export interface AIUsageLog {
-  analysis_type: 'performance' | 'anomalies' | 'optimization' | 'chat';
+  analysis_type: 'performance' | 'anomalies' | 'optimization' | 'chat' | 'insights';
   campaign_ids?: string[];
   date_range?: {
     startDate: string;

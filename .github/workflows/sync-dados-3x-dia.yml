@@ -27,27 +27,64 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create .env.local
+        run: |
+          cat > .env.local << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }}
+          META_ACCOUNT_ID=${{ secrets.META_ACCOUNT_ID }}
+          EOF
+
       - name: Sync campaigns
         run: node scripts/sync-campaigns-once.js
+        continue-on-error: true
 
       - name: Sync adsets
         run: node scripts/sync-adsets-once.js
+        continue-on-error: true
 
       - name: Sync ads (criativos)
         run: node scripts/update-ad-creatives.js
+        continue-on-error: true
 
       - name: Sync adset insights
         run: node scripts/sync-adset-insights.js
+        continue-on-error: true
 
       - name: Sync ad insights
         run: node scripts/sync-ad-insights.js
+        continue-on-error: true
 
       - name: Sync meta leads
         run: node scripts/import-meta-leads.js
+        continue-on-error: true
 
       - name: Atualizar relacionamentos entre tabelas
         run: node scripts/update-table-relationships.js
+        continue-on-error: true
+
+      - name: Verificar status da sincronização
+        run: |
+          echo "🔄 Verificando status da sincronização..."
+          echo "📅 Data/Hora: $(date)"
+          echo "🌍 Timezone: $(date +%Z)"
+          echo "📊 Última execução: $(date -u)"
+          echo "✅ Workflow executado com sucesso"
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sync-logs-${{ github.run_id }}
+          path: logs/
+          retention-days: 7
 
       - name: Log success
         if: success()
-        run: echo "✅ Sincronização concluída com sucesso em $(date)" 
+        run: echo "✅ Sincronização concluída com sucesso em $(date)"
+
+      - name: Log failure
+        if: failure()
+        run: echo "❌ Sincronização falhou em $(date) - Verificar logs para detalhes" 

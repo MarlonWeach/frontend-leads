@@ -242,7 +242,7 @@ export function OpenAIBillingWidget({
             ))}
 
             {/* Gráfico Simples de Uso Diário */}
-            {data.data.dailyUsage.length > 0 && (
+            {data && data.data && Array.isArray(data.data.dailyUsage) && data.data.dailyUsage.length > 0 && (
               <div className="space-y-2">
                 <div className="text-sm text-white/70">Uso Diário (últimos {days} dias)</div>
                 <div className="flex items-end gap-1 h-16">
@@ -265,7 +265,7 @@ export function OpenAIBillingWidget({
 
             {/* Metadados */}
             <div className="text-xs text-white/50 space-y-1">
-              <div>Fonte: {data.source === 'openai_api' ? 'OpenAI API' : 'Estimativa Local'}</div>
+              <div>Fonte: {data && data.source === 'openai_api' ? 'OpenAI API' : 'Estimativa Local'}</div>
               {lastUpdated && (
                 <div>
                   Última atualização: {new Date(lastUpdated).toLocaleTimeString()}

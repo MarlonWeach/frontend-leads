@@ -306,3 +306,271 @@ Após cada sincronização de dados (3x ao dia), o workflow do GitHub Actions ex
 ### Observação
 
 Se novas tabelas forem criadas ou a estrutura mudar, o script deve ser revisado para garantir que todos os relacionamentos necessários continuem sendo atualizados corretamente.
+
+### 22. Problemas na Página /ads
+- **Status**: Aberto
+- **Descrição**: Foram identificados os seguintes problemas na página de anúncios:
+  1. O card de **CTR Médio** não está trazendo resultados (valor sempre 0 ou vazio).
+  2. O card de **CPL Médio** não está trazendo resultados (valor sempre 0 ou vazio).
+  3. Ao selecionar os períodos "Hoje", "Ontem" ou "Últimos 7 dias", nenhum resultado é exibido, indicando ausência de dados recentes.
+- **Solução Sugerida**:
+  - Corrigir o cálculo e exibição dos cards de CTR Médio e CPL Médio.
+  - Investigar e debugar a rotina de atualização automática do banco de dados/Supabase, pois os dados recentes não estão sendo sincronizados corretamente.
+  - Garantir que a sincronização automática esteja funcionando e que os dados estejam disponíveis para os períodos recentes.
+
+---
+
+## 🎯 OPORTUNIDADES IDENTIFICADAS - Análise Completa dos Documentos .md
+
+### **Prioridade 1: Problemas Críticos Pendentes**
+
+#### 23. PBI 16 - Atualização Automática de Anúncios Ativos
+- **Status**: Proposed (não implementado)
+- **Impacto**: Sistema não atualiza automaticamente lista de anúncios ativos
+- **Descrição**: Como usuário do dashboard, quero que o sistema atualize automaticamente a lista de anúncios ativos para que eu possa ver as métricas corretas sem intervenção manual
+- **CoS**:
+  1. O sistema deve buscar automaticamente anúncios ativos da Meta API
+  2. A lista de anúncios ativos deve ser atualizada periodicamente
+  3. O dashboard deve usar apenas dados de anúncios ativos
+  4. Não deve ser necessária intervenção manual para atualizar a lista de anúncios
+  5. O sistema deve lidar adequadamente com mudanças de status (pausa/ativação) dos anúncios
+  6. A performance do dashboard não deve ser impactada negativamente
+  7. O sistema deve implementar cache inteligente para reduzir chamadas à API
+  8. Erros na atualização da lista de anúncios devem ser tratados adequadamente e registrados
+  9. O usuário deve ser notificado caso haja problemas na atualização dos dados
+- **Oportunidade**: Implementar sistema de atualização automática via GitHub Actions
+
+#### 24. PBI 18 - Dados Atualizados e Funcionais
+- **Status**: Agreed (não implementado)
+- **Impacto**: Páginas podem exibir dados desatualizados
+- **Descrição**: Como usuário, quero que todas as páginas exibam dados atualizados e funcionais para ter uma experiência consistente e confiável em todo o dashboard
+- **CoS**:
+  1. Página /campaigns deve exibir dados reais e atualizados da Meta API
+  2. Filtro padrão de anunciantes ativos deve funcionar em /advertisers
+  3. Bloco "Performance Geral" no dashboard deve mostrar métricas agregadas
+  4. Páginas devem ter fallback adequado para dados indisponíveis
+  5. Status de sincronização deve ser visível para o usuário
+  6. Interface consistente com design system em todas as páginas
+  7. Tratamento de erros amigável e informativo
+  8. Performance adequada em todas as funcionalidades
+- **Oportunidade**: Garantir que todas as páginas tenham dados funcionais
+
+#### 25. Tarefa 22-12 - Correção da Análise Individual de IA
+- **Status**: Review (problemas identificados)
+- **Problemas**: Análise genérica, otimização vazia, erros de processamento
+- **Descrição**: Corrigir problemas identificados na análise individual implementada na tarefa 22-11
+- **Oportunidade**: Finalizar correções da IA
+
+### **Prioridade 2: Problemas Técnicos Identificados**
+
+#### 26. Problema 22 - Página /ads com Bugs (Detalhado acima)
+- **Status**: Aberto
+- **Problemas**: CTR Médio, CPL Médio sempre 0, períodos recentes sem dados
+- **Causa**: Rotina de atualização automática não funcionando
+- **Oportunidade**: Corrigir sincronização de dados recentes
+
+#### 27. Problema 21 - Debug de Rotinas de Atualização (Detalhado acima)
+- **Status**: Aberto
+- **Problemas**: Performance Geral vazia, dados desatualizados, falhas intermitentes
+- **Oportunidade**: Implementar sistema de monitoramento e logs
+
+### **Prioridade 3: Melhorias e Otimizações**
+
+#### 28. Melhorias de UX/UI Pendentes
+- **Status**: Pendente
+- **Descrição**: Implementações de interface ultra-refinada
+- **Itens**:
+  - Gráficos interativos e filtros avançados
+  - Interface ultra-refinada inspirada em Apple Vision Pro + Baremetrics
+  - Implementar temas claro/escuro
+  - Sidebar minimalista com ícones e animações
+  - Gráficos animados (barras, pizza, linha)
+  - Tipografia moderna e títulos destacados
+  - Cartões e painéis interativos
+  - Filtros avançados com UI refinada
+  - Testes de usabilidade e responsividade
+
+#### 29. Melhorias de Performance
+- **Status**: Pendente
+- **Descrição**: Otimizações de performance do sistema
+- **Itens**:
+  - Lazy loading de componentes
+  - Otimizar bundle size
+  - Implementar service worker para cache offline
+  - Virtualização para listas longas (já implementado)
+  - Sistema de cache com React Query ou SWR (já implementado)
+
+#### 30. Melhorias de Segurança
+- **Status**: Pendente
+- **Descrição**: Implementações de segurança
+- **Itens**:
+  - Implementar rate limiting
+  - Adicionar validação de dados
+  - Melhorar sanitização de inputs
+  - Implementar autenticação robusta
+  - RLS habilitado em tabelas públicas (em progresso)
+
+### **Prioridade 4: Monitoramento e Observabilidade**
+
+#### 31. Sistema de Monitoramento
+- **Status**: Pendente
+- **Descrição**: Sistema completo de monitoramento e observabilidade
+- **Itens**:
+  - Implementar logging estruturado
+  - Criar dashboard de monitoramento de status das sincronizações
+  - Implementar alertas automáticos para falhas
+  - Adicionar métricas de performance das rotinas
+  - Sistema de retry automático com backoff exponencial
+  - Health checks para todas as APIs
+  - Monitoramento de erros (ex: Sentry) - já implementado
+
+#### 32. Testes e Validações
+- **Status**: Em Progresso
+- **Descrição**: Melhorias no sistema de testes
+- **Itens**:
+  - Corrigir falhas nos testes unitários do DashboardOverview
+  - Garantir cobertura total dos fluxos críticos
+  - Validar funcionamento das rotinas de atualização
+  - Testes unitários e de integração (já implementados)
+
+### **Prioridade 5: Funcionalidades Avançadas**
+
+#### 33. Funcionalidades de IA Avançadas
+- **Status**: Pendente
+- **Descrição**: Melhorias nas funcionalidades de IA
+- **Itens**:
+  - Otimização automática de campanhas
+  - Geração de copies com IA
+  - Predição de performance
+  - Sistema avançado de scoring de leads
+  - Relatórios inteligentes automatizados
+  - Modelo híbrido (GPT-3.5 para análises simples)
+  - API própria com endpoints de IA
+  - Marketplace de prompts otimizados
+
+#### 34. Funcionalidades de Exportação e Relatórios
+- **Status**: Pendente
+- **Descrição**: Sistema de exportação e relatórios
+- **Itens**:
+  - Implementar exportação de dados
+  - Relatórios inteligentes automatizados
+  - Exportação de leads em formato CSV/Excel
+  - Relatórios programados por email
+
+#### 35. Funcionalidades de Gestão de Leads
+- **Status**: Baixa Prioridade
+- **Descrição**: Sistema completo de gestão de leads
+- **Itens**:
+  - Visualizar leads gerados por campanha
+  - Exportar leads em formato CSV/Excel
+  - Filtrar leads por período e campanha
+  - Marcar status de leads (novo/contatado/convertido)
+  - Sistema de scoring de leads
+
+### **Prioridade 6: Arquitetura e Infraestrutura**
+
+#### 36. Melhorias de Arquitetura
+- **Status**: Parcialmente Implementado
+- **Descrição**: Melhorias na arquitetura do sistema
+- **Itens**:
+  - Separar lógica de negócios em hooks customizados (parcialmente resolvido)
+  - Adicionar TypeScript para melhor tipagem
+  - Implementar sistema de feature flags para deploy gradual
+  - Multi-tenant (múltiplos clientes)
+  - App mobile com assistente integrado
+
+#### 37. Melhorias de Infraestrutura
+- **Status**: Pendente
+- **Descrição**: Melhorias na infraestrutura
+- **Itens**:
+  - Cache inteligente com IA
+  - Sistema de fallback para quando a API estiver indisponível
+  - Backup diário dos dados
+  - Recuperação de falhas em < 1 hora
+  - Sistema disponível 99.5% do tempo
+
+### **Prioridade 7: Analytics e Métricas**
+
+#### 38. Sistema de Analytics
+- **Status**: Pendente
+- **Descrição**: Sistema de analytics e métricas
+- **Itens**:
+  - Implementar analytics
+  - Adicionar métricas de performance
+  - Métricas de uso da IA
+  - Métricas de custo por análise
+  - Feedback loop para melhoria de modelos
+
+---
+
+## 📋 ROADMAP DE IMPLEMENTAÇÃO
+
+### **Fase 1: Estabilidade (Recomendado)**
+1. **Corrigir Problema 22** - Página /ads com bugs de dados
+2. **Implementar Problema 21** - Sistema de debug de rotinas
+3. **Finalizar Tarefa 22-12** - Correções da análise individual de IA
+
+### **Fase 2: Funcionalidades Core**
+1. **Implementar PBI 16** - Atualização automática de anúncios ativos
+2. **Implementar PBI 18** - Garantir dados funcionais em todas as páginas
+3. **Melhorias de UX/UI** - Gráficos interativos e filtros avançados
+
+### **Fase 3: Monitoramento**
+1. **Sistema de logs estruturados**
+2. **Dashboard de monitoramento**
+3. **Alertas automáticos**
+4. **Métricas de performance**
+
+### **Fase 4: Funcionalidades Avançadas**
+1. **IA Avançada** - Otimização automática, geração de copies
+2. **Exportação e Relatórios** - Sistema completo de relatórios
+3. **Gestão de Leads** - Sistema completo de gestão
+
+### **Fase 5: Escala e Otimização**
+1. **Multi-tenant** - Suporte a múltiplos clientes
+2. **Performance** - Otimizações avançadas
+3. **Mobile** - App mobile com assistente integrado
+
+---
+
+## 🎯 PRÓXIMOS PASSOS IMEDIATOS
+
+### **Opção 1: Foco em Estabilidade (Recomendado)**
+- Corrigir problemas críticos que afetam a experiência do usuário
+- Garantir que dados estejam sempre atualizados
+- Melhorar confiabilidade do sistema
+
+### **Opção 2: Foco em Funcionalidades**
+- Adicionar funcionalidades importantes que estão pendentes
+- Implementar melhorias de UX/UI
+- Expandir capacidades do sistema
+
+### **Opção 3: Foco em Monitoramento**
+- Melhorar a confiabilidade e observabilidade do sistema
+- Implementar alertas e métricas
+- Facilitar debugging e manutenção
+
+---
+
+## 📊 STATUS ATUAL DO PROJETO
+
+### **Concluído (Done)**
+- ✅ PBI 17: Interface ultra-refinada
+- ✅ PBI 19: Página de performance detalhada
+- ✅ PBI 20: Análise granular de adsets e ads
+- ✅ PBI 21: Padrão visual de cards coloridos
+- ✅ PBI 22: Integração de IA (exceto tarefa 22-12)
+
+### **Em Progresso**
+- 🔄 PBI 18: Dados atualizados e funcionais (Agreed)
+- 🔄 Tarefa 22-12: Correção da análise individual (Review)
+- 🔄 Problema 21: Debug de rotinas de atualização (Aberto)
+- 🔄 Problema 22: Problemas na página /ads (Aberto)
+
+### **Pendente**
+- ⏳ PBI 16: Atualização automática de anúncios ativos (Proposed)
+- ⏳ Melhorias de UX/UI
+- ⏳ Sistema de monitoramento
+- ⏳ Funcionalidades avançadas de IA
+- ⏳ Melhorias de segurança
+- ⏳ Sistema de analytics

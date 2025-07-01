@@ -11,8 +11,6 @@ const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const FORM_IDS = process.env.META_FORM_ID.split(',').map(id => id.trim());
-
 async function fetchMetaLeads() {
   const allLeads = [];
   // Define a data de início para 37 meses atrás a partir da data atual
@@ -84,28 +82,56 @@ async function fetchMetaLeads() {
 }
 
 async function saveLeadToSupabase(lead) {
-  // Evita duplicidade pelo created_time + form_id + ad_id
-  const { data: existing } = await supabase
-    .from('meta_leads')
-    .select('id')
-    .eq('created_time', lead.created_time)
-    .eq('form_id', lead.form_id)
-    .eq('ad_id', lead.ad_id)
-    .maybeSingle();
+  try {
+    // Evita duplicidade pelo created_time + ad_id
+    const { data: existing } = await supabase
+      .from('meta_leads')
+      .select('id')
+      .eq('created_time', lead.created_time)
+      .eq('ad_id', lead.ad_id)
+      .maybeSingle();
 
-  if (!existing) {
-    await supabase.from('meta_leads').insert([lead]);
-    console.log('Lead importado:', lead.created_time, lead.email || '');
-  } else {
-    console.log('Lead já existe:', lead.created_time, lead.email || '');
+    if (!existing) {
+      const { error } = await supabase.from('meta_leads').insert([lead]);
+      if (error) {
+        console.error('Erro ao inserir lead:', error);
+      } else {
+        console.log('Lead importado:', lead.created_time, lead.ad_id);
+      }
+    } else {
+      console.log('Lead já existe:', lead.created_time, lead.ad_id);
+    }
+  } catch (error) {
+    console.error('Erro ao salvar lead:', error);
   }
 }
 
-(async () => {
-  for (const formId of FORM_IDS) {
-    const leads = await fetchMetaLeads(formId);
+async function main() {
+  try {
+    console.log('🔄 Iniciando importação de leads do Meta...');
+    console.log(`📊 Account ID: ${ACCOUNT_ID}`);
+    console.log(`🔑 Access Token: ${ACCESS_TOKEN ? 'Configurado' : 'NÃO CONFIGURADO'}`);
+    
+    if (!ACCOUNT_ID || !ACCESS_TOKEN) {
+      throw new Error('META_ACCOUNT_ID e META_ACCESS_TOKEN são obrigatórios');
+    }
+    
+    const leads = await fetchMetaLeads();
+    console.log(`📈 Total de leads encontrados: ${leads.length}`);
+    
     for (const lead of leads) {
       await saveLeadToSupabase(lead);
     }
+    
+    console.log('✅ Importação de leads concluída com sucesso!');
+    
+  } catch (error) {
+    console.error('❌ Erro na importação de leads:', error);
+    process.exit(1);
   }
-})();
+}
+
+// Executar se chamado diretamente
+if (require.main === module) {
+  main();
+}

@@ -51,7 +51,11 @@ const typeLabels = {
   DUPLICATE_LEADS: 'Leads Duplicados',
   COST_SPIKE: 'Pico de Gastos',
   PERFORMANCE_DROP: 'Queda de Performance',
-  UNUSUAL_PATTERN: 'Padrão Incomum'
+  UNUSUAL_PATTERN: 'Padrão Incomum',
+  LOW_CPL_SUSPICIOUS: 'CPL Baixo Suspeito',
+  HIGH_VOLUME_SUSPICIOUS: 'Volume Alto Suspeito',
+  QUALITY_DROP: 'Queda de Qualidade',
+  SEASONAL_ANOMALY: 'Anomalia Sazonal'
 };
 
 export default function AnomalyAlert({ 

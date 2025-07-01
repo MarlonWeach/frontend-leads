@@ -84,6 +84,8 @@ export default function AdsPage() {
 
   const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias por padrão
 
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+
   useEffect(() => {
     // Ao montar, aplicar o preset "Últimos 7 dias"
     const range = datePresets[2].getRange();
@@ -263,6 +265,11 @@ export default function AdsPage() {
     };
   }, []);
 
+  // Ordenação padrão por investimento (spend) decrescente
+  useEffect(() => {
+    setSortConfig({ key: 'spend', direction: 'desc' });
+  }, []);
+
   if (error) {
     return (
       <MainLayout title="Anúncios" breadcrumbs={[{ name: 'Anúncios', href: '/ads' }]}>
@@ -284,29 +291,93 @@ export default function AdsPage() {
           <p className="text-sublabel-refined text-white/70">Gerencie e analise seus anúncios</p>
         </div>
 
+        {/* Bloco de métricas agregadas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+          {/* Total de Leads */}
+          <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-blue-400 text-sm font-medium">Total de Leads</div>
+              <span className="text-blue-400 font-bold">🔵</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalLeads || 0)}
+            </div>
+          </div>
+          {/* Investimento */}
+          <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-green-400 text-sm font-medium">Investimento</div>
+              <span className="text-green-400 font-bold">💸</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              R$ {metrics?.totalSpend ? metrics.totalSpend.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '0'}
+            </div>
+          </div>
+          {/* Impressões */}
+          <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-purple-400 text-sm font-medium">Impressões</div>
+              <span className="text-purple-400 font-bold">👁️</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalImpressions || 0)}
+            </div>
+          </div>
+          {/* Cliques */}
+          <div className="bg-indigo-900/30 rounded-lg p-4 border border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-indigo-400 text-sm font-medium">Cliques</div>
+              <span className="text-indigo-400 font-bold">🖱️</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {formatNumber(metrics?.totalClicks || 0)}
+            </div>
+          </div>
+          {/* CTR Médio */}
+          <div className="bg-cyan-900/30 rounded-lg p-4 border border-cyan-500/20 hover:bg-cyan-900/40 hover:border-cyan-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-cyan-400 text-sm font-medium">CTR Médio</div>
+              <span className="text-cyan-400 font-bold">📈</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {metrics?.averageCTR ? metrics.averageCTR.toFixed(2) + '%' : '0%'}
+            </div>
+          </div>
+          {/* CPL Médio */}
+          <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-500/20 hover:bg-orange-900/40 hover:border-orange-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-orange-400 text-sm font-medium">CPL Médio</div>
+              <span className="text-orange-400 font-bold">💰</span>
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {metrics?.averageCPL ? 'R$ ' + metrics.averageCPL.toFixed(2) : 'R$ 0,00'}
+            </div>
+          </div>
+        </div>
+
         {/* Filtros */}
         <div className="flex flex-wrap gap-4 items-center">
           {/* Filtro de Status */}
           <div className="relative">
             <Button
-              onClick={openStatusMenu}
-              className="flex items-center gap-2 glass-medium"
+              onClick={() => setShowStatusMenu((v) => !v)}
+              className="flex items-center gap-2 glass-medium text-white font-medium"
             >
               <Filter className="w-4 h-4" />
-              Status: {filters.status || 'Todos'}
+              Status: <span className="ml-1">{filters.status || 'Todos'}</span>
             </Button>
-            {showDateMenu && (
-              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[200px]">
+            {showStatusMenu && (
+              <div className="absolute z-50 mt-2 bg-zinc-900/95 rounded-lg shadow-lg border border-gray-700 min-w-[180px]">
                 <div className="p-2">
                   {['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED'].map((status) => (
                     <button
                       key={status}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                        filters.status === status ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        filters.status === status ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-blue-800/40'
                       }`}
                       onClick={() => {
                         setFilters(prev => ({ ...prev, status }));
-                        setShowDateMenu(false);
+                        setShowStatusMenu(false);
                       }}
                     >
                       {status}
@@ -317,23 +388,23 @@ export default function AdsPage() {
             )}
           </div>
 
-          {/* Filtro de Data */}
+          {/* Filtro de Período */}
           <div className="relative" ref={dateMenuRef}>
             <Button
               onClick={openPresetMenu}
-              className="flex items-center gap-2 glass-medium"
+              className="flex items-center gap-2 glass-medium text-white font-medium"
             >
               <Calendar className="w-4 h-4" />
-              {getDateLabel()}
+              <span>Período: {getDateLabel()}</span>
             </Button>
             {showDateMenu && (
-              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px]">
+              <div className="absolute z-50 mt-2 bg-zinc-900/95 rounded-lg shadow-lg border border-gray-700 min-w-[220px]">
                 <div className="p-2">
                   {datePresets.map((preset, index) => (
                     <button
                       key={preset.label}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                        selectedPreset === index ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        selectedPreset === index ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-blue-800/40'
                       }`}
                       onClick={() => applyDatePreset(index)}
                     >
@@ -349,17 +420,17 @@ export default function AdsPage() {
           <div className="relative" ref={campaignMenuRef}>
             <Button
               onClick={openCampaignMenu}
-              className="flex items-center gap-2 glass-medium"
+              className="flex items-center gap-2 glass-medium text-white font-medium"
               disabled={campaignsLoading}
             >
               <Filter className="w-4 h-4" />
               {getCampaignLabel()}
             </Button>
             {showCampaignMenu && (
-              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px] max-h-[400px] overflow-y-auto">
+              <div className="absolute z-50 mt-2 bg-zinc-900/95 rounded-lg shadow-lg border border-gray-700 min-w-[220px] max-h-[400px] overflow-y-auto">
                 <div className="p-2">
                   <button
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-800 hover:bg-blue-100"
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-blue-800/40 font-medium"
                     onClick={() => {
                       setFilters(prev => ({ ...prev, campaignId: '' }));
                       setShowCampaignMenu(false);
@@ -370,8 +441,8 @@ export default function AdsPage() {
                   {campaigns.map((campaign) => (
                     <button
                       key={campaign.id}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                        filters.campaignId === campaign.id ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        filters.campaignId === campaign.id ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-blue-800/40'
                       }`}
                       onClick={() => {
                         setFilters(prev => ({ ...prev, campaignId: campaign.id }));
@@ -390,17 +461,17 @@ export default function AdsPage() {
           <div className="relative" ref={adsetMenuRef}>
             <Button
               onClick={openAdsetMenu}
-              className="flex items-center gap-2 glass-medium"
+              className="flex items-center gap-2 glass-medium text-white font-medium"
               disabled={adsetsLoading || !filters.campaignId}
             >
               <Filter className="w-4 h-4" />
               {getAdsetLabel()}
             </Button>
             {showAdsetMenu && (
-              <div className="absolute z-50 mt-2 bg-white/95 rounded-lg shadow-lg border border-gray-200 min-w-[300px] max-h-[400px] overflow-y-auto">
+              <div className="absolute z-50 mt-2 bg-zinc-900/95 rounded-lg shadow-lg border border-gray-700 min-w-[220px] max-h-[400px] overflow-y-auto">
                 <div className="p-2">
                   <button
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-800 hover:bg-blue-100"
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-blue-800/40 font-medium"
                     onClick={() => {
                       setFilters(prev => ({ ...prev, adsetId: '' }));
                       setShowAdsetMenu(false);
@@ -411,8 +482,8 @@ export default function AdsPage() {
                   {adsets.map((adset) => (
                     <button
                       key={adset.id}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm ${
-                        filters.adsetId === adset.id ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-blue-100'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        filters.adsetId === adset.id ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-blue-800/40'
                       }`}
                       onClick={() => {
                         setFilters(prev => ({ ...prev, adsetId: adset.id }));
@@ -431,78 +502,11 @@ export default function AdsPage() {
           <Button
             onClick={() => refreshAds()}
             disabled={loading || isFetching}
-            className="flex items-center gap-2 glass-medium"
+            className="flex items-center gap-2 glass-medium text-white font-medium"
           >
             <RefreshCw className={`w-4 h-4 ${loading || isFetching ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-        </div>
-
-        {/* Cards de Métricas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/15 transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/70 mb-1">Total de Ads</p>
-                  <p className="text-3xl font-bold text-white">
-                    {formatNumber(metrics.totalAds)}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-500/20 rounded-full">
-                  <Image className="w-8 h-8 text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/15 transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/70 mb-1">Gasto Total</p>
-                  <p className="text-3xl font-bold text-white">
-                    {formatCurrency(metrics.totalSpend)}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-500/20 rounded-full">
-                  <DollarSign className="w-8 h-8 text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/15 transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/70 mb-1">Impressões</p>
-                  <p className="text-3xl font-bold text-white">
-                    {formatNumber(metrics.totalImpressions)}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-500/20 rounded-full">
-                  <Eye className="w-8 h-8 text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/15 transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/70 mb-1">Leads</p>
-                  <p className="text-3xl font-bold text-white">
-                    {formatNumber(metrics.totalLeads)}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-500/20 rounded-full">
-                  <TrendingUp className="w-8 h-8 text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Tabela de Ads */}

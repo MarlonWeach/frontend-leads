@@ -128,6 +128,9 @@ function CampaignsPage() {
     ? allCampaigns.filter(campaign => campaign.is_active)
     : allCampaigns;
 
+  // Ordenar campanhas por investimento (do maior para o menor)
+  const sortedCampaigns = [...campaigns].sort((a, b) => (b.spend || 0) - (a.spend || 0));
+
   // Funções de formatação
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -236,8 +239,8 @@ function CampaignsPage() {
               </button>
             </div>
             
-            <div className="text-sublabel-refined text-glow glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
-              <span className="font-medium text-white">Período:</span> Últimos {periodOptions.find(p => p.value === selectedPeriod)?.label}
+            <div className="text-sublabel-refined text-white glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
+              <span className="font-medium text-white">Período:</span> <span className="text-white">Últimos {periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -272,7 +275,7 @@ function CampaignsPage() {
 
         {/* Grid de cards de campanhas com design system */}
         <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(280px,1fr))] auto-rows-fr">
-          {campaigns.map((campaign) => (
+          {sortedCampaigns.map((campaign) => (
             <motion.div
               key={campaign.id}
               className="glass-card card-metric cursor-pointer relative group"
