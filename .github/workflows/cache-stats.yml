@@ -47,25 +47,39 @@ jobs:
           echo "🧪 Testando API no Vercel..."
           sleep 30  # Aguardar deploy
           
+          # Determinar URL do Vercel
+          if [ -n "${{ secrets.VERCEL_URL }}" ]; then
+            VERCEL_URL="${{ secrets.VERCEL_URL }}"
+          else
+            # Tentar obter URL do projeto Vercel
+            VERCEL_URL=$(npx vercel ls --token ${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^[:space:]]*' | head -1)
+            if [ -z "$VERCEL_URL" ]; then
+              echo "❌ Não foi possível determinar a URL do Vercel"
+              exit 1
+            fi
+          fi
+          
+          echo "🌐 Usando URL: $VERCEL_URL"
+          
           # Testar GET
           echo "📡 Testando GET..."
-          curl -s "${{ secrets.VERCEL_URL }}/api/cache-stats" | jq .
+          curl -s "$VERCEL_URL/api/cache-stats" | jq .
           
           # Testar POST - stats
           echo "📡 Testando POST (stats)..."
-          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+          curl -s -X POST "$VERCEL_URL/api/cache-stats" \
             -H "Content-Type: application/json" \
             -d '{"action": "stats", "data": {"cacheType": "general"}}' | jq .
           
           # Testar POST - update
           echo "📡 Testando POST (update)..."
-          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+          curl -s -X POST "$VERCEL_URL/api/cache-stats" \
             -H "Content-Type: application/json" \
             -d '{"action": "update", "data": {"cacheType": "workflow", "hits": 200, "misses": 15, "sizeBytes": 750000}}' | jq .
           
           # Testar POST - invalidate
           echo "📡 Testando POST (invalidate)..."
-          curl -s -X POST "${{ secrets.VERCEL_URL }}/api/cache-stats" \
+          curl -s -X POST "$VERCEL_URL/api/cache-stats" \
             -H "Content-Type: application/json" \
             -d '{"action": "invalidate"}' | jq .
 
@@ -73,12 +87,26 @@ jobs:
         run: |
           echo "📊 Gerando relatório de Cache Stats..."
           
+          # Determinar URL do Vercel
+          if [ -n "${{ secrets.VERCEL_URL }}" ]; then
+            VERCEL_URL="${{ secrets.VERCEL_URL }}"
+          else
+            # Tentar obter URL do projeto Vercel
+            VERCEL_URL=$(npx vercel ls --token ${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^[:space:]]*' | head -1)
+            if [ -z "$VERCEL_URL" ]; then
+              echo "❌ Não foi possível determinar a URL do Vercel"
+              exit 1
+            fi
+          fi
+          
+          echo "🌐 Usando URL: $VERCEL_URL"
+          
           # Buscar estatísticas atuais
-          RESPONSE=$(curl -s "${{ secrets.VERCEL_URL }}/api/cache-stats")
+          RESPONSE=$(curl -s "$VERCEL_URL/api/cache-stats")
           
           echo "## Cache Stats Report" >> $GITHUB_STEP_SUMMARY
           echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "**Endpoint:** ${{ secrets.VERCEL_URL }}/api/cache-stats" >> $GITHUB_STEP_SUMMARY
+          echo "**Endpoint:** $VERCEL_URL/api/cache-stats" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Response:" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
@@ -97,7 +125,15 @@ jobs:
         if: success()
         run: |
           echo "🎉 Cache Stats workflow executado com sucesso!"
-          echo "📊 API disponível em: ${{ secrets.VERCEL_URL }}/api/cache-stats"
+          
+          # Determinar URL do Vercel para notificação
+          if [ -n "${{ secrets.VERCEL_URL }}" ]; then
+            VERCEL_URL="${{ secrets.VERCEL_URL }}"
+          else
+            VERCEL_URL=$(npx vercel ls --token ${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^[:space:]]*' | head -1)
+          fi
+          
+          echo "📊 API disponível em: $VERCEL_URL/api/cache-stats"
           echo "⏰ Próxima execução: $(date -d '+6 hours' '+%Y-%m-%d %H:%M:%S')"
 
       - name: Notify Failure
