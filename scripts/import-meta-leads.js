@@ -11,6 +11,11 @@ const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+if (!process.env.META_FORM_ID) {
+  throw new Error('A variável de ambiente META_FORM_ID não está definida! Adicione META_FORM_ID nos secrets do GitHub Actions.');
+}
+const FORM_IDS = process.env.META_FORM_ID.split(',').map(id => id.trim());
+
 async function fetchMetaLeads() {
   const allLeads = [];
   // Define a data de início para 37 meses atrás a partir da data atual

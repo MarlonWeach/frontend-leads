@@ -39,10 +39,8 @@ jobs:
           node scripts/test-cache-stats.js
           pkill -f "next dev"
 
-      - name: Deploy to Vercel
-        run: |
-          echo "🚀 Fazendo deploy para Vercel..."
-          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy para Vercel
+        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
 
       - name: Test Cache Stats API on Vercel
         run: |
