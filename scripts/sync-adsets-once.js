@@ -143,7 +143,8 @@ async function getAdsetsFromMeta() {
 async function getAdsetsTrafficBatch(adsetIds) {
   if (adsetIds.length === 0) return {};
   const idsParam = adsetIds.join(',');
-  const url = `https://graph.facebook.com/${META_API_VERSION}/?ids=${idsParam}&fields=insights{impressions,clicks,spend}&date_preset=last_${TRAFFIC_DAYS}_days&access_token=${META_ACCESS_TOKEN}`;
+  // Usar last_90d que é um valor válido aceito pela API da Meta
+  const url = `https://graph.facebook.com/${META_API_VERSION}/?ids=${idsParam}&fields=insights{impressions,clicks,spend}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
   const data = await makeRateLimitedRequest(url);
   // Retorna um objeto: { adset_id1: { insights: [...] }, adset_id2: { insights: [...] }, ... }
   return data;
