@@ -207,9 +207,9 @@ async function upsertAdsets(adsetsData) {
     billing_event: adset.billing_event,
     targeting: adset.targeting,
     last_synced: new Date().toISOString(),
-    total_impressions: adset.totalImpressions,
-    total_clicks: adset.totalClicks,
-    total_spend: adset.totalSpend
+    impressions: adset.totalImpressions,
+    clicks: adset.totalClicks,
+    spend: adset.totalSpend
   }));
   try {
     const batches = [];
