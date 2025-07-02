@@ -14,11 +14,11 @@ if (!SUPABASE_URL || !SUPABASE_KEY || !META_ACCESS_TOKEN || !META_ACCOUNT_ID) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Configurações de otimização
-const CONCURRENT_REQUESTS = 3; // Reduzido para respeitar rate limit
+// Configurações de otimização - Reduzidas para evitar rate limiting
+const CONCURRENT_REQUESTS = 1; // Apenas 1 requisição por vez
 const BATCH_SIZE = 100; // Tamanho do lote para Supabase
-const INSIGHTS_BATCH = 50; // Máximo de adsets por chamada de insights
-const RATE_LIMIT_DELAY = 500; // Delay maior para evitar bloqueio
+const INSIGHTS_BATCH = 25; // Reduzido para menos adsets por chamada
+const RATE_LIMIT_DELAY = 2000; // Delay de 2 segundos entre requisições
 const TRAFFIC_DAYS = 60; // Período de tráfego para verificar
 const META_API_VERSION = 'v23.0';
 
@@ -130,7 +130,7 @@ async function getAdsetsFromMeta() {
       } else {
         after = null;
       }
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY * 2)); // Delay maior entre páginas
     } while (after);
     return allAdsets;
   } catch (error) {

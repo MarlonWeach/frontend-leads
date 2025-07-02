@@ -14,10 +14,10 @@ if (!SUPABASE_URL || !SUPABASE_KEY || !META_ACCESS_TOKEN || !META_ACCOUNT_ID) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Configurações de otimização
-const RATE_LIMIT_DELAY = 500; // 500ms entre requisições
-const CONCURRENT_REQUESTS = 3; // Máximo 3 requisições simultâneas
-const BATCH_SIZE = 50; // Máximo 50 ads por requisição de insights
+// Configurações de otimização - Reduzidas para evitar rate limiting
+const RATE_LIMIT_DELAY = 2000; // 2 segundos entre requisições
+const CONCURRENT_REQUESTS = 1; // Apenas 1 requisição por vez
+const BATCH_SIZE = 25; // Reduzido para menos ads por requisição
 const TRAFFIC_DAYS = 60; // Buscar tráfego dos últimos 60 dias
 
 // Função para obter o account ID com prefixo

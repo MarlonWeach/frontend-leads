@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
   try {
     const { data, error } = await supabase.from('sync_status').select('*');
-    if (error) {
+  if (error) {
       console.error('Erro ao consultar sync_status:', error);
       
       // Tentar criar a tabela se não existir
@@ -55,7 +55,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
           console.log('Registro inicial inserido com sucesso!');
         }
       }
-    } else {
+  } else {
       console.log('Tabela sync_status existe e contém dados:', data);
     }
   } catch (err) {
