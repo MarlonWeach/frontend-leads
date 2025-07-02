@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { logger } from '../utils/logger';
 
 // Função auxiliar para validar datas
 function validateDates(dateFrom, dateTo) {
@@ -80,7 +81,13 @@ export async function fetchPerformanceMetrics(filters = {}) {
       metrics
     };
   } catch (error) {
-    console.error('❌ Erro ao buscar métricas:', error);
+    logger.error({
+      msg: 'Erro ao buscar métricas de performance',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      filters
+    });
+    
     // Retornar erro estruturado
     return {
       error: {
@@ -125,7 +132,11 @@ function validateMetrics(metrics) {
 
 function calculateDetailedMetrics(campaigns) {
   if (!Array.isArray(campaigns)) {
-    console.error('❌ Dados de campanhas inválidos');
+    logger.error({
+      msg: 'Dados de campanhas inválidos para cálculo de métricas',
+      campaignsType: typeof campaigns,
+      campaignsLength: campaigns?.length
+    });
     return getEmptyMetrics();
   }
 
@@ -176,7 +187,12 @@ function calculateDetailedMetrics(campaigns) {
           const lifetimeBudget = parseFloat(adset.lifetime_budget || 0);
           
           if (isNaN(dailyBudget) || isNaN(lifetimeBudget)) {
-            console.warn('⚠️ Budget inválido para adset:', adset.id);
+            logger.warn({
+              msg: 'Budget inválido para adset',
+              adsetId: adset.id,
+              dailyBudget: adset.daily_budget,
+              lifetimeBudget: adset.lifetime_budget
+            });
             return;
           }
 
@@ -196,7 +212,10 @@ function calculateDetailedMetrics(campaigns) {
 
     // Validar métricas calculadas
     if (!validateMetrics(metrics)) {
-      console.error('❌ Métricas inválidas calculadas');
+      logger.error({
+        msg: 'Métricas inválidas calculadas',
+        metrics
+      });
       return getEmptyMetrics();
     }
 
@@ -208,7 +227,12 @@ function calculateDetailedMetrics(campaigns) {
 
     return metrics;
   } catch (error) {
-    console.error('❌ Erro ao calcular métricas:', error);
+    logger.error({
+      msg: 'Erro ao calcular métricas detalhadas',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      campaignsCount: campaigns.length
+    });
     return getEmptyMetrics();
   }
 }

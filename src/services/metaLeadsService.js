@@ -1,9 +1,11 @@
 // src/services/metaLeadsService.js
 
+import { logger } from '../utils/logger';
+
 class MetaLeadsService {
-  constructor() {
-    this.accessToken = process.env.NEXT_PUBLIC_META_ACCESS_TOKEN;
-    this.baseUrl = 'https://graph.facebook.com/v18.0';
+  constructor(accessToken) {
+    this.accessToken = accessToken;
+    this.baseUrl = 'https://graph.facebook.com/v23.0';
   }
 
   async getLeadForms(pageId) {
@@ -19,7 +21,13 @@ class MetaLeadsService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Erro ao buscar formulários:', error);
+      logger.error({
+        msg: 'Erro ao buscar formulários de leads',
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        pageId,
+        baseUrl: this.baseUrl
+      });
       throw error;
     }
   }

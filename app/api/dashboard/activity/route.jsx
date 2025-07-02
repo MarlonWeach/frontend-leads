@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '../../../src/utils/logger';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -61,7 +62,12 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Erro ao buscar dados de atividade:', error);
+    logger.error({
+      msg: 'Erro ao buscar dados de atividade',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
     return NextResponse.json(
       { error: 'Erro ao buscar dados de atividade' },
       { status: 500 }

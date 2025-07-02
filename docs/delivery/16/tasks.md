@@ -10,7 +10,7 @@ This document lists all tasks associated with PBI 16.
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
 | 16-1 | [Implementar sistema de atualização automática via GitHub Actions](./16-1.md) | Done | Criar workflow do GitHub Actions para atualizar anúncios ativos periodicamente |
 | 16-2 | [Implementar cache inteligente para reduzir chamadas à API](./16-2.md) | Done | Sistema de cache para otimizar performance e reduzir custos da API |
-| 16-3 | [Implementar tratamento de erros e logs estruturados](./16-3.md) | Proposed | Sistema robusto de tratamento de erros e logging para monitoramento |
+| 16-3 | [Implementar tratamento de erros e logs estruturados](./16-3.md) | Done | Sistema robusto de tratamento de erros e logging para monitoramento |
 | 16-4 | [Implementar notificações para problemas na atualização](./16-4.md) | Proposed | Sistema de alertas para notificar usuários sobre falhas na sincronização |
 | 16-5 | [Implementar filtro automático de anúncios ativos no dashboard](./16-5.md) | Proposed | Garantir que dashboard use apenas dados de anúncios ativos |
 | 16-6 | [Teste E2E do sistema de atualização automática](./16-6.md) | Proposed | Validar funcionamento completo do sistema de atualização automática |

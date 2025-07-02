@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { AI_CONFIG, AIModel, PERFORMANCE_ANALYSIS_CONFIG } from './config';
+import { logger } from '../../utils/logger';
 
 // Inicializar cliente OpenAI
 const openai = new OpenAI({
@@ -51,7 +52,11 @@ export class AIService {
         return { success: false, message: 'Resposta inesperada da API' };
       }
     } catch (error) {
-      console.error('Erro ao testar conexão com OpenAI:', error);
+      logger.error({
+        msg: 'Erro ao testar conexão com OpenAI',
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return { 
         success: false, 
         message: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
@@ -102,7 +107,11 @@ export class AIService {
 
       return analysis;
     } catch (error) {
-      console.error('Erro ao analisar performance:', error);
+      logger.error({
+        msg: 'Erro ao analisar performance',
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       throw new Error(`Erro na análise de performance: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
@@ -138,11 +147,19 @@ export class AIService {
         const anomalies = JSON.parse(content);
         return Array.isArray(anomalies) ? anomalies : [];
       } catch (parseError) {
-        console.error('Erro ao fazer parse das anomalias:', parseError);
+        logger.error({
+          msg: 'Erro ao fazer parse das anomalias',
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+          stack: parseError instanceof Error ? parseError.stack : undefined,
+        });
         return [];
       }
     } catch (error) {
-      console.error('Erro ao detectar anomalias:', error);
+      logger.error({
+        msg: 'Erro ao detectar anomalias',
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       throw new Error(`Erro na detecção de anomalias: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
@@ -178,12 +195,20 @@ export class AIService {
         const suggestions = JSON.parse(content);
         return Array.isArray(suggestions) ? suggestions : [];
       } catch (parseError) {
-        console.error('Erro ao fazer parse das sugestões:', parseError);
+        logger.error({
+          msg: 'Erro ao fazer parse das sugestões',
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+          stack: parseError instanceof Error ? parseError.stack : undefined,
+        });
         return [];
       }
-    } catch (error) {
-      console.error('Erro ao gerar sugestões:', error);
-      throw new Error(`Erro na geração de sugestões: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          } catch (error) {
+        logger.error({
+          msg: 'Erro ao gerar sugestões',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        throw new Error(`Erro na geração de sugestões: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 

@@ -23,6 +23,7 @@ import AnomalyAlert from './AnomalyAlert';
 import { OptimizationSuggestions } from './OptimizationSuggestions';
 import ChatAssistant from './ChatAssistant';
 import { AlertTriangle as AlertTriangleIcon, Settings as SettingsIcon } from 'lucide-react';
+import { logger } from '../../utils/logger';
 
 interface AIPanelProps {
   data: any[];
@@ -149,7 +150,14 @@ function AIPanel({ data, filters }: AIPanelProps) {
 
   // Função genérica para tratar erros de IA
   function handleAIError(error: any) {
-    console.log('AI Error received:', error);
+    logger.warn({
+      msg: 'Erro de IA recebido',
+      error: error instanceof Error ? error.message : String(error),
+      code: error?.code,
+      status: error?.status,
+      context: 'AIPanel'
+    });
+    
     if (error?.code === 'rate_limit_exceeded' || error?.status === 429) {
       setRateLimit(true);
       setAIError('Limite de uso da IA atingido. Aguarde alguns minutos e tente novamente.');

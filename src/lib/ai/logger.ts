@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../utils/supabaseClient';
+import { logger } from '../../utils/logger';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,10 +42,30 @@ export async function logAIUsage(log: AIUsageLog): Promise<void> {
       });
 
     if (error) {
-      console.error('Erro ao registrar log de IA:', error);
+      logger.error({
+        msg: 'Erro ao registrar log de IA no banco de dados',
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        logData: log
+      });
+    } else {
+      logger.info({
+        msg: 'Log de IA registrado com sucesso',
+        analysisType: log.analysis_type,
+        tokensUsed: log.tokens_used,
+        costEstimated: log.cost_estimated,
+        modelUsed: log.model_used,
+        status: log.status
+      });
     }
   } catch (error) {
-    console.error('Erro ao registrar log de IA:', error);
+    logger.error({
+      msg: 'Erro ao registrar log de IA',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      logData: log
+    });
   }
 }
 
