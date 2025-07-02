@@ -237,7 +237,6 @@ describe('AI Modules Unit Tests', () => {
   });
 
   describe('Integration Between Modules', () => {
-    const mockCampaignData = mockData.campaigns;
 
     it('should maintain consistency between anomaly detection and optimization', async () => {
       // Run anomaly detection
@@ -316,7 +315,7 @@ describe('AI Modules Unit Tests', () => {
 
     it.skip('should handle concurrent AI operations', async () => {
       const data = {
-        campaigns: mockCampaignData,
+        campaigns: mockData.campaigns,
         dateRange: { startDate: '2025-01-20', endDate: '2025-01-27' }
       };
 
@@ -324,7 +323,7 @@ describe('AI Modules Unit Tests', () => {
       const operations = [
         analyzePerformance(data),
         generateInsights(data),
-        detectAnomalies(mockCampaignData, getDetectionConfig('medium'))
+        detectAnomalies(mockData.campaigns, getDetectionConfig('medium'))
       ];
 
       const results = await Promise.all(operations);
