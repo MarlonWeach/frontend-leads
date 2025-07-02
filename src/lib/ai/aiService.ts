@@ -340,4 +340,43 @@ Responda de forma clara e útil, usando o contexto fornecido quando relevante.
 }
 
 // Exportar instância singleton
-export const aiService = AIService.getInstance(); 
+export const aiService = AIService.getInstance();
+
+// Funções de conveniência para compatibilidade com testes
+export async function analyzePerformance(data: any, period: string = '7 dias'): Promise<{
+  analysis: string;
+  insights: Array<{ type: string; title: string; description: string; severity: string }>;
+  recommendations: Array<{ type: string; suggestion: string; expectedImpact: string }>;
+}> {
+  const service = AIService.getInstance();
+  const analysis = await service.analyzePerformance(data, period);
+  const insights = await service.detectAnomalies(data);
+  const recommendations = await service.generateOptimizationSuggestions(data);
+  
+  return {
+    analysis,
+    insights: insights.map(insight => ({
+      type: insight.type,
+      title: `Anomalia: ${insight.type}`,
+      description: insight.description,
+      severity: insight.severity.toUpperCase()
+    })),
+    recommendations: recommendations.map(rec => ({
+      type: rec.type,
+      suggestion: rec.suggestion,
+      expectedImpact: rec.expectedImpact
+    }))
+  };
+}
+
+export async function generateInsights(data: any): Promise<Array<{ type: string; title: string; description: string; severity: string }>> {
+  const service = AIService.getInstance();
+  const anomalies = await service.detectAnomalies(data);
+  
+  return anomalies.map(insight => ({
+    type: insight.type,
+    title: `Insight: ${insight.type}`,
+    description: insight.description,
+    severity: insight.severity.toUpperCase()
+  }));
+} 

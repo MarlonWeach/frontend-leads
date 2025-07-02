@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../src/components/ui/card';
-import Button from '../src/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
+import Button from '../../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Calendar, TrendingUp, Eye, MousePointer, DollarSign, Users, TrendingDown } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import ReactDOM from 'react-dom';
-import AnimatedBarChart from '../src/components/ui/AnimatedBarChart';
-import AnimatedPieChart from '../src/components/ui/AnimatedPieChart';
-import AnimatedLineChart from '../src/components/ui/AnimatedLineChart';
-import { AIPanel } from '../src/components/ai/AIPanel';
-import { OpenAIBillingWidget } from '../src/components/ai/OpenAIBillingWidget';
+import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
+import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
+import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
+import { AIPanel } from '../../src/components/ai/AIPanel';
+import { OpenAIBillingWidget } from '../../src/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
 
 // Função para abreviar números grandes (igual ao dashboard)

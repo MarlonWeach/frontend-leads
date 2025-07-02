@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import MainLayout from '../src/components/MainLayout';
+import MainLayout from '../../src/components/MainLayout';
 import PerformancePageClient from './PerformancePageClient';
 
 // Componente de loading

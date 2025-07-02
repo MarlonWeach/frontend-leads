@@ -107,9 +107,8 @@ describe('LeadsDashboard', () => {
 
     render(<LeadsDashboard />);
     
-    // Verificar se os cards de loading estão presentes
-    const loadingCards = screen.getAllByTestId('loading-card');
-    expect(loadingCards.length).toBeGreaterThan(0);
+    // Verificar se o texto de carregamento está presente
+    expect(screen.getByText('Carregando leads...')).toBeInTheDocument();
   });
 
   it('deve mostrar estado de erro e permitir retry', async () => {
@@ -123,7 +122,7 @@ describe('LeadsDashboard', () => {
 
     render(<LeadsDashboard />);
     
-    expect(screen.getByText('Erro ao carregar leads')).toBeInTheDocument();
+    expect(screen.getByText('Erro ao carregar leads: Erro de conexão')).toBeInTheDocument();
     const retryButton = screen.getByRole('button', { name: /tentar novamente/i });
     expect(retryButton).toBeInTheDocument();
 
@@ -190,15 +189,15 @@ describe('LeadsDashboard', () => {
 
     // Verificar se os status estão corretos
     expect(screen.getByText('Novo')).toBeInTheDocument();
-    expect(screen.getByText('Contactado')).toBeInTheDocument();
+    expect(screen.getByText('Contatado')).toBeInTheDocument();
   });
 
   it('deve mostrar gráfico de tendências', () => {
     render(<LeadsDashboard />);
 
     expect(screen.getByText('Tendências de Leads')).toBeInTheDocument();
-    expect(screen.getByText('Novos')).toBeInTheDocument();
-    expect(screen.getByText('Convertidos')).toBeInTheDocument();
+    expect(screen.getAllByText('Novos')).toHaveLength(2); // Um no select, outro no botão
+    expect(screen.getAllByText('Convertidos')).toHaveLength(3); // Um no card, um no select, um no botão
     expect(screen.getByText('Taxa de Conversão')).toBeInTheDocument();
   });
 

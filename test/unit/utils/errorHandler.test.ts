@@ -259,26 +259,38 @@ describe('ErrorHandler', () => {
 
     it('deve incluir stack trace em desenvolvimento', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'development',
+        writable: true
+      });
       
       const error = new AppError('Erro de teste');
       const formatted = formatErrorForResponse(error);
       
       expect(formatted.details).toBe(error.stack);
       
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true
+      });
     });
 
     it('deve omitir stack trace em produção', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        writable: true
+      });
       
       const error = new AppError('Erro de teste');
       const formatted = formatErrorForResponse(error);
       
       expect(formatted.details).toBeUndefined();
       
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true
+      });
     });
   });
 }); 

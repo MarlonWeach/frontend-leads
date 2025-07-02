@@ -3,13 +3,13 @@
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { SectionTransition } from '../src/components/ui/transitions';
+import { SectionTransition } from '../../src/components/ui/transitions';
 import { BarChart3, Info, Eye, MousePointer, DollarSign, AlertCircle, Clock, RefreshCw, Brain } from 'lucide-react';
-import { Tooltip } from '../src/components/Tooltip';
-import { Card } from '../src/components/ui/card';
-import MainLayout from '../src/components/MainLayout';
-import { useCampaignsData } from '../src/hooks/useCampaignsData';
-import IndividualAnalysis from '../src/components/ai/IndividualAnalysis';
+import { Tooltip } from '../../src/components/Tooltip';
+import { Card } from '../../src/components/ui/card';
+import MainLayout from '../../src/components/MainLayout';
+import { useCampaignsData } from '../../src/hooks/useCampaignsData';
+import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 
 const periodOptions = [
   { value: 'today', label: 'Hoje' },

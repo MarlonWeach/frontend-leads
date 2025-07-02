@@ -102,7 +102,7 @@ describe('API de Overview do Dashboard', () => {
   
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSupabase = createClient();
+    mockSupabase = createClient('https://test.supabase.co', 'test-key');
   });
   
   it('deve retornar dados vazios quando não há anúncios ativos', async () => {

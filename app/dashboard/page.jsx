@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import MainLayout from '../src/components/MainLayout';
+import MainLayout from '../../src/components/MainLayout';
 import DashboardPageClient from './DashboardPageClient';
 
 // Componente de loading

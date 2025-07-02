@@ -1,6 +1,10 @@
 // @ts-nocheck
 export {};
 import { jest } from '@jest/globals';
+import dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente do arquivo .env.local
+dotenv.config({ path: '.env.local' });
 
 // Mock do logger
 export const mockLogger = {

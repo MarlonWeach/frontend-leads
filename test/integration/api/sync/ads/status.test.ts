@@ -16,13 +16,13 @@ jest.mock('@/middleware', () => ({
 }));
 
 // Mock do syncAdsStatus
-const mockSyncAdsStatus = jest.fn();
+const mockSyncAdsStatus = jest.fn() as jest.MockedFunction<any>;
 jest.mock('@/jobs/sync-ads', () => ({
   syncAdsStatus: mockSyncAdsStatus
 }));
 
 // Mock do rateLimit
-const mockCheckRateLimit = jest.fn();
+const mockCheckRateLimit = jest.fn() as jest.MockedFunction<any>;
 jest.mock('@/utils/rateLimit', () => ({
   resetRateLimit: jest.fn(),
   getRequestCount: jest.fn(),
@@ -99,13 +99,13 @@ const mockPOST = async (request: MockNextRequest) => {
       { success: true, data: result },
       { status: 200 }
     );
-  } catch (error) {
-    mockLogger.error('Erro ao sincronizar status dos anúncios:', error);
-    return new MockNextResponse(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
+      } catch (error) {
+      mockLogger.error('Erro ao sincronizar status dos anúncios:', error);
+      return new MockNextResponse(
+        { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' },
+        { status: 500 }
+      );
+    }
 };
 
 describe('POST /api/sync/ads/status', () => {

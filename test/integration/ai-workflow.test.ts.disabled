@@ -1,5 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { NextRequest } from 'next/server';
+
+// Mock NextRequest
+global.Request = class MockRequest {
+  constructor(url: string, options?: any) {
+    this.url = url;
+    this.method = options?.method || 'GET';
+    this.body = options?.body;
+  }
+  url: string;
+  method: string;
+  body: any;
+  
+  async json() {
+    return JSON.parse(this.body);
+  }
+} as any;
 
 // Mock do Supabase
 const mockSupabase = {
@@ -75,7 +90,7 @@ describe('AI Workflow Integration Tests', () => {
 
   describe('Performance Analysis API', () => {
     it('should analyze performance data successfully', async () => {
-      const request = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const request = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE',
@@ -95,7 +110,7 @@ describe('AI Workflow Integration Tests', () => {
     });
 
     it('should handle missing date range', async () => {
-      const request = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const request = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE'
@@ -110,7 +125,7 @@ describe('AI Workflow Integration Tests', () => {
 
   describe('Anomaly Detection API', () => {
     it('should detect anomalies successfully', async () => {
-      const request = new NextRequest('http://localhost:3000/api/ai/anomalies', {
+      const request = new global.Request('http://localhost:3000/api/ai/anomalies', {
         method: 'POST',
         body: JSON.stringify({
           dateRange: mockDateRange,
@@ -133,10 +148,10 @@ describe('AI Workflow Integration Tests', () => {
     });
 
     it('should handle different sensitivity levels', async () => {
-      const sensitivities = ['low', 'medium', 'high'];
+      const sensitivities = ['low', 'medium', 'high'] as const;
       
       for (const sensitivity of sensitivities) {
-        const request = new NextRequest('http://localhost:3000/api/ai/anomalies', {
+        const request = new global.Request('http://localhost:3000/api/ai/anomalies', {
           method: 'POST',
           body: JSON.stringify({
             dateRange: mockDateRange,
@@ -157,7 +172,7 @@ describe('AI Workflow Integration Tests', () => {
 
   describe('Optimization Suggestions API', () => {
     it('should generate optimization suggestions', async () => {
-      const request = new NextRequest('http://localhost:3000/api/ai/optimization', {
+      const request = new global.Request('http://localhost:3000/api/ai/optimization', {
         method: 'POST',
         body: JSON.stringify({
           dateRange: mockDateRange,
@@ -178,7 +193,7 @@ describe('AI Workflow Integration Tests', () => {
 
   describe('Chat Assistant API', () => {
     it('should respond to chat queries', async () => {
-      const request = new NextRequest('http://localhost:3000/api/ai/chat', {
+      const request = new global.Request('http://localhost:3000/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify({
           message: 'Qual campanha teve melhor performance?',
@@ -207,7 +222,7 @@ describe('AI Workflow Integration Tests', () => {
       ];
 
       for (const question of questions) {
-        const request = new NextRequest('http://localhost:3000/api/ai/chat', {
+        const request = new global.Request('http://localhost:3000/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify({
             message: question,
@@ -237,7 +252,7 @@ describe('AI Workflow Integration Tests', () => {
       };
 
       // Get analysis
-      const analysisRequest = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const analysisRequest = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE',
@@ -249,7 +264,7 @@ describe('AI Workflow Integration Tests', () => {
       const analysisData = await analysisResponse.json();
 
       // Get anomalies
-      const anomaliesRequest = new NextRequest('http://localhost:3000/api/ai/anomalies', {
+      const anomaliesRequest = new global.Request('http://localhost:3000/api/ai/anomalies', {
         method: 'POST',
         body: JSON.stringify({
           sensitivity: 'medium',
@@ -261,7 +276,7 @@ describe('AI Workflow Integration Tests', () => {
       const anomaliesData = await anomaliesResponse.json();
 
       // Get optimizations
-      const optimizationRequest = new NextRequest('http://localhost:3000/api/ai/optimization', {
+      const optimizationRequest = new global.Request('http://localhost:3000/api/ai/optimization', {
         method: 'POST',
         body: JSON.stringify(testData)
       });
@@ -286,7 +301,7 @@ describe('AI Workflow Integration Tests', () => {
 
     it('should handle workflow with no data gracefully', async () => {
       // Mock empty data response
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn(() => ({
           gte: jest.fn(() => ({
             lte: jest.fn(() => ({
@@ -305,7 +320,7 @@ describe('AI Workflow Integration Tests', () => {
       };
 
       // Test analysis with no data
-      const analysisRequest = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const analysisRequest = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE',
@@ -317,7 +332,7 @@ describe('AI Workflow Integration Tests', () => {
       expect(analysisResponse.status).toBe(200);
 
       // Test anomalies with no data
-      const anomaliesRequest = new NextRequest('http://localhost:3000/api/ai/anomalies', {
+      const anomaliesRequest = new global.Request('http://localhost:3000/api/ai/anomalies', {
         method: 'POST',
         body: JSON.stringify({
           sensitivity: 'medium',
@@ -346,7 +361,7 @@ describe('AI Workflow Integration Tests', () => {
         }
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const request = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE',
@@ -363,7 +378,7 @@ describe('AI Workflow Integration Tests', () => {
 
     it('should handle database errors gracefully', async () => {
       // Mock database error
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn(() => ({
           gte: jest.fn(() => ({
             lte: jest.fn(() => ({
@@ -376,7 +391,7 @@ describe('AI Workflow Integration Tests', () => {
         }))
       });
 
-      const request = new NextRequest('http://localhost:3000/api/ai/anomalies', {
+      const request = new global.Request('http://localhost:3000/api/ai/anomalies', {
         method: 'POST',
         body: JSON.stringify({
           dateRange: mockDateRange,
@@ -397,7 +412,7 @@ describe('AI Workflow Integration Tests', () => {
     it('should complete analysis within acceptable time', async () => {
       const startTime = Date.now();
 
-      const request = new NextRequest('http://localhost:3000/api/ai/analyze', {
+      const request = new global.Request('http://localhost:3000/api/ai/analyze', {
         method: 'POST',
         body: JSON.stringify({
           type: 'PERFORMANCE',
@@ -417,7 +432,7 @@ describe('AI Workflow Integration Tests', () => {
 
     it('should handle concurrent requests', async () => {
       const requests = Array.from({ length: 3 }, () => 
-        new NextRequest('http://localhost:3000/api/ai/analyze', {
+        new global.Request('http://localhost:3000/api/ai/analyze', {
           method: 'POST',
           body: JSON.stringify({
             type: 'PERFORMANCE',

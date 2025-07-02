@@ -38,7 +38,9 @@ describe('MetaAdsService', () => {
           id: 'ad1',
         name: 'Ad 1',
         status: 'ACTIVE',
-          effective_status: 'ACTIVE'
+          effective_status: 'ACTIVE',
+          created_time: '2025-01-20T00:00:00Z',
+          updated_time: '2025-01-27T00:00:00Z'
       }
       ],
       paging: {
@@ -69,7 +71,7 @@ describe('MetaAdsService', () => {
     });
 
   it('deve lidar com erros da API corretamente', async () => {
-    const mockError: MetaAPIError = {
+    const mockErrorResponse = {
       error: {
         message: 'API Error',
         type: 'OAuthException',
@@ -82,7 +84,7 @@ describe('MetaAdsService', () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
-      json: () => Promise.resolve(mockError)
+      json: () => Promise.resolve(mockErrorResponse)
     });
 
     await expect(service.getActiveAds()).rejects.toThrow('API Error');

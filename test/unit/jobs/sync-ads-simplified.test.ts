@@ -114,7 +114,7 @@ describe('Sync Ads - Funções Individuais', () => {
       expect(result.status.success).toBe(true);
       expect(result.status.totalAds).toBe(1);
       expect(result.status.activeAds).toBe(1);
-      expect(result.ads).toEqual(activeAds);
+      expect(result.data).toEqual(activeAds);
     });
 
     it('deve respeitar o modo dryRun', async () => {
@@ -128,7 +128,7 @@ describe('Sync Ads - Funções Individuais', () => {
       expect(result.status.success).toBe(true);
       expect(result.status.totalAds).toBe(1);
       expect(result.status.activeAds).toBe(1);
-      expect(result.ads).toEqual(activeAds);
+      expect(result.data).toEqual(activeAds);
       expect(logger.info).toHaveBeenCalledWith('Modo dryRun ativado - nenhuma alteração será feita no banco');
       
       // No modo dryRun, o Supabase não deve ser chamado
@@ -159,7 +159,7 @@ describe('Sync Ads - Funções Individuais', () => {
       expect(result.status.success).toBe(true);
       expect(result.status.totalAds).toBe(0);
       expect(result.status.activeAds).toBe(0);
-      expect(result.ads).toEqual([]);
+      expect(result.data).toEqual([]);
     });
   });
 }); 

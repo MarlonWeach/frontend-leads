@@ -174,12 +174,56 @@ export class OptimizationEngine {
     luxury: { cplRange: [80, 150], conversionRate: [0.25, 0.40] }
   };
 
-  constructor(campaigns: CampaignData[]) {
+  constructor(campaigns: CampaignData[] = []) {
     this.campaigns = campaigns;
-    this.calculateBenchmarks();
+    // Inicializar benchmarks vazios
+    this.benchmarks = { 
+      avgCTR: 0, 
+      avgCPL: 0, 
+      avgConversionRate: 0,
+      automotiveBenchmarks: this.automotiveBenchmarks
+    };
   }
 
-  private calculateBenchmarks() {
+  // Método de conveniência para compatibilidade com testes
+  async generateSuggestions(campaignData: any[], dateRange?: { startDate: string; endDate: string }): Promise<OptimizationSuggestion[]> {
+    this.campaigns = campaignData.map(campaign => ({
+      campaign_id: campaign.id || campaign.campaign_id,
+      name: campaign.name,
+      status: campaign.status || 'ACTIVE',
+      spend: campaign.spend || 0,
+      impressions: campaign.impressions || 0,
+      clicks: campaign.clicks || 0,
+      leads: campaign.conversions || campaign.leads || 0,
+      ctr: campaign.ctr || 0,
+      cpl: campaign.cpl || 0,
+      conversion_rate: campaign.conversionRate || campaign.conversion_rate || 0,
+      created_time: campaign.created_time || new Date().toISOString()
+    }));
+    
+    this.calculateBenchmarks();
+    const analysis = await this.generateOptimizations();
+    return analysis.suggestions;
+  }
+
+  // Método público para compatibilidade com testes
+  calculateBenchmarks(campaignData?: any[]) {
+    if (campaignData) {
+      this.campaigns = campaignData.map(campaign => ({
+        campaign_id: campaign.id || campaign.campaign_id,
+        name: campaign.name,
+        status: campaign.status || 'ACTIVE',
+        spend: campaign.spend || 0,
+        impressions: campaign.impressions || 0,
+        clicks: campaign.clicks || 0,
+        leads: campaign.conversions || campaign.leads || 0,
+        ctr: campaign.ctr || 0,
+        cpl: campaign.cpl || 0,
+        conversion_rate: campaign.conversionRate || campaign.conversion_rate || 0,
+        created_time: campaign.created_time || new Date().toISOString()
+      }));
+    }
+    
     const activeCampaigns = this.campaigns.filter(c => c.status === 'ACTIVE');
     
     if (activeCampaigns.length === 0) {
@@ -189,14 +233,21 @@ export class OptimizationEngine {
         avgConversionRate: 0,
         automotiveBenchmarks: this.automotiveBenchmarks
       };
-      return;
+    } else {
+      this.benchmarks = {
+        avgCTR: activeCampaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / activeCampaigns.length,
+        avgCPL: activeCampaigns.reduce((sum, c) => sum + (c.cpl || 0), 0) / activeCampaigns.length,
+        avgConversionRate: activeCampaigns.reduce((sum, c) => sum + (c.conversion_rate || 0), 0) / activeCampaigns.length,
+        automotiveBenchmarks: this.automotiveBenchmarks
+      };
     }
-
-    this.benchmarks = {
-      avgCTR: activeCampaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / activeCampaigns.length,
-      avgCPL: activeCampaigns.reduce((sum, c) => sum + (c.cpl || 0), 0) / activeCampaigns.length,
-      avgConversionRate: activeCampaigns.reduce((sum, c) => sum + (c.conversion_rate || 0), 0) / activeCampaigns.length,
-      automotiveBenchmarks: this.automotiveBenchmarks
+    
+    return {
+      avgCPL: this.benchmarks.avgCPL,
+      avgCTR: this.benchmarks.avgCTR,
+      avgConversionRate: this.benchmarks.avgConversionRate,
+      totalSpend: this.campaigns.reduce((sum, c) => sum + (c.spend || 0), 0),
+      totalConversions: this.campaigns.reduce((sum, c) => sum + (c.leads || 0), 0)
     };
   }
 

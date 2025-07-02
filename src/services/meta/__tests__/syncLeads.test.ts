@@ -1,6 +1,7 @@
 import { MetaLeadsSyncService } from '../syncLeads';
 import { MetaAdsService } from '../ads';
 import { logger } from '../../../utils/logger';
+import { MetaAd } from '../../../types/meta';
 
 // Mock das dependências
 jest.mock('../ads');
@@ -27,9 +28,9 @@ describe('MetaLeadsSyncService', () => {
   describe('fetchLeadsWithRetry', () => {
     it('deve filtrar insights apenas para anúncios ativos', async () => {
       // Mock dos anúncios ativos
-      const mockActiveAds = [
-        { id: 'ad_1', name: 'Anúncio Ativo 1', effective_status: 'ACTIVE' },
-        { id: 'ad_2', name: 'Anúncio Ativo 2', effective_status: 'ACTIVE' }
+      const mockActiveAds: MetaAd[] = [
+        { id: 'ad_1', name: 'Anúncio Ativo 1', effective_status: 'ACTIVE', status: 'ACTIVE', created_time: '2024-01-01', updated_time: '2024-01-01' },
+        { id: 'ad_2', name: 'Anúncio Ativo 2', effective_status: 'ACTIVE', status: 'ACTIVE', created_time: '2024-01-01', updated_time: '2024-01-01' }
       ];
       mockMetaAdsService.getActiveAds.mockResolvedValue(mockActiveAds);
 

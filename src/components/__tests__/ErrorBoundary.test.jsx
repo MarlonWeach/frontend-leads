@@ -45,8 +45,8 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByText('Ops! Algo deu errado')).toBeInTheDocument();
-    expect(screen.getByText('Desculpe, ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para resolver.')).toBeInTheDocument();
+    expect(screen.getByText('Erro inesperado')).toBeInTheDocument();
+    expect(screen.getByText('Ocorreu um erro ao carregar o conteúdo.')).toBeInTheDocument();
     expect(screen.getByText('Tentar novamente')).toBeInTheDocument();
 
     console.error = originalError;
@@ -95,7 +95,7 @@ describe('ErrorBoundary', () => {
     });
 
     // Verificar se o erro foi renderizado
-    expect(screen.getByText('Ops! Algo deu errado')).toBeInTheDocument();
+    expect(screen.getByText('Erro inesperado')).toBeInTheDocument();
 
     // Clicar em "Tentar novamente" e re-renderizar
     await act(async () => {
@@ -110,7 +110,7 @@ describe('ErrorBoundary', () => {
     // Aguardar e verificar se o componente normal foi renderizado novamente
     await waitFor(() => {
       expect(screen.getByText('Componente normal')).toBeInTheDocument();
-      expect(screen.queryByText('Ops! Algo deu errado')).not.toBeInTheDocument();
+      expect(screen.queryByText('Erro inesperado')).not.toBeInTheDocument();
     });
 
     console.error = originalError;
@@ -124,6 +124,6 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Componente normal')).toBeInTheDocument();
-    expect(screen.queryByText('Ops! Algo deu errado')).not.toBeInTheDocument();
+    expect(screen.queryByText('Erro inesperado')).not.toBeInTheDocument();
   });
 }); 

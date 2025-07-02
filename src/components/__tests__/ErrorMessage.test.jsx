@@ -10,7 +10,7 @@ describe('ErrorMessage', () => {
     render(<ErrorMessage message={mockMessage} onRetry={mockOnRetry} />);
 
     expect(screen.getByText(mockMessage)).toBeInTheDocument();
-    expect(screen.getByText('Tentar Novamente')).toBeInTheDocument();
+    expect(screen.getByText('Tentar novamente')).toBeInTheDocument();
   });
 
   it('deve chamar onRetry quando o botão for clicado', () => {
@@ -19,7 +19,7 @@ describe('ErrorMessage', () => {
 
     render(<ErrorMessage message={mockMessage} onRetry={mockOnRetry} />);
 
-    const retryButton = screen.getByText('Tentar Novamente');
+    const retryButton = screen.getByText('Tentar novamente');
     fireEvent.click(retryButton);
 
     expect(mockOnRetry).toHaveBeenCalledTimes(1);
@@ -31,6 +31,6 @@ describe('ErrorMessage', () => {
     render(<ErrorMessage message={mockMessage} />);
 
     expect(screen.getByText(mockMessage)).toBeInTheDocument();
-    expect(screen.queryByText('Tentar Novamente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tentar novamente')).not.toBeInTheDocument();
   });
 }); 

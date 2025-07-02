@@ -328,7 +328,10 @@ export function checkMemoryHealth(): HealthCheck {
   const total = used.heapTotal;
   const usage = used.heapUsed / total;
   
-  if (usage > this.thresholds.memoryUsage) {
+  // Definir threshold de memória (80% por padrão)
+  const memoryThreshold = 0.8;
+  
+  if (usage > memoryThreshold) {
     return {
       name: 'memory',
       status: 'unhealthy',

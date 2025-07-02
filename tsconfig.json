@@ -23,6 +23,7 @@
     },
     "allowJs": true,
     "incremental": true,
+    "types": ["jest", "node"],
     "plugins": [
       {
         "name": "next"

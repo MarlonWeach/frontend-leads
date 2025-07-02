@@ -25,6 +25,7 @@ export interface SyncOptions {
 export interface SyncResult {
   status: SyncStatus;
   data?: any;
+  ads?: any[]; // Adicionado para compatibilidade com testes
 }
 
 export interface SyncError extends Error {

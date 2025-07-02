@@ -1,6 +1,6 @@
 'use client';
 
-import { usePerformanceData } from '../src/hooks/usePerformanceData';
+import { usePerformanceData } from '../../src/hooks/usePerformanceData';
 
 export default function TestPerformancePage() {
   const {

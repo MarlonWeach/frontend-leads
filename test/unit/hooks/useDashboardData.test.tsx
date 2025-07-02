@@ -31,7 +31,7 @@ const createWrapper = () => {
     defaultOptions: {
       queries: {
         retry: false,
-        cacheTime: 0,
+        gcTime: 0, // cacheTime foi renomeado para gcTime no React Query v5
         staleTime: 0,
         refetchOnMount: false,
         refetchOnWindowFocus: false,

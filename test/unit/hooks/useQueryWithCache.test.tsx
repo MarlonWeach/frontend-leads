@@ -21,7 +21,7 @@ describe('useQueryWithCache', () => {
     defaultOptions: {
       queries: {
         retry: false,
-        cacheTime: 10000, // 10 segundos
+        gcTime: 10000, // 10 segundos (cacheTime foi renomeado para gcTime no React Query v5)
         staleTime: 5000,  // 5 segundos
       },
     },

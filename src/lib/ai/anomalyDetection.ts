@@ -52,6 +52,7 @@ export interface DetectionConfig {
   sensitivity: 'low' | 'medium' | 'high';
   deviationThreshold: number;
   conversionRateThreshold: number;
+  cplThreshold: number; // Adicionado para compatibilidade com testes
   minDataPoints: number;
   costSpikeThreshold: number;
   performanceDropThreshold: number;
@@ -86,6 +87,7 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       sensitivity: 'low' as const,
       deviationThreshold: 3.0,
       conversionRateThreshold: 0.20,
+      cplThreshold: 50, // Adicionado para compatibilidade com testes
       minDataPoints: 10,
       costSpikeThreshold: 3.0,
       performanceDropThreshold: 0.40,
@@ -106,6 +108,7 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       sensitivity: 'medium' as const,
       deviationThreshold: 2.5,
       conversionRateThreshold: 0.15,
+      cplThreshold: 40, // Adicionado para compatibilidade com testes
       minDataPoints: 5,
       costSpikeThreshold: 2.5,
       performanceDropThreshold: 0.30,
@@ -126,6 +129,7 @@ export function getDetectionConfig(sensitivity: 'low' | 'medium' | 'high' = 'med
       sensitivity: 'high' as const,
       deviationThreshold: 2.0,
       conversionRateThreshold: 0.10,
+      cplThreshold: 30, // Adicionado para compatibilidade com testes
       minDataPoints: 3,
       costSpikeThreshold: 2.0,
       performanceDropThreshold: 0.20,
