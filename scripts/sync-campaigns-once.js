@@ -133,7 +133,7 @@ async function getCampaignsInsightsBatch(campaignIds) {
     const batch = campaignIds.slice(i, i + BATCH_SIZE);
     const idsParam = batch.join(',');
     
-    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_${TRAFFIC_DAYS}_days&access_token=${META_ACCESS_TOKEN}`;
+    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
     
     try {
       console.log(`📊 Buscando insights para lote ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} campanhas)...`);
@@ -183,9 +183,10 @@ async function saveCampaignsToSupabase(campaigns) {
   console.log(`💾 Salvando ${campaigns.length} campanhas no Supabase...`);
   
   try {
+    // Upsert direto para evitar conflitos de PK
     const { data, error } = await supabase
       .from('campaigns')
-      .upsert(campaigns, { onConflict: 'campaign_id' });
+      .upsert(campaigns);
     
     if (error) {
       console.error('❌ Erro ao salvar campanhas:', error);
@@ -231,21 +232,21 @@ async function syncCampaigns() {
     const campaignsToSave = activeCampaigns.map(campaign => {
       const insight = insights.find(i => i.campaign_id === campaign.id);
       return {
-        campaign_id: campaign.id,
+        id: campaign.id, // Usar o ID da Meta como ID primário
+        meta_campaign_id: campaign.id,
         name: campaign.name,
         status: campaign.status,
-        effective_status: campaign.effective_status,
-        created_time: campaign.created_time,
+        objective: campaign.objective,
+        created_at: campaign.created_time,
         start_time: campaign.start_time,
         end_time: campaign.end_time,
         daily_budget: campaign.daily_budget ? parseFloat(campaign.daily_budget) : null,
-        lifetime_budget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) : null,
-        objective: campaign.objective,
+        budget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) : null,
         impressions: insight?.impressions || 0,
         clicks: insight?.clicks || 0,
         spend: insight?.spend || 0,
-        has_recent_traffic: !!insight,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        last_meta_sync: new Date().toISOString()
       };
     });
     
@@ -271,4 +272,3 @@ async function syncCampaigns() {
 
 // Executar sincronização
 syncCampaigns(); 
-main(); 

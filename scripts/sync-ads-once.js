@@ -133,7 +133,7 @@ async function getAdsInsightsBatch(adIds) {
     const batch = adIds.slice(i, i + BATCH_SIZE);
     const idsParam = batch.join(',');
     
-    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_${TRAFFIC_DAYS}_days&access_token=${META_ACCESS_TOKEN}`;
+    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
     
     try {
       console.log(`📊 Buscando insights para lote ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} ads)...`);

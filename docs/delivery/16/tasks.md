@@ -11,15 +11,15 @@ This document lists all tasks associated with PBI 16.
 | 16-1 | [Implementar sistema de atualização automática via GitHub Actions](./16-1.md) | Done | Criar workflow do GitHub Actions para atualizar anúncios ativos periodicamente |
 | 16-2 | [Implementar cache inteligente para reduzir chamadas à API](./16-2.md) | Done | Sistema de cache para otimizar performance e reduzir custos da API |
 | 16-3 | [Implementar tratamento de erros e logs estruturados](./16-3.md) | Done | Sistema robusto de tratamento de erros e logging para monitoramento |
-| 16-4 | [Implementar notificações para problemas na atualização](./16-4.md) | Proposed | Sistema de alertas para notificar usuários sobre falhas na sincronização |
-| 16-5 | [Implementar filtro automático de anúncios ativos no dashboard](./16-5.md) | Proposed | Garantir que dashboard use apenas dados de anúncios ativos |
-| 16-6 | [Teste E2E do sistema de atualização automática](./16-6.md) | Proposed | Validar funcionamento completo do sistema de atualização automática |
+| 16-4 | [Implementar Cache de Dados](./16-4.md) | Done | Sistema de cache para otimizar performance e reduzir custos da API |
+| 16-5 | [Atualizar Dashboard para Usar Novos Dados](./16-5.md) | Done | Garantir que dashboard use apenas dados de anúncios ativos |
+| 16-6 | [Implementar Testes E2E](./16-6.md) | Done | Validar funcionamento completo do sistema de atualização automática |
 | 16-7 | [Otimizar sincronização de campanhas com filtro de tráfego recente](./16-7.md) | Done | Implementar filtro para sincronizar apenas campanhas com tráfego nos últimos 90 dias |
 | 16-8 | [Otimizar sincronização de adsets com filtro de tráfego recente](./16-8.md) | Done | Implementar filtro para sincronizar apenas adsets com tráfego nos últimos 90 dias |
 | 16-9 | [Otimizar sincronização de ads com filtro de tráfego recente](./16-9.md) | Done | Implementar filtro para sincronizar apenas ads com tráfego nos últimos 90 dias |
-| 16-10 | [Limitar sincronização de meta_leads para 90 dias](./16-10.md) | Done | Implementar limite de 90 dias para sincronização de leads e otimizar performance |
-| 16-11 | [Implementar sistema de priorização de sincronização](./16-11.md) | Agreed | Criar sistema que prioriza anúncios ativos e com tráfego recente |
-| 16-12 | [Otimizar workflow GitHub Actions com paralelização](./16-12.md) | Agreed | Implementar execução paralela de scripts para reduzir tempo total de sincronização |
+| 16-10 | [Limitar sincronização de meta_leads para 30 dias](./16-10.md) | Done | Implementar limite de 30 dias para sincronização de leads e otimizar performance |
+| 16-11 | [Implementar sistema de priorização de sincronização](./16-11.md) | Done | Criar sistema que prioriza anúncios ativos e com tráfego recente |
+| 16-12 | [Otimizar workflow GitHub Actions com paralelização](./16-12.md) | Done | Implementar execução paralela de scripts para reduzir tempo total de sincronização |
 
 ### 16-6.1 Dashboard E2E
 - [x] Exibir métricas de anúncios ativos usando dados reais do Supabase

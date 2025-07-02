@@ -230,18 +230,20 @@ export function isRecoverableError(error: unknown): boolean {
   }
 
   if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    
     // Erros de rede são geralmente recuperáveis
-    if (error.message.includes('network') || error.message.includes('fetch')) {
+    if (message.includes('network') || message.includes('fetch')) {
       return true;
     }
 
     // Timeouts são recuperáveis
-    if (error.message.includes('timeout')) {
+    if (message.includes('timeout')) {
       return true;
     }
 
     // Rate limits são recuperáveis
-    if (error.message.includes('rate limit') || error.message.includes('429')) {
+    if (message.includes('rate limit') || message.includes('429')) {
       return true;
     }
   }

@@ -1,11 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../../utils/supabaseClient';
+import { supabase } from '../supabaseClient.js';
 import { logger } from '../../utils/logger';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export interface AIUsageLog {
   analysis_type: 'performance' | 'anomalies' | 'optimization' | 'chat' | 'insights';
