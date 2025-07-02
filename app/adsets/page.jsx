@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAdsetsData } from '../../src/hooks/useAdsetsData';
-import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import Button from '../../src/components/ui/button';
+import { useAdsetsData } from '../src/hooks/useAdsetsData';
+import { Card, CardContent, CardHeader, CardTitle } from '../src/components/ui/card';
+import Button from '../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Brain } from 'lucide-react';
-import MainLayout from '../../src/components/MainLayout';
+import MainLayout from '../src/components/MainLayout';
 import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
-import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
+import IndividualAnalysis from '../src/components/ai/IndividualAnalysis';
 
 export default function AdsetsPage() {
   const [filters, setFilters] = useState({

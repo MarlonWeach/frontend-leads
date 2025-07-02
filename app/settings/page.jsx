@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { AlertCircle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
-import MainLayout from '../../src/components/MainLayout';
-import { Card } from '../../src/components/ui/card';
+import MainLayout from '../src/components/MainLayout';
+import { Card } from '../src/components/ui/card';
 
 export default function SettingsPage() {
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | success | error

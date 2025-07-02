@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAdsData } from '../../src/hooks/useAdsData';
-import { useCampaignsList } from '../../src/hooks/useCampaignsList';
-import { useAdsetsList } from '../../src/hooks/useAdsetsList';
-import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import Button from '../../src/components/ui/button';
+import { useAdsData } from '../src/hooks/useAdsData';
+import { useCampaignsList } from '../src/hooks/useCampaignsList';
+import { useAdsetsList } from '../src/hooks/useAdsetsList';
+import { Card, CardContent, CardHeader, CardTitle } from '../src/components/ui/card';
+import Button from '../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Image, Video, FileText, Eye, MousePointer, DollarSign, TrendingUp, Calendar, Brain } from 'lucide-react';
-import MainLayout from '../../src/components/MainLayout';
-import AdCreativePreview from '../../src/components/ui/AdCreativePreview';
-import AdCreativeModal from '../../src/components/ui/AdCreativeModal';
-import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
+import MainLayout from '../src/components/MainLayout';
+import AdCreativePreview from '../src/components/ui/AdCreativePreview';
+import AdCreativeModal from '../src/components/ui/AdCreativeModal';
+import IndividualAnalysis from '../src/components/ai/IndividualAnalysis';
 import { formatInTimeZone } from 'date-fns-tz';
 import ReactDOM from 'react-dom';
 

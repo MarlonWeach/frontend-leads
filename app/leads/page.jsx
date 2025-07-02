@@ -1,7 +1,7 @@
 'use client';
 
-import MainLayout from '../../src/components/MainLayout';
-import LeadsDashboard from '../../src/components/LeadsDashboard';
+import MainLayout from '../src/components/MainLayout';
+import LeadsDashboard from '../src/components/LeadsDashboard';
 
 export default function LeadsPage() {
   const breadcrumbs = [
