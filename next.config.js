@@ -8,7 +8,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   // Configurações para resolver problemas de RSC
-  transpilePackages: ['@supabase/supabase-js'],
+  transpilePackages: [],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
