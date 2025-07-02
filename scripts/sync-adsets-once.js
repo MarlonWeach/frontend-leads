@@ -160,8 +160,28 @@ async function applyOptimizedFilters(adsets) {
     (adset.created_time && new Date(adset.created_time) > cutoffDate) ||
     (adset.updated_time && new Date(adset.updated_time) > cutoffDate)
   );
-  // Filtro 2: Buscar insights em lote
-  const adsetIdList = activeAdsets.map(a => a.id);
+  
+  // Filtro 2: Verificar se as campanhas existem no banco
+  const campaignIds = [...new Set(activeAdsets.map(adset => adset.campaign_id))];
+  const { data: existingCampaigns, error: campaignError } = await supabase
+    .from('campaigns')
+    .select('id')
+    .in('id', campaignIds);
+  
+  if (campaignError) {
+    console.error('❌ Erro ao verificar campanhas existentes:', campaignError);
+    throw new Error('Falha ao verificar campanhas existentes');
+  }
+  
+  const existingCampaignIds = new Set(existingCampaigns.map(c => c.id));
+  const adsetsWithValidCampaigns = activeAdsets.filter(adset => 
+    existingCampaignIds.has(adset.campaign_id)
+  );
+  
+  console.log(`📊 ${activeAdsets.length} adsets ativos, ${adsetsWithValidCampaigns.length} com campanhas válidas`);
+  
+  // Filtro 3: Buscar insights em lote
+  const adsetIdList = adsetsWithValidCampaigns.map(a => a.id);
   const adsetBatches = [];
   for (let i = 0; i < adsetIdList.length; i += INSIGHTS_BATCH) {
     adsetBatches.push(adsetIdList.slice(i, i + INSIGHTS_BATCH));
@@ -171,7 +191,7 @@ async function applyOptimizedFilters(adsets) {
     const batchIds = adsetBatches[i];
     const insightsData = await getAdsetsTrafficBatch(batchIds);
     for (const adsetId of batchIds) {
-      const adset = activeAdsets.find(a => a.id === adsetId);
+      const adset = adsetsWithValidCampaigns.find(a => a.id === adsetId);
       const insights = insightsData[adsetId]?.insights?.data || [];
       const totalImpressions = insights.reduce((sum, day) => sum + (parseInt(day.impressions) || 0), 0);
       const totalClicks = insights.reduce((sum, day) => sum + (parseInt(day.clicks) || 0), 0);
