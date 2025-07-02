@@ -1,0 +1,21 @@
+# Variáveis de ambiente necessárias para o Vercel
+# Copie este arquivo para .env.local e preencha com seus valores
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Meta API
+NEXT_PUBLIC_META_ACCESS_TOKEN=your_meta_access_token
+NEXT_PUBLIC_META_ACCOUNT_ID=your_meta_account_id
+
+# OpenAI (para funcionalidades de IA)
+OPENAI_API_KEY=your_openai_api_key
+
+# Sentry (opcional, para monitoramento de erros)
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
+
+# Configurações do ambiente
+NODE_ENV=production
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app 

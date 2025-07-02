@@ -1,0 +1,64 @@
+# Arquivos de desenvolvimento
+.env.local
+.env.development
+.env.test
+
+# Arquivos de teste
+test/
+e2e/
+__tests__/
+*.test.js
+*.test.ts
+*.test.jsx
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.jsx
+*.spec.tsx
+
+# Arquivos de documentação
+docs/
+README.md
+*.md
+
+# Arquivos de configuração de desenvolvimento
+.babelrc
+jest.config.js
+jest.setup.js
+playwright.config.ts
+tsconfig.json
+
+# Arquivos de log
+*.log
+logs/
+debug-*.log
+
+# Arquivos temporários
+.next/
+node_modules/
+.swc/
+.vercel/
+
+# Scripts de desenvolvimento
+scripts/
+apply-*.js
+create-*.js
+check-*.js
+debug-*.js
+test-*.js
+
+# Arquivos de migração
+supabase/migrations/
+
+# Arquivos de relatório
+test-results/
+playwright-report/
+coverage/
+
+# Arquivos do sistema
+.DS_Store
+.breakpoints
+.replit
+
+# Arquivos de estrutura
+estrutura_projeto.txt 

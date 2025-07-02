@@ -5,6 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "vercel-build": "next build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -12,8 +13,10 @@
     "test:ai:integration": "jest test/integration/ai-workflow.test.ts",
     "test:ai:unit": "jest test/unit/ai-modules.test.ts",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "audit:daily": "node scripts/audit-daily.js",
-    "audit:run": "node scripts/audit-daily.js"
+    "audit:run": "node scripts/audit-daily.js",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@nivo/bar": "^0.99.0",

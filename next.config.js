@@ -4,6 +4,8 @@ const nextConfig = {
   swcMinify: true,
   experimental: {
     forceSwcTransforms: true,
+    // Otimizações para Vercel
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   // Configurações para resolver problemas de RSC
   transpilePackages: ['@supabase/supabase-js'],
@@ -14,8 +16,24 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
       };
     }
+    
+    // Otimizações para Vercel
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push('@supabase/supabase-js');
+    }
+    
     return config;
   },
   // Configurações para assets estáticos
@@ -25,6 +43,40 @@ const nextConfig = {
   // Configurações para otimização
   poweredByHeader: false,
   compress: true,
+  // Configurações para Vercel
+  output: 'standalone',
+  // Configurações de cache
+  generateEtags: false,
+  // Configurações de headers
+  async headers() {
+    return [
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+        ],
+      },
+    ];
+  },
+  // Configurações de redirecionamento
+  async redirects() {
+    return [];
+  },
+  // Configurações de rewrites
+  async rewrites() {
+    return [];
+  },
 };
 
 module.exports = nextConfig;
