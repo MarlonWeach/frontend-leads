@@ -171,7 +171,7 @@ async function handleRequestWithDateFilter(campaignId: string | null, status: st
   }
 
   // Extrair IDs únicos de adsets
-  const adsetIds = [...new Set(insightsData.map(insight => insight.adset_id))];
+  const adsetIds = Array.from(new Set(insightsData.map(insight => insight.adset_id)));
   
   // Buscar dados dos adsets
   const { data: adsetsData, error: adsetsError } = await supabase
@@ -265,7 +265,7 @@ async function handleRequestWithDateFilter(campaignId: string | null, status: st
   let adsets = Array.from(adsetMetrics.values());
 
   // Buscar nomes das campanhas
-  const campaignIds = [...new Set(adsets.map(a => a.campaign_id))];
+  const campaignIds = Array.from(new Set(adsets.map(a => a.campaign_id)));
   let campaignNamesMap = new Map();
   if (campaignIds.length > 0) {
     const { data: campaignsData, error: campaignsError } = await supabase

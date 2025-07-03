@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Buscar adsets para obter campaign_id
-        const adsetIds = [...new Set((periodData || []).map(d => d.adset_id))];
+        const adsetIds = Array.from(new Set((periodData || []).map(d => d.adset_id)));
         const { data: adsets, error: adsetsError } = await supabase
           .from('adsets')
           .select('id, campaign_id')
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Buscar campanhas
-        const campaignIds = [...new Set(adsetToCampaignMap.values())].filter(id => id);
+        const campaignIds = Array.from(new Set(adsetToCampaignMap.values())).filter(id => id);
         let campaignsQuery = supabase
           .from('campaigns')
           .select('id, name, status');
