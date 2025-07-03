@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCacheStats, getCacheMetrics } from "@/utils/cache";
-import { logger } from "@/utils/logger";
+import { logger } from '../../../../utils/logger';
 
 export async function GET() {
   try {

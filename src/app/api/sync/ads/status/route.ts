@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncAdsStatus } from '@/jobs/sync-ads';
-import { logger } from "@/utils/logger";
+import { logger } from '../../../../utils/logger';
 import { DEFAULT_SYNC_OPTIONS } from '@/types/sync';
 
 export async function POST(request: NextRequest) {
