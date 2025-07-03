@@ -126,8 +126,8 @@ async function handleRequestWithoutDateFilter(campaignId: string | null, adsetId
   }
 
   // Buscar nomes de campanhas e adsets para enriquecer os dados
-  const campaignIds = [...new Set(ads?.map(ad => ad.campaign_id).filter(Boolean) || [])];
-  const adsetIds = [...new Set(ads?.map(ad => ad.adset_id).filter(Boolean) || [])];
+  const campaignIds = Array.from(new Set(ads?.map(ad => ad.campaign_id).filter(Boolean) || []));
+  const adsetIds = Array.from(new Set(ads?.map(ad => ad.adset_id).filter(Boolean) || []));
 
   const campaignNamesMap = new Map();
   const adsetNamesMap = new Map();
@@ -287,8 +287,8 @@ async function handleRequestWithDateFilter(campaignId: string | null, adsetId: s
   }
 
   // Buscar nomes de campanhas e adsets para enriquecer os dados
-  const campaignIds = [...new Set(adsData?.map(ad => ad.campaign_id).filter(Boolean) || [])];
-  const adsetIds = [...new Set(adsData?.map(ad => ad.adset_id).filter(Boolean) || [])];
+  const campaignIds = Array.from(new Set(adsData?.map(ad => ad.campaign_id).filter(Boolean) || []));
+  const adsetIds = Array.from(new Set(adsData?.map(ad => ad.adset_id).filter(Boolean) || []));
 
   const campaignNamesMap = new Map();
   const adsetNamesMap = new Map();
