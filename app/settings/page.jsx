@@ -9,7 +9,7 @@ export default function SettingsPage() {
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | success | error
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [syncError, setSyncError] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('connected'); // connected | error | checking
+  const [connectionStatus, _setConnectionStatus] = useState('connected'); // connected | error | checking
 
   const breadcrumbs = [
     { name: 'Configurações', href: '/settings' }

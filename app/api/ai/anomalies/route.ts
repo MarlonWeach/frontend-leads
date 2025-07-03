@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
     const { 
       dateRange, 
       sensitivity = 'medium',
-      campaignIds,
-      forceRefresh = false 
+      campaignIds
     } = await request.json();
 
     // Validação de entrada

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useAdsData } from '../../src/hooks/useAdsData';
 import { useCampaignsList } from '../../src/hooks/useCampaignsList';
 import { useAdsetsList } from '../../src/hooks/useAdsetsList';
@@ -47,7 +47,7 @@ export default function AdsPage() {
   // Presets de data com timezone São Paulo
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
   
-  const datePresets = [
+  const datePresets = useMemo(() => [
     { label: 'Hoje', getRange: () => {
       const now = new Date();
       const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
@@ -79,7 +79,7 @@ export default function AdsPage() {
         end: formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd')
       };
     }},
-  ];
+  ], []);
 
   const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias por padrão
 

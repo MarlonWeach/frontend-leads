@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useAdsetsData } from '../../src/hooks/useAdsetsData';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
 import Button from '../../src/components/ui/button';
-import { ArrowUpDown, Filter, RefreshCw, Brain } from 'lucide-react';
+import { Filter, RefreshCw, Brain } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
-import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 
 export default function AdsetsPage() {
@@ -32,19 +32,9 @@ export default function AdsetsPage() {
 
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
 
-  const getYesterdaySP = () => {
-    // Obter agora em SP
-    const now = new Date();
-    // Converter para o início do dia em SP
-    const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-    const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-    // Subtrair 1 dia
-    todaySPDate.setDate(todaySPDate.getDate() - 1);
-    // Formatar para yyyy-MM-dd em SP
-    return formatInTimeZone(todaySPDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-  };
 
-  const datePresets = [
+
+  const datePresets = useMemo(() => [
     { label: 'Hoje', getRange: () => {
       const now = new Date();
       const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
@@ -103,7 +93,7 @@ export default function AdsetsPage() {
         end: formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd')
       };
     }},
-  ];
+  ], []);
   const [selectedPreset, setSelectedPreset] = useState(1);
 
   const { adsets, loading, error, metrics, refreshAdsets } = useAdsetsData({
@@ -118,7 +108,7 @@ export default function AdsetsPage() {
     const range = datePresets[1].getRange();
     setFilters(f => ({ ...f, startDate: range.start, endDate: range.end }));
     setSelectedPreset(1);
-  }, []);
+  }, [datePresets]);
 
   // Ordenação padrão por investimento (spend) decrescente
   useEffect(() => {
@@ -137,14 +127,7 @@ export default function AdsetsPage() {
     setIsAnalysisOpen(true);
   };
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+
 
   const sortedAdsets = [...adsets].sort((a, b) => {
     let aValue, bValue;
@@ -195,9 +178,7 @@ export default function AdsetsPage() {
     return new Intl.NumberFormat('pt-BR').format(value || 0);
   };
 
-  const formatPercentage = (value) => {
-    return `${(value || 0).toFixed(2)}%`;
-  };
+
 
   const getStatusColor = (status) => {
     switch (status) {

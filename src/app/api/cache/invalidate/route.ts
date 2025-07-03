@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { invalidateCache } from "@/utils/cache";
-import { logger } from '../../../../utils/logger';
+import { logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {

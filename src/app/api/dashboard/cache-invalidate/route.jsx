@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { invalidateCache, invalidateAllCache } from "@/utils/cache";
 import { logger } from "@/utils/logger";
 
@@ -7,7 +7,7 @@ export async function POST(request) {
     logger.info('Cache invalidate endpoint called');
     
     const body = await request.json();
-    const { event, key, pattern } = body;
+    const { event, key: _key, pattern: _pattern } = body;
     
     if (!event) {
       // Se não houver evento, invalida todo o cache

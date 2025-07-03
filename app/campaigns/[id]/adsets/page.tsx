@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../../lib/supabaseClient'
-import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import MainLayout from '../../../../src/components/MainLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../src/components/ui/card'

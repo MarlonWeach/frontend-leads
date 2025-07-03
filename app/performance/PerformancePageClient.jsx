@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import Button from '../../src/components/ui/button';
-import { ArrowUpDown, Filter, RefreshCw, Calendar, TrendingUp, Eye, MousePointer, DollarSign, Users, TrendingDown } from 'lucide-react';
+import { ArrowUpDown, TrendingUp, Eye, MousePointer, DollarSign, Users } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
-import ReactDOM from 'react-dom';
 import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
 import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
 import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
@@ -53,8 +51,8 @@ export default function PerformancePageClient() {
     direction: 'desc'
   });
 
-  const [showDateMenu, setShowDateMenu] = useState(false);
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [_showDateMenu, setShowDateMenu] = useState(false);
+  const [_showStatusMenu, setShowStatusMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const dateMenuRef = useRef(null);
   const statusMenuRef = useRef(null);
@@ -62,7 +60,7 @@ export default function PerformancePageClient() {
   // Presets de data com timezone São Paulo
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
   
-  const datePresets = [
+  const datePresets = useMemo(() => [
     { label: 'Hoje', getRange: () => {
       const now = new Date();
       const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
@@ -94,7 +92,7 @@ export default function PerformancePageClient() {
         end: formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd')
       };
     }},
-  ];
+  ], []);
 
   const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias por padrão
 
@@ -118,7 +116,7 @@ export default function PerformancePageClient() {
       startDate: range.start,
       endDate: range.end
     }));
-  }, []); // Array vazio para executar apenas uma vez
+  }, [datePresets]); // Adicionar datePresets como dependência
 
   const applyDatePreset = (presetIndex) => {
     const preset = datePresets[presetIndex];
@@ -227,9 +225,7 @@ export default function PerformancePageClient() {
     }).format(value || 0);
   };
 
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat('pt-BR').format(value || 0);
-  };
+
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(2)}%`;
@@ -250,22 +246,7 @@ export default function PerformancePageClient() {
     }
   };
 
-  const statusOptions = [
-    { value: 'ACTIVE', label: 'Ativo' },
-    { value: 'PAUSED', label: 'Pausado' },
-    { value: 'DELETED', label: 'Excluído' },
-    { value: 'ARCHIVED', label: 'Arquivado' }
-  ];
 
-  const openStatusMenu = () => {
-    setShowStatusMenu(!showStatusMenu);
-    setShowDateMenu(false);
-  };
-
-  const openPresetMenu = () => {
-    setShowDateMenu(!showDateMenu);
-    setShowStatusMenu(false);
-  };
 
   // Fechar menus ao clicar fora
   useEffect(() => {

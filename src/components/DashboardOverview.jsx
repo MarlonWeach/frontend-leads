@@ -4,10 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   TrendingUp, Users, Building2, Target, DollarSign, Eye, 
-  MousePointer, CheckCircle, Clock, AlertCircle, ArrowRight,
-  BarChart3, PieChart, Calendar, Download, Info, AlertTriangle, XCircle
+  MousePointer, CheckCircle, Clock, Info, AlertTriangle, XCircle
 } from 'lucide-react';
-import { Tooltip } from './Tooltip';
+
 import { useDashboardOverview } from '../hooks/useDashboardData';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
