@@ -2,6 +2,7 @@ import React from 'react';
 import '../styles/globals.css'
 import { Inter } from 'next/font/google'
 import { QueryProvider } from '../src/providers/query-provider'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,6 +22,7 @@ export default function RootLayout({
         <QueryProvider enableDevtools={process.env.NODE_ENV === 'development'}>
           {children}
         </QueryProvider>
+        <SpeedInsights />
         {/* Registrar Service Worker */}
         <script
           dangerouslySetInnerHTML={{

@@ -6,13 +6,12 @@ import { useCampaignsList } from '../../src/hooks/useCampaignsList';
 import { useAdsetsList } from '../../src/hooks/useAdsetsList';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
 import Button from '../../src/components/ui/button';
-import { ArrowUpDown, Filter, RefreshCw, Image, Video, FileText, Eye, MousePointer, DollarSign, TrendingUp, Calendar, Brain } from 'lucide-react';
+import { ArrowUpDown, Filter, RefreshCw, Calendar, Brain } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
 import AdCreativePreview from '../../src/components/ui/AdCreativePreview';
 import AdCreativeModal from '../../src/components/ui/AdCreativeModal';
 import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 import { formatInTimeZone } from 'date-fns-tz';
-import ReactDOM from 'react-dom';
 
 export default function AdsPage() {
   const [filters, setFilters] = useState({
@@ -94,7 +93,7 @@ export default function AdsPage() {
       startDate: range.start,
       endDate: range.end
     }));
-  }, []);
+  }, [datePresets]);
 
   // Resetar filtro de adset quando campanha mudar
   useEffect(() => {
@@ -177,20 +176,7 @@ export default function AdsPage() {
     return formatInTimeZone(new Date(dateString), 'America/Sao_Paulo', 'dd/MM/yyyy');
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'PAUSED':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'DELETED':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'ARCHIVED':
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-      default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
+  // Função para exibir label resumida do filtro de data
 
   // Função para exibir label resumida do filtro de data
   const getDateLabel = () => {
@@ -221,11 +207,6 @@ export default function AdsPage() {
   };
 
   // Funções para abrir menus
-  const openStatusMenu = () => {
-    setShowDateMenu(false);
-    setShowCampaignMenu(false);
-    setShowAdsetMenu(false);
-  };
 
   const openPresetMenu = () => {
     setShowDateMenu(!showDateMenu);
