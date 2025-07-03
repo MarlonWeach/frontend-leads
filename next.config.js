@@ -4,8 +4,8 @@ const nextConfig = {
   swcMinify: true,
   experimental: {
     forceSwcTransforms: true,
-    // Otimizações para Vercel
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+    // Otimizações para Vercel - removido @supabase/supabase-js para evitar conflito
+    serverComponentsExternalPackages: [],
   },
   // Configurações para resolver problemas de RSC
   transpilePackages: [],
