@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { invalidateCache } from "@/utils/cache";
+import { invalidateCache } from "../../../../../src/utils/cache";
 import { logger } from '@/utils/logger';
 
 // Log de diagnóstico para verificar se o arquivo está sendo carregado

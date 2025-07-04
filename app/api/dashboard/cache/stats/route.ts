@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCacheStats, getCacheMetrics } from "@/utils/cache";
+import { getCacheStats, getCacheMetrics } from "../../../../../src/utils/cache";
 import { logger } from '@/utils/logger';
 
 // Log de diagnóstico para verificar se o arquivo está sendo carregado
