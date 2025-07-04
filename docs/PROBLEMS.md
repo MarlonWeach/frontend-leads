@@ -320,6 +320,145 @@ Se novas tabelas forem criadas ou a estrutura mudar, o script deve ser revisado 
 
 ---
 
+## 🎯 APRENDIZADOS E MELHORES PRÁTICAS - Build e Deploy
+
+### **Problemas de Build Resolvidos e Prevenção Futura**
+
+#### **1. Imports Incorretos e Caminhos de Módulos**
+- **Problema**: Imports usando caminhos relativos incorretos (ex: `../../../../utils/logger`)
+- **Solução**: Sempre usar imports absolutos com alias `@/` (ex: `@/utils/logger`)
+- **Prevenção**: 
+  - Configurar corretamente o `jsconfig.json` com paths
+  - Usar sempre imports absolutos para módulos internos
+  - Evitar caminhos relativos profundos (mais de 2 níveis)
+
+#### **2. Variáveis Não Utilizadas em React**
+- **Problema**: Variáveis declaradas mas não utilizadas causam warnings no build
+- **Solução**: Prefixar com `_` para indicar uso intencional (ex: `_setConnectionStatus`)
+- **Prevenção**:
+  - Sempre prefixar variáveis não utilizadas com `_`
+  - Remover imports não utilizados antes do commit
+  - Usar ESLint para detectar variáveis não utilizadas
+
+#### **3. Dependências de useEffect e useMemo**
+- **Problema**: Dependências faltantes ou desnecessárias causam warnings
+- **Solução**: 
+  - Adicionar dependências faltantes (ex: `datePresets` em useEffect)
+  - Remover dependências desnecessárias (ex: `campaigns.length` em useMemo)
+  - Usar `useMemo` para arrays/objetos que mudam a cada render
+- **Prevenção**:
+  - Sempre revisar dependências de hooks React
+  - Usar `useMemo` para objetos/arrays complexos
+  - Evitar dependências desnecessárias que causam re-renders
+
+#### **4. Imports de APIs do Next.js em Testes**
+- **Problema**: `NextRequest` e `NextResponse` não disponíveis no ambiente Jest
+- **Solução**: Criar mocks customizados para APIs do Next.js
+- **Prevenção**:
+  - Sempre mockar APIs do Next.js em testes
+  - Usar mocks simples e estáveis
+  - Evitar dependências de framework em testes unitários
+
+#### **5. Configuração do Next.js**
+- **Problema**: Conflitos entre `transpilePackages` e `serverComponentsExternalPackages`
+- **Solução**: Simplificar configuração, usar apenas o necessário
+- **Prevenção**:
+  - Manter configuração do Next.js simples
+  - Testar build local antes do push
+  - Documentar mudanças na configuração
+
+#### **6. Tratamento de Warnings vs Erros**
+- **Problema**: Warnings acumulados podem mascarar problemas reais
+- **Solução**: 
+  - Corrigir warnings críticos primeiro
+  - Manter warnings em nível aceitável
+  - Focar em erros que impedem o build
+- **Prevenção**:
+  - Corrigir warnings regularmente
+  - Não ignorar warnings de dependências
+  - Manter código limpo e organizado
+
+### **Checklist de Prevenção de Problemas de Build**
+
+#### **Antes de Cada Commit:**
+- [ ] Executar `npm run build` localmente
+- [ ] Verificar se não há erros de compilação
+- [ ] Corrigir warnings críticos (dependências, imports)
+- [ ] Remover imports não utilizados
+- [ ] Prefixar variáveis não utilizadas com `_`
+- [ ] Verificar dependências de hooks React
+
+#### **Antes de Cada Push:**
+- [ ] Build local bem-sucedido
+- [ ] Testes passando
+- [ ] Warnings em nível aceitável
+- [ ] Documentar mudanças significativas
+
+#### **Configurações Importantes:**
+```javascript
+// jsconfig.json - Sempre configurar paths
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+
+// next.config.js - Manter simples
+const nextConfig = {
+  experimental: {
+    forceSwcTransforms: true
+  }
+}
+```
+
+### **Padrões de Código Recomendados**
+
+#### **Imports:**
+```javascript
+// ✅ Correto - Imports absolutos
+import { logger } from '@/utils/logger';
+import { useDashboardData } from '@/hooks/useDashboardData';
+
+// ❌ Incorreto - Caminhos relativos profundos
+import { logger } from '../../../../utils/logger';
+```
+
+#### **Variáveis Não Utilizadas:**
+```javascript
+// ✅ Correto - Prefixar com _
+const [connectionStatus, _setConnectionStatus] = useState('connected');
+const { key: _key, pattern: _pattern } = body;
+
+// ❌ Incorreto - Variável não utilizada sem prefixo
+const [connectionStatus, setConnectionStatus] = useState('connected');
+```
+
+#### **useEffect e useMemo:**
+```javascript
+// ✅ Correto - Dependências adequadas
+useEffect(() => {
+  // lógica
+}, [datePresets]); // Dependência necessária
+
+const memoizedValue = useMemo(() => {
+  return campaigns.map(/* ... */);
+}, [campaigns]); // Apenas campaigns, não campaigns.length
+
+// ❌ Incorreto - Dependências desnecessárias
+useEffect(() => {
+  // lógica
+}, []); // Falta dependência
+
+const memoizedValue = useMemo(() => {
+  return campaigns.map(/* ... */);
+}, [campaigns, campaigns.length]); // campaigns.length é desnecessário
+```
+
+---
+
 ## 🎯 OPORTUNIDADES IDENTIFICADAS - Análise Completa dos Documentos .md
 
 ### **Prioridade 1: Problemas Críticos Pendentes**

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '../../../../src/utils/logger';
+import { logger } from "@/utils/logger";
+import { serverCache, CacheType } from '@/utils/server-cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -9,65 +10,60 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Buscar métricas apenas da tabela meta_leads (sem JOIN problemático)
-    const { data: metrics, error: metricsError } = await supabase
-      .from('meta_leads')
-      .select(`
-        lead_count,
-        spend,
-        impressions,
-        clicks,
-        ad_id,
-        created_time
-      `)
-      .not('ad_id', 'is', null); // Filtrar apenas registros com ad_id válido
+    // Gerar chave de cache
+    const cacheKey = serverCache.constructor.generateKey(
+      CacheType.DASHBOARD_ACTIVITY
+    );
 
-    if (metricsError) {
-      console.error('Erro ao buscar métricas:', metricsError);
-      throw metricsError;
-    }
+    // Tentar obter dados do cache ou buscar do Supabase
+    return NextResponse.json(await serverCache.getOrSet(
+      cacheKey,
+      async () => {
+        // Buscar anúncios ativos (status do anúncio, não do adset)
+        const { data: activeAds, error: adsError } = await supabase
+          .from('ads')
+          .select('ad_id, name, adset_id, campaign_id, status')
+          .eq('status', 'ACTIVE');
+        if (adsError) throw adsError;
+        
+        const activeAdIds = (activeAds || []).map(ad => ad.ad_id).filter(Boolean);
+        logger.debug({ activeAdIds }, 'IDs de anúncios ativos encontrados');
+        
+        // Se não houver anúncios ativos, retornar dados vazios
+        if (activeAdIds.length === 0) {
+          logger.warn('Nenhum anúncio ativo encontrado para dados de atividade');
+          return [];
+        }
+        
+        // Agrupa os leads por status
+        const activityData = activeAdIds.reduce((acc, ad_id) => {
+          const status = 'pendente';
+          const count = 1;
+          acc[status] = (acc[status] || 0) + count;
+          return acc;
+        }, {});
 
-    // Agregação dos dados
-    const aggregatedMetrics = metrics.reduce((acc, metric) => {
-      acc.totalLeads += metric.lead_count || 0;
-      acc.totalSpend += metric.spend || 0;
-      acc.totalImpressions += metric.impressions || 0;
-      acc.totalClicks += metric.clicks || 0;
-      return acc;
-    }, {
-      totalLeads: 0,
-      totalSpend: 0,
-      totalImpressions: 0,
-      totalClicks: 0
-    });
+        // Converte para o formato esperado pelo componente Activity
+        const formattedData = Object.entries(activityData).map(([status, total]) => ({
+          status,
+          total
+        }));
 
-    // Cálculo de métricas derivadas
-    const ctr = aggregatedMetrics.totalImpressions > 0 
-      ? (aggregatedMetrics.totalClicks / aggregatedMetrics.totalImpressions) * 100 
-      : 0;
-    
-    const cpl = aggregatedMetrics.totalLeads > 0 
-      ? aggregatedMetrics.totalSpend / aggregatedMetrics.totalLeads 
-      : 0;
+        logger.debug({ 
+          activeAdsCount: activeAdIds.length,
+          leadsCount: 0,
+          statusGroups: Object.keys(activityData).length
+        }, 'Dados de atividade processados');
 
-    return NextResponse.json({
-      metrics: {
-        leads: aggregatedMetrics.totalLeads,
-        spend: aggregatedMetrics.totalSpend,
-        impressions: aggregatedMetrics.totalImpressions,
-        clicks: aggregatedMetrics.totalClicks,
-        ctr: parseFloat(ctr.toFixed(2)),
-        cpl: parseFloat(cpl.toFixed(2))
-      }
-    });
-
+        return formattedData;
+      },
+      CacheType.DASHBOARD_ACTIVITY
+    ));
   } catch (error) {
     logger.error({
-      msg: 'Erro ao buscar dados de atividade',
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined
-    });
-    
+    }, 'Erro ao buscar dados de atividade');
     return NextResponse.json(
       { error: 'Erro ao buscar dados de atividade' },
       { status: 500 }

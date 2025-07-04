@@ -10,6 +10,7 @@ import {
 import { useDashboardOverview } from '../hooks/useDashboardData';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatInTimeZone } from 'date-fns-tz';
 import { motion } from 'framer-motion';
 import { Card } from './ui/card';
 import LoadingState from './ui/LoadingState';
@@ -38,31 +39,48 @@ export default function DashboardOverview() {
   const [currentPeriod, setCurrentPeriod] = useState('30d');
 
   const applyDateFilter = useCallback((period) => {
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
+    const SAO_PAULO_TZ = 'America/Sao_Paulo';
+    const now = new Date();
+    const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
+    const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
 
-    const startDate = new Date(endDate);
+    let startDate, endDate;
     switch (period) {
-      case '7d':
-        startDate.setDate(endDate.getDate() - 6);
+      case 'ontem': {
+        const yesterdayDate = new Date(todaySPDate);
+        yesterdayDate.setDate(todaySPDate.getDate() - 1);
+        startDate = formatInTimeZone(yesterdayDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+        endDate = startDate; // Mesmo dia
         break;
-      case '30d':
-        startDate.setDate(endDate.getDate() - 29);
+      }
+      case '7d': {
+        const weekAgoDate = new Date(todaySPDate);
+        weekAgoDate.setDate(todaySPDate.getDate() - 6);
+        startDate = formatInTimeZone(weekAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+        endDate = todaySP;
         break;
-      case '90d':
-        startDate.setDate(endDate.getDate() - 89);
+      }
+      case '30d': {
+        const monthAgoDate = new Date(todaySPDate);
+        monthAgoDate.setDate(todaySPDate.getDate() - 29);
+        startDate = formatInTimeZone(monthAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+        endDate = todaySP;
         break;
-      default:
-        startDate.setDate(endDate.getDate() - 29);
+      }
+      default: {
+        const defaultDate = new Date(todaySPDate);
+        defaultDate.setDate(todaySPDate.getDate() - 29);
+        startDate = formatInTimeZone(defaultDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+        endDate = todaySP;
+      }
     }
-    startDate.setHours(0, 0, 0, 0);
 
-    setDateFrom(startDate.toISOString());
-    setDateTo(endDate.toISOString());
+    setDateFrom(startDate);
+    setDateTo(endDate);
   }, []);
 
   useEffect(() => {
-    const period = searchParams.get('period') || '30d';
+    const period = searchParams.get('period') || '7d';
     setCurrentPeriod(period);
     applyDateFilter(period);
   }, [searchParams, applyDateFilter]);
@@ -133,7 +151,7 @@ export default function DashboardOverview() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex space-x-2">
-            {['7d', '30d', '90d'].map((period) => (
+            {['ontem', '7d', '30d'].map((period) => (
               <button
                 key={period}
                 onClick={() => handleFilterClick(period)}
@@ -143,16 +161,16 @@ export default function DashboardOverview() {
                     : 'glass-light text-white hover:glass-medium'}
                 `}
               >
-                {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
+                {period === 'ontem' ? 'Ontem' : period === '7d' ? '7 dias' : '30 dias'}
               </button>
             ))}
           </div>
           {/* Período selecionado */}
-          <div className="text-sublabel-refined text-glow glass-light px-3 py-2 rounded-2xl">
+          <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
             <span className="font-medium text-white">Período:</span> {
               dateFrom && dateTo 
                 ? `${new Date(dateFrom).toLocaleDateString('pt-BR')} a ${new Date(dateTo).toLocaleDateString('pt-BR')}`
-                : 'Últimos 30 dias'
+                : 'Últimos 7 dias'
             }
           </div>
         </div>

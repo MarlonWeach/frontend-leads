@@ -79,9 +79,9 @@ async function getActiveCampaignsFromSupabase() {
     
     const { data: campaigns, error } = await supabase
       .from('campaigns')
-      .select('campaign_id, name, status')
+      .select('id, name, status')
       .or('status.eq.ACTIVE,effective_status.eq.ACTIVE')
-      .order('created_time', { ascending: false });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('❌ Erro ao buscar campanhas:', error);

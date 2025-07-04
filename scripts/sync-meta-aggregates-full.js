@@ -70,51 +70,6 @@ async function clearExistingData() {
   return true;
 }
 
-async function insertAggregates(level, data) {
-  console.log(`📥 Inserindo dados de ${level} no Supabase...`);
-  
-  const records = data.map(row => {
-    let leads = 0;
-    if (Array.isArray(row.actions)) {
-      const leadAction = row.actions.find(a => a.action_type === 'onsite_conversion.lead_grouped');
-      leads = leadAction ? parseInt(leadAction.value) : 0;
-    }
-    const clicks = parseInt(row.clicks) || 0;
-    const impressions = parseInt(row.impressions) || 0;
-    const spend = parseFloat(row.spend) || 0;
-    const ctr = parseFloat(row.ctr) || 0;
-    const cpm = parseFloat(row.cpm) || 0;
-    
-    return {
-      campaign_name: row.campaign_name,
-      adset_name: row.adset_name || null,
-      ad_name: row.ad_name || null,
-      campaign_id: row.campaign_id,
-      adset_id: row.adset_id || null,
-      ad_id: row.ad_id || null,
-      lead_count: leads,
-      spend: spend,
-      impressions: impressions,
-      clicks: clicks,
-      ctr: ctr,
-      cpm: cpm,
-      created_time: row.date_start
-    };
-  });
-  
-  const { error } = await supabase
-    .from('meta_leads')
-    .insert(records);
-    
-  if (error) {
-    console.error('❌ Erro ao inserir dados:', error);
-    return false;
-  }
-  
-  console.log(`✅ ${records.length} registros inseridos para ${level}`);
-  return true;
-}
-
 async function validateSync() {
   console.log('🔍 Validando sincronização...');
   
@@ -213,11 +168,7 @@ async function main() {
     for (const level of levels) {
       const data = await fetchMetaAggregates(level);
       if (data.length > 0) {
-        const inserted = await insertAggregates(level, data);
-        if (!inserted) {
-          console.log(`❌ Falha ao inserir dados de ${level}`);
-          return;
-        }
+        // Removido: toda lógica de inserção em meta_leads
       }
     }
     

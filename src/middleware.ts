@@ -12,9 +12,10 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Verifica autenticação para rotas protegidas (exceto status)
+  // Verifica autenticação para rotas protegidas (exceto status e trigger)
   if (request.nextUrl.pathname.startsWith('/api/sync') && 
-      !request.nextUrl.pathname.startsWith('/api/sync/status')) {
+      !request.nextUrl.pathname.startsWith('/api/sync/status') &&
+      !request.nextUrl.pathname.startsWith('/api/sync/trigger')) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
