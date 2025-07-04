@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { invalidateCache } from "@/utils/cache";
-import { logger } from '../../../../../utils/logger';
+import { logger } from '@/utils/logger';
 
 // Log de diagnóstico para verificar se o arquivo está sendo carregado
 console.log('🔍 [DIAGNÓSTICO] Arquivo route.ts de cache/invalidate carregado:', new Date().toISOString());
