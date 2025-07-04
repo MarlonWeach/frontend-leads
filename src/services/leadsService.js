@@ -1,6 +1,6 @@
 // src/services/leadsService.js
 
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import MetaLeadsService from './metaLeadsService';
 
 class LeadsService {

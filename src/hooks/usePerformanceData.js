@@ -1,6 +1,6 @@
 // hooks/usePerformanceData.js
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
 export function usePerformanceData(dateFrom, dateTo) {
   const [data, setData] = useState([]);

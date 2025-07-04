@@ -2,7 +2,13 @@
 
 ## 🚨 Problema Atual
 
-O projeto está apresentando erros no Vercel devido à falta de configuração das variáveis de ambiente da Meta API.
+O projeto está apresentando erros no Vercel devido à falta de configuração das variáveis de ambiente da Meta API. **SOLUÇÃO TEMPORÁRIA IMPLEMENTADA**: O sistema agora busca dados do Supabase quando a Meta API não está configurada.
+
+## ✅ Solução Temporária Implementada
+
+- **Fallback para Supabase**: Quando `NEXT_PUBLIC_META_ACCESS_TOKEN` não está configurado, o sistema busca dados das tabelas `campaigns` e `campaign_insights` do Supabase
+- **Funcionalidade Mantida**: A página `/campaigns` continua funcionando mesmo sem a Meta API configurada
+- **Dados Limitados**: Os dados do Supabase podem estar desatualizados em relação à Meta API
 
 ## 🔧 Solução
 

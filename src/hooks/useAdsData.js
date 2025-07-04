@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
@@ -42,7 +42,7 @@ export const useAdsData = (filters = {}) => {
   const [error, setError] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -71,7 +71,7 @@ export const useAdsData = (filters = {}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignId, adsetId, startDate, endDate, status, limit]);
 
   // Função para atualizar manualmente
   const refreshAds = async () => {
@@ -92,7 +92,7 @@ export const useAdsData = (filters = {}) => {
   // Buscar dados quando os filtros mudarem
   useEffect(() => {
     fetchData();
-  }, [campaignId, adsetId, startDate, endDate, status, limit]);
+  }, [fetchData]);
 
   // Métricas agregadas
   const metrics = {

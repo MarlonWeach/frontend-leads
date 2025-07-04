@@ -40,7 +40,7 @@ async function handleRequest(request: NextRequest, isPost: boolean) {
     } = body;
 
     logger.info({
-      msg: 'Requisição para buscar ads do Supabase',
+      msg: 'Requisição para buscar ads do Supabase (apenas ad_insights)',
       method: isPost ? 'POST' : 'GET',
       campaignId,
       adsetId,
@@ -50,12 +50,8 @@ async function handleRequest(request: NextRequest, isPost: boolean) {
       limit
     });
 
-    // Se há filtro de data, usar a tabela de insights diários
-    if (startDate || endDate) {
-      return await handleRequestWithDateFilter(campaignId, adsetId, status, startDate, endDate, limit, startTime);
-    } else {
-      return await handleRequestWithoutDateFilter(campaignId, adsetId, status, limit, startTime);
-    }
+    // Sempre usar ad_insights como fonte
+    return await handleRequestWithDateFilter(campaignId, adsetId, status, startDate, endDate, limit, startTime, true);
 
   } catch (error: any) {
     const responseTime = Date.now() - startTime;
@@ -79,138 +75,20 @@ async function handleRequest(request: NextRequest, isPost: boolean) {
   }
 }
 
-async function handleRequestWithoutDateFilter(campaignId: string | null, adsetId: string | null, status: string | null, limit: number, startTime: number) {
-  // Buscar ads com métricas agregadas da tabela ads
-  let query = supabase
-    .from('ads')
-    .select(`
-      ad_id,
-      name,
-      status,
-      adset_id,
-      campaign_id,
-      created_at,
-      spend,
-      impressions,
-      clicks,
-      leads_count,
-      ctr,
-      cpc,
-      cpm,
-      creative
-    `)
-    .limit(limit);
+// Ajuste: sempre usar ad_insights, mesmo sem filtro de data
+async function handleRequestWithDateFilter(
+  campaignId: string | null,
+  adsetId: string | null,
+  status: string | null,
+  startDate: string | null,
+  endDate: string | null,
+  limit: number,
+  startTime: number,
+  forceAllDates = false
+) {
+  logger.info({ startDate, endDate, forceAllDates }, 'Usando filtro de data com insights diários (ad_insights)');
 
-  // Aplicar filtros
-  if (campaignId) {
-    query = query.eq('campaign_id', campaignId);
-  }
-  
-  if (adsetId) {
-    query = query.eq('adset_id', adsetId);
-  }
-  
-  if (status) {
-    query = query.eq('status', status);
-  }
-
-  const { data: ads, error } = await query;
-
-  if (error) {
-    logger.error({
-      msg: 'Erro ao buscar ads do Supabase',
-      error: error.message,
-      code: error.code
-    });
-    throw error;
-  }
-
-  // Buscar nomes de campanhas e adsets para enriquecer os dados
-  const campaignIds = Array.from(new Set(ads?.map(ad => ad.campaign_id).filter(Boolean) || []));
-  const adsetIds = Array.from(new Set(ads?.map(ad => ad.adset_id).filter(Boolean) || []));
-
-  const campaignNamesMap = new Map();
-  const adsetNamesMap = new Map();
-
-  if (campaignIds.length > 0) {
-    const { data: campaignsData, error: campaignsError } = await supabase
-      .from('campaigns')
-      .select('id, name')
-      .in('id', campaignIds);
-    if (!campaignsError && campaignsData) {
-      campaignsData.forEach(c => campaignNamesMap.set(c.id, c.name));
-    }
-  }
-
-  if (adsetIds.length > 0) {
-    const { data: adsetsData, error: adsetsError } = await supabase
-      .from('adsets')
-      .select('id, name')
-      .in('id', adsetIds);
-    if (!adsetsError && adsetsData) {
-      adsetsData.forEach(a => adsetNamesMap.set(a.id, a.name));
-    }
-  }
-
-  // Enriquecer dados com nomes e mapear campos para compatibilidade
-  const enrichedAds = ads?.map(ad => ({
-    id: ad.ad_id, // Mapear ad_id para id para compatibilidade
-    name: ad.name, // Mapear name para name para compatibilidade
-    status: ad.status,
-    adset_id: ad.adset_id,
-    campaign_id: ad.campaign_id,
-    spend: ad.spend,
-    impressions: ad.impressions,
-    clicks: ad.clicks,
-    leads: ad.leads_count, // Mapear leads_count para leads para compatibilidade
-    ctr: ad.ctr,
-    cpc: ad.cpc,
-    cpm: ad.cpm,
-    creative: {
-      type: ad.creative?.type || 'TEXT',
-      images: ad.creative?.images || [],
-      video: ad.creative?.video || null,
-      text: ad.creative?.text || ad.creative?.body || ad.creative?.description || 'Texto do anúncio não disponível',
-      slideshow: ad.creative?.slideshow || null,
-      title: ad.creative?.title || ad.name || 'Anúncio',
-      description: ad.creative?.description || ad.creative?.body || '',
-      linkUrl: ad.creative?.link_url || null,
-      linkTitle: ad.creative?.link_title || null,
-      linkDescription: ad.creative?.link_description || null,
-      linkImageUrl: ad.creative?.link_image_url || null,
-      thumbnail_url: ad.creative?.thumbnail_url || ad.creative?.image_url || null,
-      image_url: ad.creative?.image_url || null
-    },
-    campaign_name: campaignNamesMap.get(ad.campaign_id) || ad.campaign_id,
-    adset_name: adsetNamesMap.get(ad.adset_id) || ad.adset_id
-  })) || [];
-
-  // Ordenar por gasto (maior primeiro)
-  enrichedAds.sort((a, b) => (b.spend || 0) - (a.spend || 0));
-
-  const responseTime = Date.now() - startTime;
-  
-  logger.info({ 
-    count: enrichedAds.length,
-    responseTime,
-    filters: { campaignId, adsetId, status, limit }
-  }, 'Ads buscados com sucesso do Supabase.');
-
-  return NextResponse.json({ 
-    ads: enrichedAds,
-    meta: {
-      count: enrichedAds.length,
-      responseTime,
-      filters: { campaignId, adsetId, status, limit },
-      dataSource: 'ads_aggregated'
-    }
-  });
-}
-
-async function handleRequestWithDateFilter(campaignId: string | null, adsetId: string | null, status: string | null, startDate: string | null, endDate: string | null, limit: number, startTime: number) {
-  logger.info({ startDate, endDate }, 'Usando filtro de data com insights diários');
-
-  // Primeiro, buscar insights agregados por ad
+  // Se não houver filtro de data, buscar tudo (limitado)
   let insightsQuery = supabase
     .from('ad_insights')
     .select(`
@@ -226,9 +104,13 @@ async function handleRequestWithDateFilter(campaignId: string | null, adsetId: s
       frequency,
       leads
     `)
-    .gte('date', startDate)
-    .lte('date', endDate)
     .limit(limit);
+
+  if (startDate && endDate) {
+    insightsQuery = insightsQuery.gte('date', startDate).lte('date', endDate);
+  } else if (forceAllDates) {
+    // Se não houver filtro, buscar tudo (limitado)
+  }
 
   const { data: insightsData, error: insightsError } = await insightsQuery;
 
@@ -316,7 +198,6 @@ async function handleRequestWithDateFilter(campaignId: string | null, adsetId: s
   // Combinar dados dos ads com insights agregados
   const adsWithInsights = adsData?.map(ad => {
     const adInsights = insightsByAd[ad.ad_id] || [];
-    
     // Calcular métricas agregadas
     const aggregatedInsights = adInsights.reduce((acc, insight) => {
       acc.spend += parseFloat(insight.spend || 0);
@@ -326,12 +207,10 @@ async function handleRequestWithDateFilter(campaignId: string | null, adsetId: s
       acc.leads += parseInt(insight.leads || 0); // Somar leads se existir
       return acc;
     }, { spend: 0, impressions: 0, clicks: 0, reach: 0, leads: 0 });
-
     // Calcular métricas derivadas
     const ctr = aggregatedInsights.impressions > 0 ? (aggregatedInsights.clicks / aggregatedInsights.impressions) * 100 : 0;
     const cpc = aggregatedInsights.clicks > 0 ? aggregatedInsights.spend / aggregatedInsights.clicks : 0;
     const cpm = aggregatedInsights.impressions > 0 ? (aggregatedInsights.spend / aggregatedInsights.impressions) * 1000 : 0;
-
     return {
       id: ad.ad_id,
       name: ad.name,
@@ -384,7 +263,7 @@ async function handleRequestWithDateFilter(campaignId: string | null, adsetId: s
     count: adsWithInsights.length, 
     responseTime, 
     filters: { campaignId, adsetId, status, startDate, endDate, limit } 
-  }, 'Ads buscados com sucesso do Supabase com filtro de data.');
+  }, 'Ads buscados com sucesso do Supabase com filtro de data (ad_insights).');
 
   return NextResponse.json({
     ads: adsWithInsights,
