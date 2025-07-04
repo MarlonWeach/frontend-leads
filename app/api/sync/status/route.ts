@@ -24,6 +24,7 @@ export async function GET() {
       }
     );
 
+    // Tentar buscar o status da sincronização
     const { data, error } = await supabase
       .from('sync_status')
       .select('*')
@@ -32,8 +33,24 @@ export async function GET() {
 
     if (error) {
       if (error.code === 'PGRST116') { // Not found
-        return NextResponse.json({ status: 'not_initialized', last_sync_end: null }, { status: 404 });
+        // Retornar status padrão se não encontrado
+        return NextResponse.json({ 
+          status: 'not_initialized', 
+          last_sync_end: null,
+          id: 'meta_leads_sync'
+        });
       }
+      
+      // Se for erro de tabela não existir, retornar status padrão
+      if (error.code === '42P01') { // undefined_table
+        console.warn('Tabela sync_status não existe - retornando status padrão');
+        return NextResponse.json({ 
+          status: 'not_initialized', 
+          last_sync_end: null,
+          id: 'meta_leads_sync'
+        });
+      }
+      
       throw error;
     }
 

@@ -23,6 +23,15 @@ export function useCampaignsData(dateFrom, dateTo) {
           accessToken: accessToken ? 'Configurado' : 'Não configurado',
           accountId: accountId ? 'Configurado' : 'Não configurado'
         });
+        
+        // Em produção, retornar dados vazios em vez de erro
+        if (process.env.NODE_ENV === 'production') {
+          console.warn('Meta API não configurada em produção - retornando dados vazios');
+          setCampaigns([]);
+          setLoading(false);
+          return;
+        }
+        
         throw new Error('Configuração da Meta API não encontrada');
       }
 
