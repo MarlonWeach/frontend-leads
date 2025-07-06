@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { useOpenAIBilling, useBillingStats } from '@/hooks/useOpenAIBilling';
+import { useOpenAIBilling, useBillingStats } from '../../hooks/useOpenAIBilling';
 
 interface OpenAIBillingWidgetProps {
   days?: number;

@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient, PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
-import { MetaAdsService } from '@/services/meta/ads';
-import { logger } from '@/utils/logger';
+import { MetaAdsService } from '../services/meta/ads';
+import { logger } from '../utils/logger';
 import {
   SyncOptions,
   SyncResult,

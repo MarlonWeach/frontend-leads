@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCacheStats, getCacheMetrics } from "../../../../../src/utils/cache";
-import { logger } from '@/utils/logger';
+import { logger } from '../../../../../src/utils/logger';
 
 // Log de diagnóstico para verificar se o arquivo está sendo carregado
 console.log('🔍 [DIAGNÓSTICO] Arquivo route.ts de cache/stats carregado:', new Date().toISOString());

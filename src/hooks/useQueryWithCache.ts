@@ -1,6 +1,6 @@
 import { useQuery, UseQueryOptions, UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 
 // Opções para o hook useQueryWithCache
 export interface UseQueryWithCacheOptions<TData, TError> 

@@ -1,7 +1,7 @@
-import { useFormattedLastUpdated } from '@/hooks/useQueryWithCache';
+import { useFormattedLastUpdated } from '../../hooks/useQueryWithCache';
 import { Tooltip } from './tooltip';
 import { InfoIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 
 interface LastUpdatedProps {
   lastUpdated: Date | null;

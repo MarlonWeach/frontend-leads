@@ -1,7 +1,7 @@
 import React from 'react';
-import { AIAnalysis } from '@/hooks/useAIAnalysis';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { AIAnalysis } from '../../hooks/useAIAnalysis';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
 import { 
   Lightbulb, 
   AlertTriangle, 
