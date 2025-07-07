@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AIService } from '@/lib/ai/aiService';
-import { AI_CONFIG, PROMPT_CONFIG, FALLBACK_CONFIG } from '@/lib/ai/config';
+import { AIService } from '../../../../src/lib/ai/aiService';
+import { AI_CONFIG, PROMPT_CONFIG, FALLBACK_CONFIG } from '../../../../src/lib/ai/config';
 import { checkOpenAIRateLimit, recordOpenAI429Error } from '../../../../src/utils/rateLimit';
 import { logAIUsage, estimateTokens, calculateEstimatedCost } from '../../../../src/lib/ai/logger';
 

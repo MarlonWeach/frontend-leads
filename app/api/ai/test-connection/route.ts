@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai, logOpenAIRequest, logOpenAIResponse } from '../../../../src/lib/ai/config';
-import { AIService } from '@/lib/ai/aiService';
-import { anthropic, logAnthropicRequest, logAnthropicResponse } from '@/lib/ai/config';
+import { AIService } from '../../../../src/lib/ai/aiService';
+import { anthropic, logAnthropicRequest, logAnthropicResponse } from '../../../../src/lib/ai/config';
 
 export async function GET() {
   const results = {
