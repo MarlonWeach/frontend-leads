@@ -294,7 +294,7 @@ async function checkExistingData(startDate, endDate) {
   console.log(`📊 Total de registros encontrados: ${data.length}`);
   
   if (data.length > 0) {
-    const uniqueAdsets = [...new Set(data.map(r => r.adset_id))];
+    const uniqueAdsets = Array.from(new Set(data.map(r => r.adset_id)));
     console.log(`📋 Adsets únicos com dados: ${uniqueAdsets.length}`);
     console.log(`📋 IDs dos adsets: ${uniqueAdsets.join(', ')}`);
     

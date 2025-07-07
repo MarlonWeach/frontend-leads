@@ -52,7 +52,7 @@ async function updateAdsetInsightsCampaignId() {
   if (adsetInsights && adsetInsights.length > 0) {
     console.log(`   Processando ${adsetInsights.length} registros...`);
     
-    const adsetIds = [...new Set(adsetInsights.map(insight => insight.adset_id))];
+    const adsetIds = Array.from(new Set(adsetInsights.map(insight => insight.adset_id)));
     const { data: adsets, error: adsetsError } = await supabase
       .from('adsets')
       .select('id, campaign_id')
@@ -106,7 +106,7 @@ async function updateAdsCampaignId() {
   if (ads && ads.length > 0) {
     console.log(`   Processando ${ads.length} registros...`);
     
-    const adsetIds = [...new Set(ads.map(ad => ad.adset_id))];
+    const adsetIds = Array.from(new Set(ads.map(ad => ad.adset_id)));
     const { data: adsets, error: adsetsError } = await supabase
       .from('adsets')
       .select('id, campaign_id')

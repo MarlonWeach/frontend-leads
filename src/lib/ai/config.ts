@@ -12,6 +12,7 @@ export const openai = new OpenAI({
 // Configuração da Anthropic como fallback
 export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-tests',
+  dangerouslyAllowBrowser: process.env.NODE_ENV === 'test', // Permitir em ambiente de teste
 });
 
 // Função para log detalhado das requisições OpenAI

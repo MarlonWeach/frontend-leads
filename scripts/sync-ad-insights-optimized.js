@@ -58,7 +58,7 @@ async function getAdsetsWithRecentTraffic() {
   }
   
   // Extrair adset_ids únicos
-  const adsetIdsWithTraffic = [...new Set(recentAdsetInsights.map(insight => insight.adset_id))];
+  const adsetIdsWithTraffic = Array.from(new Set(recentAdsetInsights.map(insight => insight.adset_id)));
   
   console.log(`✅ Encontrados ${adsetIdsWithTraffic.length} adsets com tráfego recente`);
   

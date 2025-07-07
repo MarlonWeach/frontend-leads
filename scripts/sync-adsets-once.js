@@ -162,7 +162,7 @@ async function applyOptimizedFilters(adsets) {
   );
   
   // Filtro 2: Verificar se as campanhas existem no banco
-  const campaignIds = [...new Set(activeAdsets.map(adset => adset.campaign_id))];
+  const campaignIds = Array.from(new Set(activeAdsets.map(adset => adset.campaign_id)));
   const { data: existingCampaigns, error: campaignError } = await supabase
     .from('campaigns')
     .select('id')

@@ -43,7 +43,7 @@ async function analyzeOptimization() {
       return;
     }
 
-    const adsetIdsWithTraffic = [...new Set(recentAdsetInsights.map(insight => insight.adset_id))];
+    const adsetIdsWithTraffic = Array.from(new Set(recentAdsetInsights.map(insight => insight.adset_id)));
     console.log(`📊 Adsets com tráfego nos últimos ${TRAFFIC_THRESHOLD_DAYS} dias: ${adsetIdsWithTraffic.length}`);
 
     // 3. Ads de adsets com tráfego

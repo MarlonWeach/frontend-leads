@@ -139,12 +139,12 @@ export function useAnomalyDetection({
 
   // Função para dispensar anomalia
   const dismissAnomaly = useCallback((anomalyId: string) => {
-    setDismissedAnomalies(prev => new Set([...prev, anomalyId]));
+    setDismissedAnomalies(prev => new Set(Array.from(prev).concat(anomalyId)));
   }, []);
 
   // Função para marcar como resolvida
   const markAsResolved = useCallback(async (anomalyId: string) => {
-    setResolvedAnomalies(prev => new Set([...prev, anomalyId]));
+    setResolvedAnomalies(prev => new Set(Array.from(prev).concat(anomalyId)));
     
     // Aqui poderia fazer uma chamada à API para marcar como resolvida no backend
     try {
