@@ -537,3 +537,160 @@ Only one task per PBI should be 'InProgress' at any given time to maintain focus
     *   **Unit Tests**: Located in `test/unit/` mirroring the source directory structure.
     *   **Integration Tests**: Located in `test/integration/` (or `test/<module>/` e.g., `test/server/` as per existing conventions if more appropriate), reflecting the module or subsystem being tested.
 2.  **Test Naming**: Test files and descriptions should be named clearly and descriptively.
+
+# 6. Build and Deploy Management
+
+> Rationale: Establishes rules and best practices for managing builds and deployments, preventing cascading failures and ensuring stable releases.
+
+## 6.1 Build Stability Principles
+
+> Rationale: Defines core principles to maintain build stability and prevent deployment failures.
+
+1. **Rollback First Policy**: When build problems multiply or cascade, immediately rollback to the last known stable state before attempting fixes.
+2. **Surgical Approach**: Make minimal, targeted changes rather than sweeping modifications that can introduce new problems.
+3. **Build Validation**: Always test builds locally in a clean state before making changes.
+4. **Cache Management**: Clean build caches when encountering module resolution errors or webpack issues.
+5. **State Verification**: Verify the original state works before making any modifications.
+
+## 6.2 Problem Categories and Solutions
+
+> Rationale: Categorizes common build problems and their appropriate solutions to guide systematic troubleshooting.
+
+### 6.2.1 Critical Build Errors (Stop Deployment)
+- **Module Resolution Errors**: `Cannot find module './xxxx.js'`
+- **TypeScript Compilation Errors**: Type mismatches, missing types
+- **Import/Export Errors**: Circular dependencies, missing exports
+- **Webpack Runtime Errors**: Corrupted build cache, module loading failures
+
+**Solution Approach**:
+1. Immediate rollback to stable state
+2. Clean all caches (`rm -rf .next node_modules/.cache`)
+3. Identify minimal required changes
+4. Apply changes incrementally with build validation
+
+### 6.2.2 Warnings (Allow Deployment with Caution)
+- **Unused Variables**: Variables declared but not used
+- **Missing Dependencies**: useEffect/useMemo dependency warnings
+- **ESLint Warnings**: Code style and best practice violations
+- **Accessibility Warnings**: Missing alt tags, ARIA labels
+
+**Solution Approach**:
+1. Prefix unused variables with `_` (e.g., `_setConnectionStatus`)
+2. Add missing dependencies to React hooks
+3. Fix critical warnings, defer non-critical ones
+4. Document acceptable warning levels
+
+## 6.3 Prevention Strategies
+
+> Rationale: Proactive measures to prevent build failures and maintain code quality.
+
+### 6.3.1 Code Standards
+1. **Import Management**:
+   - Use absolute imports with configured aliases (`@/` prefix)
+   - Avoid deep relative paths (`../../../../utils/logger`)
+   - Remove unused imports before commits
+
+2. **React Hook Dependencies**:
+   - Include all dependencies in useEffect/useMemo arrays
+   - Use `useMemo` for objects/arrays that change on every render
+   - Avoid unnecessary dependencies that cause re-renders
+
+3. **Variable Naming**:
+   - Prefix intentionally unused variables with `_`
+   - Use descriptive names for all variables
+   - Remove truly unused code rather than prefixing
+
+### 6.3.2 Build Process
+1. **Pre-Commit Checklist**:
+   - Run `npm run build` locally
+   - Verify no compilation errors
+   - Address critical warnings
+   - Test key functionality locally
+
+2. **Deployment Validation**:
+   - Ensure build passes before push
+   - Monitor Vercel build logs
+   - Have rollback plan ready
+   - Test deployed version immediately
+
+## 6.4 Emergency Procedures
+
+> Rationale: Defines clear procedures for handling build emergencies and deployment failures.
+
+### 6.4.1 Build Failure Response
+1. **Immediate Actions**:
+   - Stop making additional changes
+   - Document current error state
+   - Assess if rollback is needed
+
+2. **Rollback Criteria**:
+   - Multiple cascading errors
+   - Webpack module resolution failures
+   - Corrupted build cache
+   - More than 3 failed fix attempts
+
+3. **Rollback Process**:
+   ```bash
+   git restore .
+   rm -rf .next node_modules/.cache
+   npm run build  # Verify stable state
+   ```
+
+### 6.4.2 Incremental Fix Strategy
+1. **Single Issue Focus**: Address one error type at a time
+2. **Build Validation**: Test build after each fix
+3. **Scope Limitation**: Avoid expanding changes beyond the immediate issue
+4. **Documentation**: Record what works and what doesn't
+
+## 6.5 Configuration Management
+
+> Rationale: Ensures build configurations remain stable and changes are tracked.
+
+### 6.5.1 Critical Configuration Files
+- `next.config.js`: Keep minimal, avoid experimental features
+- `jsconfig.json`: Maintain consistent path mappings
+- `package.json`: Lock dependency versions for stability
+- `.env.local`: Secure environment variable management
+
+### 6.5.2 Configuration Change Rules
+1. **Testing Requirement**: Test configuration changes locally before commit
+2. **Documentation**: Document all configuration changes and their purpose
+3. **Rollback Plan**: Maintain previous working configurations
+4. **Gradual Adoption**: Introduce configuration changes incrementally
+
+## 6.6 Monitoring and Alerting
+
+> Rationale: Establishes monitoring to catch build issues early and prevent deployment failures.
+
+### 6.6.1 Build Metrics
+- Build success/failure rates
+- Build duration trends
+- Warning count trends
+- Deployment success rates
+
+### 6.6.2 Alert Thresholds
+- **Critical**: Build failures, deployment failures
+- **Warning**: Increasing warning counts, slow builds
+- **Info**: Successful deployments, performance improvements
+
+## 6.7 Team Practices
+
+> Rationale: Ensures all team members follow consistent practices for build and deployment management.
+
+### 6.7.1 Communication
+- Notify team of build issues immediately
+- Share rollback decisions and reasoning
+- Document lessons learned from build failures
+- Maintain shared knowledge of working configurations
+
+### 6.7.2 Knowledge Sharing
+- Regular review of build practices
+- Documentation of common issues and solutions
+- Training on emergency procedures
+- Sharing of successful fix strategies
+
+### 6.7.3 Continuous Improvement
+- Regular assessment of build stability
+- Identification of recurring issues
+- Process refinement based on lessons learned
+- Tool and configuration optimization
