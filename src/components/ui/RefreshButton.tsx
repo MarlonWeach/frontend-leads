@@ -1,6 +1,6 @@
 import Button from './button';
 import { RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 import { useState } from 'react';
 import { Tooltip } from './tooltip';
 

@@ -1,8 +1,8 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import { syncAds } from '../../../src/jobs/sync-ads';
-import { MetaAdsService } from '@/services/meta/ads';
-import type { SyncOptions } from '@/types/sync';
-import { MetaAd } from '@/types/meta';
+import { syncAdsStatus, SyncDependencies } from '../../../src/jobs/sync-ads';
+import { MetaAdsService } from '../../../src/services/meta/ads';
+import type { SyncOptions } from '../../../src/types/sync';
+import { MetaAd } from '../../../src/types/meta';
 import { logger as mockLogger } from '../../../src/utils/logger';
 
 // Mock do logger
@@ -80,7 +80,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const result = await syncAds(DEFAULT_SYNC_OPTIONS, mockSupabase, dependencies);
+    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase, dependencies);
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(1);
     expect(result.status.activeAds).toBe(1);
@@ -105,7 +105,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const result = await syncAds({ retryCount: 1 }, mockSupabase, dependencies);
+    const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase, dependencies);
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBeTruthy();
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -136,7 +136,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const result = await syncAds({ retryCount: 1 }, mockSupabase, dependencies);
+    const result = await syncAdsStatus({ retryCount: 1 }, mockSupabase, dependencies);
     expect(result.status.success).toBe(false);
     expect(result.status.error).toBeTruthy();
     expect(mockLogger.error).toHaveBeenCalled();
@@ -160,7 +160,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const result = await syncAds({ ...DEFAULT_SYNC_OPTIONS, dryRun: true }, mockSupabase, dependencies);
+    const result = await syncAdsStatus({ ...DEFAULT_SYNC_OPTIONS, dryRun: true }, mockSupabase, dependencies);
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(1);
     expect(result.status.activeAds).toBe(1);
@@ -177,7 +177,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const result = await syncAds(DEFAULT_SYNC_OPTIONS, mockSupabase, dependencies);
+    const result = await syncAdsStatus(DEFAULT_SYNC_OPTIONS, mockSupabase, dependencies);
     expect(result.status.success).toBe(true);
     expect(result.status.totalAds).toBe(0);
     expect(result.status.activeAds).toBe(0);
@@ -209,7 +209,7 @@ describe('syncAdsStatus', () => {
     } as any;
     
     const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-    const resultPromise = syncAds({ retryCount: 2 }, mockSupabase, dependencies);
+    const resultPromise = syncAdsStatus({ retryCount: 2 }, mockSupabase, dependencies);
     await jest.runAllTimersAsync();
     const result = await resultPromise;
     expect(result.status.success).toBe(true);
@@ -245,7 +245,7 @@ describe('syncAdsStatus', () => {
       } as any;
       
       const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-      const resultPromise = syncAds(
+      const resultPromise = syncAdsStatus(
         { ...DEFAULT_SYNC_OPTIONS, timeoutMs },
         mockSupabase,
         dependencies
@@ -283,7 +283,7 @@ describe('syncAdsStatus', () => {
       } as any;
       
       const dependencies: SyncDependencies = { metaAdsService: mockMetaAdsService };
-      const resultPromise = syncAds(
+      const resultPromise = syncAdsStatus(
         { ...DEFAULT_SYNC_OPTIONS, timeoutMs },
         mockSupabase,
         dependencies

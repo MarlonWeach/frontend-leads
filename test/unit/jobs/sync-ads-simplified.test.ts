@@ -1,6 +1,6 @@
 // Testes simplificados para sync-ads com abordagem de integração
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { syncAdsSimplified } from '../../../src/jobs/sync-ads';
+import { syncAdsSimplified, upsertActiveAds, markInactiveAds, syncAdsStatusCore } from '../../../src/jobs/sync-ads';
 import { MetaAdsService } from '../../../src/services/meta/ads';
 import type { SyncOptions } from '../../../src/types/sync';
 import { MetaAd } from '../../../src/types/meta';
