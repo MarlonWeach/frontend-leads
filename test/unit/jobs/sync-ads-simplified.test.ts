@@ -1,11 +1,10 @@
 // Testes simplificados para sync-ads com abordagem de integração
-import { 
-  syncAdsStatusCore, 
-  upsertActiveAds, 
-  markInactiveAds,
-  SyncDependencies 
-} from '@/jobs/sync-ads';
-import { logger } from '@/utils/logger';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { syncAdsSimplified } from '../../../src/jobs/sync-ads';
+import { MetaAdsService } from '../../../src/services/meta/ads';
+import type { SyncOptions } from '../../../src/types/sync';
+import { MetaAd } from '../../../src/types/meta';
+import { logger } from '../../../src/utils/logger';
 
 // Mock simples do logger
 jest.mock('@/utils/logger', () => ({

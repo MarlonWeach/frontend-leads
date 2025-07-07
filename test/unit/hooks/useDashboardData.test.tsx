@@ -1,4 +1,5 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useDashboardOverview,
@@ -6,7 +7,7 @@ import {
   useDashboardRecentSales,
   useDashboardSearch,
   useInvalidateDashboard
-} from '@/hooks/useDashboardData';
+} from '../../../src/hooks/useDashboardData';
 import { ReactNode } from 'react';
 
 // Mock do logger (inline no jest.mock, antes de qualquer importação)

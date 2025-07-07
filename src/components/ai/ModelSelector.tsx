@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../ui/badge';
 import { Brain, Zap, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 

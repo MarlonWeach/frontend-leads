@@ -1,3 +1,7 @@
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { ServerCache, CacheType } from '../../../src/utils/server-cache';
+import { logger as mockLogger } from '../../../src/utils/logger';
+
 // Mock do logger (inline no jest.mock)
 jest.mock('@/utils/logger', () => ({
   logger: {
@@ -7,9 +11,6 @@ jest.mock('@/utils/logger', () => ({
     debug: jest.fn()
   }
 }));
-
-import { ServerCache, CacheType } from '@/utils/server-cache';
-import { logger as mockLogger } from '@/utils/logger';
 
 describe('ServerCache', () => {
   let cache: ServerCache;

@@ -8,9 +8,11 @@ jest.mock('@/utils/logger', () => ({
   }
 }));
 
-import { renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useQueryWithCache, useFormattedLastUpdated } from '@/hooks/useQueryWithCache';
+import { renderHook } from '@testing-library/react';
+import { useQueryWithCache, useFormattedLastUpdated } from '../../../src/hooks/useQueryWithCache';
 import { ReactNode } from 'react';
 
 // Obter referência ao mockLogger

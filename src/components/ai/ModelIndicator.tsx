@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../ui/badge';
 import { Brain, Zap, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface ModelIndicatorProps {
