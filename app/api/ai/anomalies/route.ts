@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { detectAnomalies, getDetectionConfig } from '../../../../src/lib/ai/anomalyDetection';
 import { createClient } from '@supabase/supabase-js';
 import { logAIUsage, estimateTokens, calculateEstimatedCost } from '../../../../src/lib/ai/logger';
+import { checkOpenAIRateLimit, recordOpenAI429Error } from '../../../../src/utils/rateLimit';
+import { FALLBACK_CONFIG } from '../../../../src/lib/ai/config';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +15,25 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar rate limiting da OpenAI
+    const rateLimitCheck = checkOpenAIRateLimit();
+    if (rateLimitCheck.isLimited) {
+      const waitTime = rateLimitCheck.resetTime ? Math.ceil((rateLimitCheck.resetTime - Date.now()) / 1000) : 60;
+      return NextResponse.json(
+        { 
+          error: 'Rate limit excedido para OpenAI API',
+          message: `${rateLimitCheck.reason}. Tente novamente em ${waitTime} segundos.`,
+          retryAfter: waitTime
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': waitTime.toString()
+          }
+        }
+      );
+    }
+
     const { 
       dateRange, 
       sensitivity = 'medium',
@@ -93,6 +114,40 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro na detecção de anomalias:', error);
+    
+    // Tratar erro 429 da OpenAI especificamente
+    if (error && typeof error === 'object' && 'status' in error && error.status === 429) {
+      // Registrar erro 429 para ativar cooldown
+      recordOpenAI429Error();
+      
+      // Se fallback está habilitado, retornar resposta mock
+      if (FALLBACK_CONFIG.ENABLE_FALLBACK) {
+        console.log('🔄 Usando fallback para anomalias devido a quota excedida');
+        
+        return NextResponse.json({
+          anomalies: [],
+          summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
+          message: FALLBACK_CONFIG.FALLBACK_RESPONSES.ANOMALY.detection,
+          isFallback: true,
+          reason: 'Quota da OpenAI excedida - usando resposta de fallback'
+        });
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Limite de quota da OpenAI excedido',
+          message: 'Você excedeu sua quota atual da OpenAI. Verifique seu plano e detalhes de cobrança.',
+          retryAfter: 60
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '60'
+          }
+        }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

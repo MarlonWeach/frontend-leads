@@ -1,5 +1,11 @@
-import { supabase } from '../supabaseClient.js';
+import { createClient } from '@supabase/supabase-js';
 import { logger } from '../../utils/logger';
+
+// Criar cliente Supabase dinamicamente para evitar erro de server/client boundary
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export interface AIUsageLog {
   analysis_type: 'performance' | 'anomalies' | 'optimization' | 'chat' | 'insights';

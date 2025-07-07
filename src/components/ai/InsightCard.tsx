@@ -8,8 +8,10 @@ import {
   TrendingUp, 
   GitCompare, 
   Activity, 
-  Target 
+  Target,
+  Gauge
 } from 'lucide-react';
+import { ModelIndicator } from './ModelIndicator';
 
 interface InsightCardProps {
   analysis: AIAnalysis;
@@ -65,9 +67,16 @@ export const InsightCard: React.FC<InsightCardProps> = ({ analysis, isLoading = 
               Análise Inteligente Completa
             </CardTitle>
           </div>
-          <Badge variant="secondary" className="bg-electric/20 text-electric border-electric/30 flex-shrink-0">
-            IA Powered
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-electric/20 text-electric border-electric/30 flex-shrink-0">
+              IA Powered
+            </Badge>
+            <ModelIndicator 
+              modelUsed={analysis.modelUsed} 
+              isFallback={analysis.isFallback}
+              showDetails={false}
+            />
+          </div>
         </div>
       </CardHeader>
       

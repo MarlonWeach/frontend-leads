@@ -11,9 +11,13 @@ import {
   Zap,
   Search,
   XCircle,
-  CheckCircle
+  CheckCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { useAIAnalysis } from '../../hooks/useAIAnalysis';
+import { useAIAnalysis, type AIModelType } from '../../hooks/useAIAnalysis';
+import { ModelSelector } from './ModelSelector';
+import { ModelIndicator } from './ModelIndicator';
 
 interface IndividualAnalysisProps {
   isOpen: boolean;
@@ -88,6 +92,8 @@ const getAnalysisColorClasses = (color: string, isSelected: boolean) => {
 export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }: IndividualAnalysisProps) {
   const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<AIModelType>('auto');
+  const [showModelSelector, setShowModelSelector] = useState(false);
 
   const {
     analysis,
@@ -144,7 +150,7 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
         }];
       }
 
-      await analyzeSpecific(analysisData, analysisType as any);
+      await analyzeSpecific(analysisData, analysisType as any, selectedModel);
     } catch (error: any) {
       console.error('Error in individual analysis:', error);
       setError('Erro ao processar análise. Tente novamente.');
@@ -174,6 +180,44 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
               <X className="w-5 h-5" />
             </Button>
           </div>
+          
+          {/* Controles de Modelo */}
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowModelSelector(!showModelSelector)}
+              className="text-white/70 hover:text-white text-sm"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Configurar Modelo
+              {showModelSelector ? (
+                <ChevronUp className="w-4 h-4 ml-2" />
+              ) : (
+                <ChevronDown className="w-4 h-4 ml-2" />
+              )}
+            </Button>
+            
+            {/* Indicador do modelo usado na última análise */}
+            {analysis && (
+              <ModelIndicator 
+                modelUsed={analysis.modelUsed} 
+                isFallback={analysis.isFallback}
+                className="ml-auto"
+              />
+            )}
+          </div>
+          
+          {/* Seletor de Modelo (colapsável) */}
+          {showModelSelector && (
+            <div className="pt-4 border-t border-white/10">
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+                disabled={isLoading}
+              />
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">

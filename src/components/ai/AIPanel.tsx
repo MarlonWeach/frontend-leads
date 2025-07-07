@@ -15,15 +15,18 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  ChevronDown
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { useAIAnalysis } from '../../hooks/useAIAnalysis';
+import { useAIAnalysis, type AIModelType } from '../../hooks/useAIAnalysis';
 import { useAnomalyDetection } from '../../hooks/useAnomalyDetection';
 import AnomalyAlert from './AnomalyAlert';
 import { OptimizationSuggestions } from './OptimizationSuggestions';
 import ChatAssistant from './ChatAssistant';
 import { AlertTriangle as AlertTriangleIcon, Settings as SettingsIcon } from 'lucide-react';
 import { logger } from '../../utils/logger';
+import { ModelSelector } from './ModelSelector';
+import { ModelIndicator } from './ModelIndicator';
 
 interface AIPanelProps {
   data: any[];
@@ -105,11 +108,13 @@ function AIPanel({ data, filters }: AIPanelProps) {
   const [showOptimizations, setShowOptimizations] = useState(false);
   const [anomalySensitivity, setAnomalySensitivity] = useState<'low' | 'medium' | 'high'>('medium');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<AIModelType>('auto');
   
   // Estados para filtros
   const [selectedCampaign, setSelectedCampaign] = useState<string>('');
   const [selectedAdset, setSelectedAdset] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showModelSelector, setShowModelSelector] = useState(false);
 
   // Hook para análise de IA
   const {
@@ -232,16 +237,9 @@ function AIPanel({ data, filters }: AIPanelProps) {
       };
       
       try {
-        await analyzeSpecific(performanceData, analysisType as any);
-      } catch (error: any) {
-        // Tentar extrair status HTTP do erro
-        let status = error?.status;
-        if (!status && error?.message) {
-          if (error.message.includes('429')) status = 429;
-          if (error.message.includes('quota') || error.message.includes('limite')) status = 429;
-          if (error.message.includes('500')) status = 500;
-        }
-        handleAIError({ ...error, status });
+        await analyzeSpecific(performanceData, analysisType as any, selectedModel);
+      } catch (error) {
+        handleAIError(error);
       }
     }
   };
@@ -280,6 +278,44 @@ function AIPanel({ data, filters }: AIPanelProps) {
               IA
             </Badge>
           </CardTitle>
+          
+          {/* Controles de Modelo */}
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowModelSelector(!showModelSelector)}
+              className="text-white/70 hover:text-white text-sm"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Configurar Modelo
+              {showModelSelector ? (
+                <ChevronUp className="w-4 h-4 ml-2" />
+              ) : (
+                <ChevronDown className="w-4 h-4 ml-2" />
+              )}
+            </Button>
+            
+            {/* Indicador do modelo usado na última análise */}
+            {analysis && (
+              <ModelIndicator 
+                modelUsed={analysis.modelUsed} 
+                isFallback={analysis.isFallback}
+                className="ml-auto"
+              />
+            )}
+          </div>
+          
+          {/* Seletor de Modelo (colapsável) */}
+          {showModelSelector && (
+            <div className="pt-4 border-t border-white/10">
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+                disabled={isLoading}
+              />
+            </div>
+          )}
         </CardHeader>
 
       <CardContent className="flex-1 flex flex-col justify-between w-full">

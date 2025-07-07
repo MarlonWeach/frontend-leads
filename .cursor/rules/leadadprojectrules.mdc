@@ -1,0 +1,241 @@
+# Cursor AI Assistant Rules
+
+## Core Principles
+
+### 1. Task-Driven Development
+- **NEVER** modify code without an explicit task ID
+- Always ask for task ID before making any changes
+- If no task exists, guide user to create one first
+- Format: `Task: [PBI-ID]-[TASK-ID]` (e.g., Task: 1-3)
+
+### 2. Code Quality Standards
+- Use descriptive variable names (avoid single letters except for iterators)
+- Define constants for all repeated values (e.g., `const MAX_RETRIES = 3`)
+- Follow DRY principle - no duplicate code or documentation
+- Add inline comments for complex logic
+- Use TypeScript/JSDoc for type safety when applicable
+
+### 3. Change Management
+- One task = one focused change
+- No scope creep or "while we're at it" modifications
+- Identify and report any issues outside current task scope
+- Create separate tasks for improvements or optimizations
+
+## Development Workflow
+
+### Before Starting Work
+1. Confirm task ID and verify it exists in `docs/delivery/[PBI-ID]/tasks.md`
+2. Read task description from `docs/delivery/[PBI-ID]/[PBI-ID]-[TASK-ID].md`
+3. Verify task status is "InProgress"
+4. Review related PBI in `docs/delivery/backlog.md`
+
+### During Development
+1. Only modify files explicitly mentioned in task
+2. Follow existing code patterns and conventions
+3. Maintain backward compatibility unless breaking changes are specified
+4. Update tests for any logic changes
+5. Document any assumptions or decisions made
+
+### After Completing Changes
+1. List all modified files
+2. Summarize changes made
+3. Identify any potential impacts
+4. Suggest verification steps
+5. Note any follow-up tasks needed
+
+## File Management
+
+### Documentation Structure
+```
+docs/delivery/
+├── backlog.md              # Product backlog
+├── [PBI-ID]/
+│   ├── prd.md             # PBI details
+│   ├── tasks.md           # Task list
+│   └── [PBI-ID]-[TASK-ID].md  # Individual task details
+```
+
+### File Creation Rules
+- Only create files when explicitly required by task
+- Follow project's existing structure
+- No standalone documentation without approval
+- Update relevant indexes when creating new files
+
+## External Dependencies
+
+### Package Research
+Before using any external package:
+1. Research official documentation
+2. Create guide: `tasks/[TASK-ID]-[package]-guide.md`
+3. Include:
+   - Date stamp
+   - Link to official docs
+   - API usage examples
+   - Common patterns
+   - Version compatibility
+
+### Example Guide Structure
+```markdown
+# [Package] Integration Guide
+Date: YYYY-MM-DD
+Official Docs: [URL]
+
+## Installation
+[Installation steps]
+
+## Basic Usage
+[Code examples]
+
+## API Reference
+[Key methods and patterns]
+
+## Common Issues
+[Known problems and solutions]
+```
+
+## Communication Patterns
+
+### Task Clarification
+When user requests changes without task reference:
+```
+"I need to confirm which task this change relates to. Could you provide the task ID (format: [PBI-ID]-[TASK-ID])? If this is a new requirement, we should create a task first."
+```
+
+### Scope Creep Detection
+When identifying work outside current task:
+```
+"I've noticed [issue/improvement], but this is outside the scope of task [ID]. Should I:
+1. Note this for a future task?
+2. Create a new task proposal?
+3. Continue with current task only?"
+```
+
+### Status Verification
+Before starting work:
+```
+"I'll work on task [ID]. Let me verify:
+- Task status: [status]
+- Description: [brief summary]
+- Files to modify: [list]
+Is this correct?"
+```
+
+## Code Generation Rules
+
+### Variable Naming
+```javascript
+// Good
+const userAuthToken = generateToken();
+const maxRetryAttempts = 3;
+const apiEndpoint = '/api/v1/users';
+
+// Avoid
+const t = generateToken();
+const max = 3;
+const ep = '/api/v1/users';
+```
+
+### Constants Usage
+```javascript
+// Define once
+const CONFIG = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  TIMEOUT_MS: 30000,
+  API_VERSION: 'v1'
+};
+
+// Use throughout
+if (file.size > CONFIG.MAX_FILE_SIZE) { /* ... */ }
+```
+
+### Error Handling
+```javascript
+try {
+  // Operation
+} catch (error) {
+  console.error(`[Task ${taskId}] Operation failed:`, error);
+  // Handle gracefully
+}
+```
+
+## Testing Guidelines
+
+### Test Coverage
+- Unit tests for new functions
+- Integration tests for API changes
+- Update existing tests when modifying behavior
+- Document test scenarios in task file
+
+### Test Naming
+```javascript
+describe('Feature: [PBI-ID]', () => {
+  describe('Task [TASK-ID]: [description]', () => {
+    it('should [expected behavior]', () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+## Documentation Standards
+
+### Code Comments
+```javascript
+/**
+ * Task: [TASK-ID] - Brief description
+ * @param {Type} param - Description
+ * @returns {Type} Description
+ */
+function taskSpecificFunction(param) {
+  // Implementation
+}
+```
+
+### README Updates
+Only update README when:
+- Task explicitly requires it
+- New setup steps are added
+- Breaking changes occur
+
+## Completion Checklist
+
+Before marking task complete:
+- [ ] All requirements implemented
+- [ ] Code follows project standards
+- [ ] Tests added/updated
+- [ ] Documentation updated
+- [ ] No unrelated changes
+- [ ] Files list provided
+- [ ] Verification steps documented
+
+## Quick Reference
+
+### Status Transitions
+- Proposed → Agreed → InProgress → InReview → Done
+- Any status → Rejected → InProgress (after fixes)
+
+### Priority Indicators
+- 🚨 Critical: Security/Breaking changes
+- ⚠️ High: User-facing bugs
+- 📌 Medium: Features/Improvements
+- 📎 Low: Technical debt/Refactoring
+
+### Common Commands
+```bash
+# Verify task exists
+cat docs/delivery/[PBI-ID]/[PBI-ID]-[TASK-ID].md
+
+# Check task status
+grep -n "[TASK-ID]" docs/delivery/[PBI-ID]/tasks.md
+
+# Find related files
+git grep -l "[TASK-ID]"
+```
+
+## Remember
+1. Task ID is mandatory for ALL changes
+2. One task = one focused change
+3. Document everything in task files
+4. No assumptions - verify with user
+5. Quality over speed
+6. Stay within scope
