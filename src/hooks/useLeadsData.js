@@ -112,7 +112,7 @@ export function useLeadsData(filters = {}) {
   const enrichWithCampaignNames = async (leads) => {
     try {
       // Buscar campanhas únicas
-      const campaignIds = [...new Set(leads.map(l => l.campaign_id).filter(Boolean))];
+      const campaignIds = Array.from(new Set(leads.map(l => l.campaign_id).filter(Boolean)));
       
       if (campaignIds.length === 0) {
         return leads.map(lead => ({

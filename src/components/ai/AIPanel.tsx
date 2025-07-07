@@ -150,8 +150,8 @@ function AIPanel({ data, filters }: AIPanelProps) {
   const [rateLimit, setRateLimit] = useState<boolean>(false);
 
   // Extrair campanhas e adsets únicos dos dados
-  const uniqueCampaigns = [...new Set(data.map(item => item.campaign_name || item.name || 'Sem nome'))];
-  const uniqueAdsets = [...new Set(data.map(item => item.adset_name || '').filter(Boolean))];
+  const uniqueCampaigns = Array.from(new Set(data.map(item => item.campaign_name || item.name || 'Sem nome')));
+  const uniqueAdsets = Array.from(new Set(data.map(item => item.adset_name || '').filter(Boolean)));
 
   // Função genérica para tratar erros de IA
   function handleAIError(error: any) {

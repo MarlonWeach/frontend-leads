@@ -307,7 +307,7 @@ function detectPatternAnomalies(data: any[], config: DetectionConfig): DetectedA
     const duplicates = Array.from(emailMap.entries()).filter(([_, leads]) => leads.length > 1);
     
     if (duplicates.length > 0) {
-      const affectedCampaigns = [...new Set(duplicates.flatMap(([_, leads]) => leads.map(l => l.campaign)))];
+      const affectedCampaigns = Array.from(new Set(duplicates.flatMap(([_, leads]) => leads.map(l => l.campaign))));
       
       anomalies.push({
         id: `duplicate-leads-${Date.now()}`,
@@ -344,7 +344,7 @@ function detectPatternAnomalies(data: any[], config: DetectionConfig): DetectedA
     const performanceDrop = (historicalAvgCR - recentAvgCR) / historicalAvgCR;
     
     if (performanceDrop > config.performanceDropThreshold) {
-      const affectedCampaigns = [...new Set([...recentData, ...historicalData].map(d => d.campaign_name))];
+      const affectedCampaigns = Array.from(new Set([...recentData, ...historicalData].map(d => d.campaign_name)));
       
       anomalies.push({
         id: `performance-drop-${Date.now()}`,
