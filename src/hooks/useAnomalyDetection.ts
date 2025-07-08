@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DetectedAnomaly } from '../lib/ai/anomalyDetection';
 
 interface UseAnomalyDetectionProps {
@@ -44,6 +44,9 @@ export function useAnomalyDetection({
   const [dismissedAnomalies, setDismissedAnomalies] = useState<Set<string>>(new Set());
   const [resolvedAnomalies, setResolvedAnomalies] = useState<Set<string>>(new Set());
 
+  // Memoizar campaignIds para evitar re-criação desnecessária
+  const memoizedCampaignIds = useMemo(() => campaignIds, [campaignIds]);
+
   // Função para detectar anomalias
   const detectAnomalies = useCallback(async (forceRefresh = false) => {
     if (!dateRange.startDate || !dateRange.endDate) {
@@ -74,7 +77,7 @@ export function useAnomalyDetection({
         },
         body: JSON.stringify({
           dateRange,
-          campaignIds,
+          campaignIds: memoizedCampaignIds,
           sensitivity,
           forceRefresh
         })
@@ -107,7 +110,7 @@ export function useAnomalyDetection({
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       }));
     }
-  }, [dateRange.startDate, dateRange.endDate, JSON.stringify(campaignIds), sensitivity]);
+  }, [dateRange.startDate, dateRange.endDate, memoizedCampaignIds, sensitivity]);
 
   // Função para buscar anomalias históricas
   const fetchHistoricalAnomalies = useCallback(async (
@@ -194,7 +197,7 @@ export function useAnomalyDetection({
   useEffect(() => {
     // Apenas detecta na primeira montagem, não quando dependências mudarem
     detectAnomalies(false);
-  }, []); // Array vazio para executar apenas uma vez
+  }, [detectAnomalies]);
 
   // Funções de cache
   function getCachedData() {

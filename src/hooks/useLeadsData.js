@@ -2,19 +2,19 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export function useLeadsData(filters = {}) {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({
+    leads: [],
+    metrics: {},
+    total: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchLeadsData();
-  }, [filters]);
-
-  const fetchLeadsData = async () => {
+  const fetchLeadsData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -85,7 +85,11 @@ export function useLeadsData(filters = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchLeadsData();
+  }, [fetchLeadsData]);
 
   const calculateMetrics = (leads) => {
     const today = new Date();
@@ -272,11 +276,7 @@ export function useLeadMetrics(filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchMetrics();
-  }, [filters]);
-
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -321,7 +321,11 @@ export function useLeadMetrics(filters = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
 
   return { metrics, loading, error, refetch: fetchMetrics };
 }

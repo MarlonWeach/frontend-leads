@@ -71,7 +71,7 @@ export const useAdsData = (filters = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [campaignId, adsetId, startDate, endDate, status, limit]);
+  }, [campaignId, adsetId, startDate, endDate, status, limit, filters]);
 
   // Função para atualizar manualmente
   const refreshAds = async () => {

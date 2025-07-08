@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { OptimizationAnalysis, OptimizationSuggestion } from '../lib/ai/optimizationEngine';
 
 interface UseOptimizationParams {
@@ -30,6 +30,12 @@ export function useOptimization({
   const [analysis, setAnalysis] = useState<OptimizationAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Memoizar campaignIds para evitar re-criação desnecessária
+  const memoizedCampaignIds = useMemo(() => campaignIds, [campaignIds]);
+
+  // Extrair expressão complexa para variável separada
+  const campaignIdsString = useMemo(() => JSON.stringify(campaignIds), [campaignIds]);
 
   const generateOptimizations = useCallback(async () => {
     if (!dateRange.startDate || !dateRange.endDate) {
@@ -68,7 +74,7 @@ export function useOptimization({
     } finally {
       setLoading(false);
     }
-  }, [dateRange.startDate, dateRange.endDate, JSON.stringify(campaignIds)]);
+  }, [dateRange, campaignIds]);
 
   const applySuggestion = useCallback(async (suggestionId: string): Promise<boolean> => {
     try {
@@ -142,7 +148,7 @@ export function useOptimization({
     if (dateRange.startDate && dateRange.endDate) {
       generateOptimizations();
     }
-  }, [dateRange.startDate, dateRange.endDate, JSON.stringify(campaignIds)]);
+  }, [dateRange, campaignIdsString, generateOptimizations]);
 
   return {
     analysis,

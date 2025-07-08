@@ -62,11 +62,12 @@ export default function AdCreativePreview({ ad, onExpand }) {
         <div className="relative group cursor-pointer" onClick={onExpand}>
           <img
             src={image.url}
-            alt={image.alt || 'Preview do anúncio'}
+            alt={image.alt || creativeData.title || 'Preview do anúncio'}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-image.png';
             }}
+            aria-label={image.alt || creativeData.title || 'Preview do anúncio'}
           />
           {creativeData.images.length > 1 && (
             <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -94,11 +95,12 @@ export default function AdCreativePreview({ ad, onExpand }) {
         <div className="relative group cursor-pointer" onClick={onExpand}>
           <img
             src={creativeData.video.thumbnail_url}
-            alt="Video thumbnail"
+            alt={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-video.png';
             }}
+            aria-label={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
           />
           <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
             <Play className="w-4 h-4 text-white fill-white" />
@@ -113,7 +115,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
     }
     return (
       <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center">
-        <Video className="w-4 h-4 text-red-400" />
+        <Video className="w-4 h-4 text-red-400" aria-hidden="true" focusable="false" />
       </div>
     );
   };
@@ -125,11 +127,12 @@ export default function AdCreativePreview({ ad, onExpand }) {
         <div className="relative group cursor-pointer" onClick={onExpand}>
           <img
             src={image.url}
-            alt={image.alt || 'Slideshow preview'}
+            alt={image.alt || creativeData.title || 'Slideshow preview'}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-image.png';
             }}
+            aria-label={image.alt || creativeData.title || 'Slideshow preview'}
           />
           <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {creativeData.slideshow.images.length}
@@ -145,9 +148,9 @@ export default function AdCreativePreview({ ad, onExpand }) {
     return (
       <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center">
         <div className="flex gap-0.5">
-          <Image className="w-3 h-3 text-blue-400" />
-          <Image className="w-3 h-3 text-blue-400" />
-          <Image className="w-3 h-3 text-blue-400" />
+          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
+          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
+          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
         </div>
       </div>
     );
@@ -160,9 +163,9 @@ export default function AdCreativePreview({ ad, onExpand }) {
       : creativeData.text;
 
     return (
-      <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center group cursor-pointer" onClick={onExpand}>
+      <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center group cursor-pointer" onClick={onExpand} role="button" tabIndex={0} aria-label="Expandir pré-visualização do texto" onKeyPress={e => { if (e.key === 'Enter') onExpand(); }}>
         <div className="text-center">
-          <FileText className="w-4 h-4 text-gray-400 mx-auto mb-1" />
+          <FileText className="w-4 h-4 text-gray-400 mx-auto mb-1" aria-hidden="true" focusable="false" />
           <div className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
             {truncatedText}
           </div>

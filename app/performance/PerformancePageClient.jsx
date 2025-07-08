@@ -170,7 +170,8 @@ export default function PerformancePageClient() {
     fetchRealData();
   }, [fetchRealData]);
 
-  const campaigns = data?.campaigns || [];
+  // Memoizar campaigns para evitar re-renders desnecessários
+  const campaigns = useMemo(() => data?.campaigns || [], [data?.campaigns]);
   const metrics = data?.metrics;
 
   const formatDate = (dateString) => {
@@ -179,7 +180,7 @@ export default function PerformancePageClient() {
   };
 
   // Função para exibir label resumida do filtro de data
-  const getDateLabel = () => {
+  const getDateLabel = useCallback(() => {
     if (selectedPreset !== null) {
       return datePresets[selectedPreset].label;
     }
@@ -190,7 +191,7 @@ export default function PerformancePageClient() {
       return `${formatDate(filters.startDate)} - ${formatDate(filters.endDate)}`;
     }
     return 'Selecionar período';
-  };
+  }, [selectedPreset, datePresets, filters.startDate, filters.endDate]);
 
   // Memoizar props do AIPanel para evitar re-renders desnecessários
   const aiPanelData = useMemo(() => {
@@ -216,7 +217,7 @@ export default function PerformancePageClient() {
     },
     status: filters.status,
     period: getDateLabel()
-  }), [filters.startDate, filters.endDate, filters.status, selectedPreset]);
+  }), [filters.startDate, filters.endDate, filters.status, getDateLabel]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -224,8 +225,6 @@ export default function PerformancePageClient() {
       currency: 'BRL'
     }).format(value || 0);
   };
-
-
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(2)}%`;
@@ -245,8 +244,6 @@ export default function PerformancePageClient() {
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
-
-
 
   // Fechar menus ao clicar fora
   useEffect(() => {

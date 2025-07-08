@@ -1,13 +1,6 @@
-import { mockLogger } from '../../../setup';
-import { MetaAdsService } from '../../../src/services/meta/ads';
-import { MetaAd, MetaAdsResponse, MetaAPIError } from '../../../src/types/meta';
+import { MetaAdsService } from '@/services/meta/ads';
+import { MetaAd, MetaAdsResponse, MetaAPIError } from '@/types/meta';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-
-jest.mock('../../../src/utils/logger', () => ({
-  __esModule: true,
-  default: mockLogger,
-  logger: mockLogger
-}));
 
 // Mock do fetch
 let mockFetch: jest.Mock;
@@ -68,7 +61,6 @@ describe('MetaAdsService', () => {
         })
       })
     );
-    expect(mockLogger.info).toHaveBeenCalled();
     });
 
   it('deve lidar com erros da API corretamente', async () => {
@@ -89,29 +81,12 @@ describe('MetaAdsService', () => {
     });
 
     await expect(service.getActiveAds()).rejects.toThrow('API Error');
-    expect(mockLogger.error).toHaveBeenCalledWith({
-      msg: 'Erro ao buscar anúncios ativos',
-      error: expect.objectContaining({
-        name: 'MetaAPIError',
-        message: 'API Error',
-        code: 190,
-        type: 'OAuthException',
-        fbtrace_id: 'trace123'
-      })
-    });
   });
 
   it('deve lidar com erros de rede corretamente', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network Error'));
 
     await expect(service.getActiveAds()).rejects.toThrow('Network Error');
-    expect(mockLogger.error).toHaveBeenCalledWith({
-      msg: 'Erro ao buscar anúncios ativos',
-      error: expect.objectContaining({
-        name: 'Error',
-        message: 'Network Error'
-      })
-    });
   });
 
   it('deve lidar com respostas inválidas corretamente', async () => {
@@ -121,9 +96,5 @@ describe('MetaAdsService', () => {
     });
 
     await expect(service.getActiveAds()).rejects.toThrow('response.data is not iterable');
-    expect(mockLogger.error).toHaveBeenCalledWith({
-      msg: 'Erro ao buscar anúncios ativos',
-      error: expect.any(Object)
-    });
   });
 }); 

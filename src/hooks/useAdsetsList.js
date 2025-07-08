@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export const useAdsetsList = (campaignId = null) => {
@@ -6,7 +6,7 @@ export const useAdsetsList = (campaignId = null) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAdsets = async () => {
+  const fetchAdsets = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -34,11 +34,11 @@ export const useAdsetsList = (campaignId = null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignId]);
 
   useEffect(() => {
     fetchAdsets();
-  }, [campaignId]);
+  }, [fetchAdsets]);
 
   const refreshAdsets = () => {
     fetchAdsets();

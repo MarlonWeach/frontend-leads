@@ -291,7 +291,7 @@ export function createRateLimitMiddleware(
       const now = Date.now();
       
       // Limpar registros expirados
-      for (const [ip, data] of requests.entries()) {
+      for (const [ip, data] of Array.from(requests.entries())) {
         if (now > data.resetTime) {
           requests.delete(ip);
         }
