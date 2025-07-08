@@ -17,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFilters } from '@/hooks/useFilters';
-import { DateRangePicker } from '@/components/filters/DateRangePicker';
-import { MetricSelector } from '@/components/filters/MetricSelector';
-import { SegmentFilter } from '@/components/filters/SegmentFilter';
+import DateRangePicker from '@/components/filters/DateRangePicker';
+import MetricSelector from '@/components/filters/MetricSelector';
+import SegmentFilter from '@/components/filters/SegmentFilter';
 import { formatNumberShort, formatCurrency, formatDate } from '@/lib/utils';
 import { RefreshCw } from 'lucide-react';
 
