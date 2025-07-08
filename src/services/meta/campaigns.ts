@@ -113,7 +113,7 @@ export class MetaCampaignsService {
       try {
         // Se nextUrl é uma URL completa (começa com http), extrair apenas o path
         let path: string;
-        let params: Record<string, string> = {
+        const params: Record<string, string> = {
           fields: 'id,name,status,effective_status,created_time,updated_time,objective,special_ad_categories,spend_cap,daily_budget,lifetime_budget',
           limit: '100'
         };

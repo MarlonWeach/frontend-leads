@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Image, Video, FileText, Play, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Image as ImageIcon, Video, FileText, Play, ChevronRight, ChevronLeft } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdCreativePreview({ ad, onExpand }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -41,14 +42,14 @@ export default function AdCreativePreview({ ad, onExpand }) {
   const getCreativeTypeIcon = (type) => {
     switch (type) {
       case 'IMAGE':
-        return <Image className="w-4 h-4 text-blue-400" aria-hidden="true" />;
+        return <ImageIcon className="w-4 h-4 text-blue-400" aria-hidden="true" />;
       case 'VIDEO':
         return <Video className="w-4 h-4 text-red-400" aria-hidden="true" />;
       case 'SLIDESHOW':
         return <div className="flex gap-0.5" aria-hidden="true">
-          <Image className="w-3 h-3 text-blue-400" />
-          <Image className="w-3 h-3 text-blue-400" />
-          <Image className="w-3 h-3 text-blue-400" />
+          <ImageIcon className="w-3 h-3 text-blue-400" />
+          <ImageIcon className="w-3 h-3 text-blue-400" />
+          <ImageIcon className="w-3 h-3 text-blue-400" />
         </div>;
       default:
         return <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" />;
@@ -60,9 +61,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
       const image = creativeData.images[currentImageIndex];
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={image.url}
             alt={image.alt || creativeData.title || 'Preview do anúncio'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-image.png';
@@ -93,9 +96,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
     if (creativeData.video) {
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={creativeData.video.thumbnail_url}
             alt={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-video.png';
@@ -103,7 +108,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
             aria-label={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
           />
           <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-            <Play className="w-4 h-4 text-white fill-white" />
+            <Play className="w-4 h-4 text-white fill-white" aria-hidden="true" />
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -115,7 +120,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
     }
     return (
       <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center">
-        <Video className="w-4 h-4 text-red-400" aria-hidden="true" focusable="false" />
+        <Video className="w-4 h-4 text-red-400" aria-hidden="true" />
       </div>
     );
   };
@@ -125,9 +130,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
       const image = creativeData.slideshow.images[currentImageIndex];
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={image.url}
             alt={image.alt || creativeData.title || 'Slideshow preview'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               e.target.src = '/placeholder-image.png';
@@ -147,10 +154,10 @@ export default function AdCreativePreview({ ad, onExpand }) {
     }
     return (
       <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center">
-        <div className="flex gap-0.5">
-          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
-          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
-          <Image className="w-3 h-3 text-blue-400" aria-hidden="true" focusable="false" />
+        <div className="flex gap-0.5" aria-hidden="true">
+          <ImageIcon className="w-3 h-3 text-blue-400" />
+          <ImageIcon className="w-3 h-3 text-blue-400" />
+          <ImageIcon className="w-3 h-3 text-blue-400" />
         </div>
       </div>
     );
@@ -165,7 +172,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
     return (
       <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center group cursor-pointer" onClick={onExpand} role="button" tabIndex={0} aria-label="Expandir pré-visualização do texto" onKeyPress={e => { if (e.key === 'Enter') onExpand(); }}>
         <div className="text-center">
-          <FileText className="w-4 h-4 text-gray-400 mx-auto mb-1" aria-hidden="true" focusable="false" />
+          <FileText className="w-4 h-4 text-gray-400 mx-auto mb-1" aria-hidden="true" />
           <div className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
             {truncatedText}
           </div>

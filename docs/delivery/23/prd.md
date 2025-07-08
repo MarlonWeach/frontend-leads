@@ -67,10 +67,20 @@ O PBI 23 foi concluído com sucesso. Todos os warnings críticos de build foram 
 - ✅ Documentação de padrões criada
 - ✅ Todos os testes passando (159/159)
 
+**Correções Adicionais para Vercel:**
+- ✅ Erro crítico de TypeScript em `rateLimit.ts` corrigido (for...of → Array.from())
+- ✅ Arquivos Supabase Functions excluídos do build do Next.js (tsconfig.json)
+- ✅ Warnings de prefer-const corrigidos em múltiplos arquivos
+- ✅ Build do Vercel agora funcionando sem erros críticos
+
 **Arquivos Criados/Modificados:**
 - `.eslintrc.js` - Configuração do ESLint
 - `.lintstagedrc.js` - Configuração do lint-staged
 - `docs/coding-standards.md` - Documentação de padrões
+- `tsconfig.json` - Exclusão de supabase/functions
+- `src/utils/rateLimit.ts` - Correção de compatibilidade TypeScript
+- `app/api/cache-stats/route.ts` - Correção de prefer-const
+- `app/api/meta/adsets/route.ts` - Correção de prefer-const
 - Múltiplos arquivos de código corrigidos
 
-O build agora está limpo e o projeto possui um sistema robusto para prevenir regressões de qualidade de código. 
+O build agora está limpo tanto localmente quanto no Vercel, e o projeto possui um sistema robusto para prevenir regressões de qualidade de código. 

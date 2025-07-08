@@ -121,7 +121,7 @@ export class MetaAdsetsService {
       try {
         // Se nextUrl é uma URL completa (começa com http), extrair apenas o path
         let path: string;
-        let params: Record<string, string> = {
+        const params: Record<string, string> = {
           fields: 'id,name,status,effective_status,created_time,updated_time,campaign_id,daily_budget,lifetime_budget,start_time,end_time,targeting,optimization_goal,billing_event',
           limit: '100'
         };

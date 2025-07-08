@@ -50,6 +50,9 @@ test-*.js
 # Arquivos de migração
 supabase/migrations/
 
+# Supabase Functions (Deno)
+supabase/functions/
+
 # Arquivos de relatório
 test-results/
 playwright-report/

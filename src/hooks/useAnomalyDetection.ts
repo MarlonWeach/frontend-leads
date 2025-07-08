@@ -110,7 +110,7 @@ export function useAnomalyDetection({
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       }));
     }
-  }, [dateRange.startDate, dateRange.endDate, memoizedCampaignIds, sensitivity]);
+  }, [dateRange, memoizedCampaignIds, sensitivity]);
 
   // Função para buscar anomalias históricas
   const fetchHistoricalAnomalies = useCallback(async (
