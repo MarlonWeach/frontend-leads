@@ -3,30 +3,37 @@ import { useQueryClient } from '@tanstack/react-query';
 
 // Tipos para os dados do dashboard
 export interface DashboardMetrics {
+  leads: {
+    total: number;
+    active: number;
+  };
   campaigns: {
     total: number;
     active: number;
-    active_vs_previous_month?: number;
   };
-  leads: {
-    total: number;
-    new: number;
-    converted: number;
-    conversion_rate: number;
-    total_vs_previous_month?: number;
-  };
-  advertisers: {
+  adsets: {
     total: number;
     active: number;
-    registered?: number;
-    total_vs_previous_month?: number;
   };
-  performance: {
-    spend: number;
-    impressions: number;
-    clicks: number;
-    ctr: number;
-    spend_vs_previous_month?: number;
+  ads: {
+    total: number;
+    active: number;
+  };
+  spend: {
+    total: number;
+    today: number;
+  };
+  impressions: {
+    total: number;
+    today: number;
+  };
+  clicks: {
+    total: number;
+    today: number;
+  };
+  ctr: {
+    average: number;
+    trend: number;
   };
 }
 

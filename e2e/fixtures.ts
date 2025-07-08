@@ -151,4 +151,21 @@ export const test = base.extend({
   mockSupabase
 });
 
-export { expect } from '@playwright/test'; 
+export { expect } from '@playwright/test';
+
+export const mockDashboardData = {
+  metrics: {
+    leads: { total: 1234, active: 1000 },
+    campaigns: { total: 15, active: 12 },
+    adsets: { total: 45, active: 38 },
+    ads: { total: 120, active: 95 },
+    spend: { total: 50000, today: 2500 },
+    impressions: { total: 1000000, today: 50000 },
+    clicks: { total: 15000, today: 750 },
+    ctr: { average: 1.5, trend: 0.2 }
+  },
+  recentActivity: [],
+  alerts: [],
+  overviewData: [],
+  campaignDistribution: []
+}; 

@@ -94,7 +94,7 @@ test.describe('Usabilidade e Experiência do Usuário', () => {
 
   test('Navegação entre páginas', async ({ page }) => {
     // Testar navegação para diferentes páginas
-    const navLinks = ['/performance', '/leads', '/campaigns', '/advertisers'];
+    const navLinks = ['/performance', '/leads', '/campaigns'];
     
     for (const link of navLinks) {
       await page.goto(link);

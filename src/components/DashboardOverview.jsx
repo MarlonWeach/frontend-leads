@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   TrendingUp, Users, Building2, Target, DollarSign, Eye, 
-  MousePointer, CheckCircle, Clock, Info, AlertTriangle, XCircle
+  MousePointer, CheckCircle, Clock, Info, AlertTriangle, XCircle, Layers
 } from 'lucide-react';
 
 import { useDashboardOverview } from '../hooks/useDashboardData';
@@ -102,10 +102,14 @@ export default function DashboardOverview() {
   }
 
   const metrics = data?.metrics || {
+    leads: { total: 0, active: 0 },
     campaigns: { total: 0, active: 0 },
-    leads: { total: 0, new: 0, converted: 0, conversion_rate: 0 },
-    advertisers: { total: 0, active: 0 },
-    performance: { spend: 0, impressions: 0, clicks: 0, ctr: 0 }
+    adsets: { total: 0, active: 0 },
+    ads: { total: 0, active: 0 },
+    spend: { total: 0, today: 0 },
+    impressions: { total: 0, today: 0 },
+    clicks: { total: 0, today: 0 },
+    ctr: { average: 0, trend: 0 }
   };
 
   const recentActivity = data?.recentActivity || [];
@@ -197,7 +201,7 @@ export default function DashboardOverview() {
             {formatNumberShort(metrics.leads.total)}
           </div>
           <div className="text-xs text-blue-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.leads.new)}</span> novos • <span className="font-semibold">{formatPercentage(metrics.leads.conversion_rate)}</span> conversão
+            <span className="font-semibold">{formatNumberShort(metrics.leads.active)}</span> ativos • <span className="font-semibold">{formatPercentage(metrics.leads.ctr.average)}</span> conversão
           </div>
         </motion.div>
 
@@ -221,7 +225,7 @@ export default function DashboardOverview() {
           </div>
         </motion.div>
 
-        {/* Anunciantes */}
+        {/* AdSets Ativos */}
         <motion.div 
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.98 }}
@@ -229,14 +233,14 @@ export default function DashboardOverview() {
           className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300"
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="text-purple-400 text-sm font-medium">Anunciantes</div>
-            <Building2 className="w-4 h-4 text-purple-400" />
+            <div className="text-purple-400 text-sm font-medium">AdSets Ativos</div>
+            <Layers className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.advertisers.total)}
+            {formatNumberShort(metrics.adsets.active)}
           </div>
           <div className="text-xs text-purple-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.advertisers.active)}</span> ativos
+            <span className="font-semibold">{formatNumberShort(metrics.adsets.total)}</span> total
           </div>
         </motion.div>
 
@@ -253,10 +257,10 @@ export default function DashboardOverview() {
             <DollarSign className="w-4 h-4 text-indigo-400" />
           </div>
           <div className="text-2xl font-bold text-white" data-testid="metric-performance-spend">
-            R$ {formatNumberShort(metrics.performance.spend)}
+            R$ {formatNumberShort(metrics.spend.total)}
           </div>
           <div className="text-xs text-indigo-300 mt-1">
-            CPL: <span className="font-semibold">{formatCurrency(metrics.performance.spend / (metrics.leads.total || 1))}</span>
+            CPL: <span className="font-semibold">{formatCurrency(metrics.spend.total / (metrics.leads.total || 1))}</span>
           </div>
         </motion.div>
 
@@ -272,7 +276,7 @@ export default function DashboardOverview() {
             <Eye className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.performance.impressions)}
+            {formatNumberShort(metrics.impressions.total)}
           </div>
           <div className="text-xs text-cyan-300 mt-1">
             Alcance total
@@ -291,10 +295,10 @@ export default function DashboardOverview() {
             <MousePointer className="w-4 h-4 text-orange-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.performance.clicks)}
+            {formatNumberShort(metrics.clicks.total)}
           </div>
           <div className="text-xs text-orange-300 mt-1">
-            CTR: <span className="font-semibold" data-testid="metric-performance-ctr">{formatPercentage(metrics.performance.ctr)}</span>
+            CTR: <span className="font-semibold" data-testid="metric-performance-ctr">{formatPercentage(metrics.ctr.average)}</span>
           </div>
         </motion.div>
 
@@ -310,10 +314,10 @@ export default function DashboardOverview() {
             <CheckCircle className="w-4 h-4 text-pink-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {formatPercentage(metrics.leads.conversion_rate)}
+            {formatPercentage(metrics.leads.ctr.average)}
           </div>
           <div className="text-xs text-pink-300 mt-1">
-            {formatNumberShort(metrics.leads.total)} leads / {formatNumberShort(metrics.performance.clicks)} cliques
+            {formatNumberShort(metrics.leads.total)} leads / {formatNumberShort(metrics.clicks.total)} cliques
           </div>
         </motion.div>
       </div>
@@ -419,7 +423,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="text-sublabel-refined text-white/70">Total Investido</p>
                 <p className="text-lg font-semibold text-white" data-testid="perf-total-spend">
-                  {formatCurrency(metrics.performance.spend)}
+                  {formatCurrency(metrics.spend.total)}
                 </p>
               </div>
               <DollarSign className="h-6 w-6 text-primary" />
@@ -431,7 +435,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="text-sublabel-refined text-white/70">Impressões</p>
                 <p className="text-lg font-semibold text-white" data-testid="perf-total-impressions">
-                  {formatNumberShort(metrics.performance.impressions)}
+                  {formatNumberShort(metrics.impressions.total)}
                 </p>
               </div>
               <Eye className="h-6 w-6 text-primary" />
@@ -443,7 +447,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="text-sublabel-refined text-white/70">Cliques</p>
                 <p className="text-lg font-semibold text-white" data-testid="perf-total-clicks">
-                  {formatNumberShort(metrics.performance.clicks)}
+                  {formatNumberShort(metrics.clicks.total)}
                 </p>
               </div>
               <MousePointer className="h-6 w-6 text-primary" />
@@ -455,7 +459,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="text-sublabel-refined text-white/70">CTR</p>
                 <p className="text-lg font-semibold text-accent" data-testid="perf-total-ctr">
-                  {formatPercentage(metrics.performance.ctr)}
+                  {formatPercentage(metrics.ctr.average)}
                 </p>
               </div>
               <TrendingUp className="h-6 w-6 text-accent" />
@@ -489,13 +493,13 @@ export default function DashboardOverview() {
                 id: 'Investimento',
                 color: '#00BFFF',
                 data: [
-                  { x: 'Seg', y: Math.round((metrics.performance.spend || 0) / 7 * 0.8) },
-                  { x: 'Ter', y: Math.round((metrics.performance.spend || 0) / 7 * 1.2) },
-                  { x: 'Qua', y: Math.round((metrics.performance.spend || 0) / 7 * 0.9) },
-                  { x: 'Qui', y: Math.round((metrics.performance.spend || 0) / 7 * 1.1) },
-                  { x: 'Sex', y: Math.round((metrics.performance.spend || 0) / 7 * 1.3) },
-                  { x: 'Sáb', y: Math.round((metrics.performance.spend || 0) / 7 * 0.7) },
-                  { x: 'Dom', y: Math.round((metrics.performance.spend || 0) / 7 * 0.6) },
+                  { x: 'Seg', y: Math.round((metrics.spend.total || 0) / 7 * 0.8) },
+                  { x: 'Ter', y: Math.round((metrics.spend.total || 0) / 7 * 1.2) },
+                  { x: 'Qua', y: Math.round((metrics.spend.total || 0) / 7 * 0.9) },
+                  { x: 'Qui', y: Math.round((metrics.spend.total || 0) / 7 * 1.1) },
+                  { x: 'Sex', y: Math.round((metrics.spend.total || 0) / 7 * 1.3) },
+                  { x: 'Sáb', y: Math.round((metrics.spend.total || 0) / 7 * 0.7) },
+                  { x: 'Dom', y: Math.round((metrics.spend.total || 0) / 7 * 0.6) },
                 ],
               },
             ]}
@@ -527,8 +531,8 @@ export default function DashboardOverview() {
           >
             <AnimatedBarChart
               data={[
-                { label: 'Leads', leads: metrics.leads.total || 0, spend: metrics.performance.spend || 0, impressions: Math.round((metrics.performance.impressions || 0) / 1000) },
-                { label: 'Taxa Conv', leads: Math.round((metrics.leads.conversion_rate || 0) * 100), spend: Math.round((metrics.performance.ctr || 0) * 100), impressions: Math.round((metrics.performance.spend || 0) / (metrics.leads.total || 1)) },
+                { label: 'Leads', leads: metrics.leads.total || 0, spend: metrics.spend.total || 0, impressions: Math.round((metrics.impressions.total || 0) / 1000) },
+                { label: 'Taxa Conv', leads: Math.round((metrics.leads.ctr.average || 0) * 100), spend: Math.round((metrics.ctr.average || 0) * 100), impressions: Math.round((metrics.spend.total || 0) / (metrics.leads.total || 1)) },
               ]}
               keys={['leads', 'spend', 'impressions']}
               indexBy="label"

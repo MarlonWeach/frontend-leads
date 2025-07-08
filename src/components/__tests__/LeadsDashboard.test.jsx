@@ -2,12 +2,22 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LeadsDashboard from '../LeadsDashboard';
-import { useLeadsData, useLeadActions, useLeadExport } from '../../hooks/useLeadsData';
-import { useAdvertiserFilter } from '../../hooks/useAdvertisersData';
+import { useLeadsData } from '../../hooks/useLeadsData';
 
-// Mock do módulo de hooks
+// Mock dos hooks
 jest.mock('../../hooks/useLeadsData');
-jest.mock('../../hooks/useAdvertisersData');
+jest.mock('../../hooks/useLeadActions', () => ({
+  useLeadActions: () => ({
+    updateLeadStatus: jest.fn(),
+    addInteraction: jest.fn(),
+    updating: false
+  })
+}));
+jest.mock('../../hooks/useLeadExport', () => ({
+  useLeadExport: () => ({
+    exportToCSV: jest.fn()
+  })
+}));
 
 describe('LeadsDashboard', () => {
   const mockLeads = [
@@ -49,11 +59,6 @@ describe('LeadsDashboard', () => {
     this_week: 2,
   };
 
-  const mockAdvertisers = [
-    { id: 'adv1', name: 'Anunciante 1' },
-    { id: 'adv2', name: 'Anunciante 2' },
-  ];
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -62,22 +67,6 @@ describe('LeadsDashboard', () => {
       loading: false,
       error: null,
       refetch: jest.fn(),
-    });
-
-    useLeadActions.mockReturnValue({
-      updateLeadStatus: jest.fn(),
-      addInteraction: jest.fn(),
-      updating: false,
-    });
-
-    useLeadExport.mockReturnValue({
-      exportToCSV: jest.fn(),
-    });
-
-    useAdvertiserFilter.mockReturnValue({
-      advertisers: mockAdvertisers,
-      loading: false,
-      error: null,
     });
   });
 

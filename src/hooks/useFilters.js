@@ -19,8 +19,10 @@ const DEFAULT_FILTERS = {
     cpm: false
   },
   segments: {
-    campaignStatus: 'all', // all, active, inactive
-    advertisers: [],
+    campaigns: [],
+    adsets: [],
+    ads: [],
+    // Removido: advertisers (não faz sentido na estrutura Meta)
     performance: 'all' // all, high, medium, low
   }
 };
@@ -129,7 +131,6 @@ export const useFilters = () => {
     
     // Contar segmentos ativos
     if (filters.segments.campaignStatus !== 'all') count++;
-    if (filters.segments.advertisers.length > 0) count++;
     if (filters.segments.performance !== 'all') count++;
     
     return count;

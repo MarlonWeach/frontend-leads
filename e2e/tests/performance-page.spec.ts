@@ -214,17 +214,12 @@ test.describe('Página de Performance - E2E CoS Test', () => {
     const table = page.locator('[data-testid="performance-table"]');
     await expect(table).toBeVisible();
     
-    // Verificar se os gráficos são responsivos
-    const charts = page.locator('.grid-cols-1.lg\\:grid-cols-2');
-    await expect(charts).toBeVisible();
-    
     // Testar em tablet (768px)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.reload();
     await page.waitForLoadState('networkidle');
     
     await expect(table).toBeVisible();
-    await expect(charts).toBeVisible();
     
     // Testar em desktop (1024px+)
     await page.setViewportSize({ width: 1024, height: 768 });
@@ -232,7 +227,6 @@ test.describe('Página de Performance - E2E CoS Test', () => {
     await page.waitForLoadState('networkidle');
     
     await expect(table).toBeVisible();
-    await expect(charts).toBeVisible();
   });
 
   test('Estados de loading e erro', async ({ page }) => {

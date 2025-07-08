@@ -8,10 +8,20 @@ import {
   UserCheck, UserX, Star
 } from 'lucide-react';
 import { useLeadsData, useLeadActions, useLeadExport } from '../hooks/useLeadsData';
-import { useAdvertiserFilter } from '../hooks/useAdvertisersData';
 import { Tooltip } from './Tooltip';
 import { motion } from 'framer-motion';
 import { SectionTransition } from './ui/transitions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFilters } from '@/hooks/useFilters';
+import { DateRangePicker } from '@/components/filters/DateRangePicker';
+import { MetricSelector } from '@/components/filters/MetricSelector';
+import { SegmentFilter } from '@/components/filters/SegmentFilter';
+import { formatNumberShort, formatCurrency, formatDate } from '@/lib/utils';
+import { RefreshCw } from 'lucide-react';
 
 export default function LeadsDashboard() {
   // Estados de filtro
@@ -30,7 +40,6 @@ export default function LeadsDashboard() {
   const { data, loading, error, refetch } = useLeadsData(filters);
   const { updateLeadStatus, addInteraction, updating } = useLeadActions();
   const { exportToCSV } = useLeadExport();
-  const { advertisers: advertisersForFilter } = useAdvertiserFilter();
 
   // Estados locais derivados dos dados
   const leads = data?.leads || [];

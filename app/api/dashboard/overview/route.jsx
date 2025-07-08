@@ -126,7 +126,13 @@ export async function GET(request) {
 
     // 7. Get other general metrics
     const { count: totalCampaigns } = await supabase.from('campaigns').select('*', { count: 'exact', head: true });
-    const { count: totalAdvertisers } = await supabase.from('advertisers').select('*', { count: 'exact', head: true });
+    const { count: activeCampaigns } = await supabase.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
+    
+    const { count: totalAdsets } = await supabase.from('adsets').select('*', { count: 'exact', head: true });
+    const { count: activeAdsets } = await supabase.from('adsets').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
+    
+    const { count: totalAds } = await supabase.from('ads').select('*', { count: 'exact', head: true });
+    const { count: activeAds } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE');
 
     // 8. Get recent activity (leads from last 7 days)
     const sevenDaysAgo = new Date();
@@ -185,19 +191,18 @@ export async function GET(request) {
     return NextResponse.json({
       metrics: {
         campaigns: { total: totalCampaigns || 0, active: activeCampaignIds.length },
+        adsets: { total: totalAdsets || 0, active: activeAdsets || 0 },
+        ads: { total: totalAds || 0, active: activeAds || 0 },
         leads: { 
           total: metricsAggregation.totalLeads || 0, 
           new: metricsAggregation.totalLeads || 0,
           converted: metricsAggregation.totalLeads || 0,
           conversion_rate: conversionRate
         },
-        advertisers: { total: totalAdvertisers || 0, active: totalAdvertisers || 0 },
-        performance: { 
-          spend: metricsAggregation.totalSpend, 
-          impressions: metricsAggregation.totalImpressions, 
-          clicks: metricsAggregation.totalClicks, 
-          ctr: ctr 
-        }
+        spend: { total: metricsAggregation.totalSpend, today: 0 },
+        impressions: { total: metricsAggregation.totalImpressions, today: 0 },
+        clicks: { total: metricsAggregation.totalClicks, today: 0 },
+        ctr: { average: ctr, trend: 0 }
       },
       recentActivity: recentLeads || [],
       alerts,

@@ -59,10 +59,14 @@ jest.mock('next/navigation', () => ({
 describe('DashboardOverview', () => {
   const mockData = {
     metrics: {
-      campaigns: { total: 10, active: 5 },
-      leads: { total: 100, new: 20, converted: 30, conversion_rate: 30 },
-      advertisers: { total: 8, active: 6 },
-      performance: { spend: 5000, impressions: 10000, clicks: 500, ctr: 5 }
+      leads: { total: 1234, active: 1000 },
+      campaigns: { total: 15, active: 12 },
+      adsets: { total: 45, active: 38 },
+      ads: { total: 120, active: 95 },
+      spend: { total: 50000, today: 2500 },
+      impressions: { total: 1000000, today: 50000 },
+      clicks: { total: 15000, today: 750 },
+      ctr: { average: 1.5, trend: 0.2 }
     },
     recentActivity: [
       {
@@ -123,21 +127,21 @@ describe('DashboardOverview', () => {
     // Verificar métricas de leads
     const leadsCard = screen.getByTestId('metric-card-leads');
     expect(leadsCard).toBeInTheDocument();
-    expect(screen.getByTestId('metric-leads-total')).toHaveTextContent('100');
-    expect(leadsCard).toHaveTextContent('20');
-    expect(leadsCard).toHaveTextContent('30,0%');
+    expect(screen.getByTestId('metric-leads-total')).toHaveTextContent('1234');
+    expect(leadsCard).toHaveTextContent('1000');
+    expect(leadsCard).toHaveTextContent('1.5%');
 
     // Verificar métricas de campanhas
     const campaignsCard = screen.getByTestId('metric-card-campaigns');
     expect(campaignsCard).toBeInTheDocument();
-    expect(screen.getByTestId('metric-campaigns-active')).toHaveTextContent('5');
-    expect(campaignsCard).toHaveTextContent('10');
+    expect(screen.getByTestId('metric-campaigns-active')).toHaveTextContent('12');
+    expect(campaignsCard).toHaveTextContent('15');
 
     // Verificar métricas de performance
     const performanceCard = screen.getByTestId('metric-card-performance');
     expect(performanceCard).toBeInTheDocument();
     const spendText = screen.getByTestId('metric-performance-spend').textContent;
-    expect(spendText === 'R$ 5.000' || spendText === 'R$ 5k').toBe(true);
+    expect(spendText === 'R$ 50.000' || spendText === 'R$ 50k').toBe(true);
   });
 
   it('deve mostrar estado de carregamento', () => {
