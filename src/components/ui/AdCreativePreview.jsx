@@ -41,17 +41,17 @@ export default function AdCreativePreview({ ad, onExpand }) {
   const getCreativeTypeIcon = (type) => {
     switch (type) {
       case 'IMAGE':
-        return <Image className="w-4 h-4 text-blue-400" />;
+        return <Image className="w-4 h-4 text-blue-400" aria-hidden="true" />;
       case 'VIDEO':
-        return <Video className="w-4 h-4 text-red-400" />;
+        return <Video className="w-4 h-4 text-red-400" aria-hidden="true" />;
       case 'SLIDESHOW':
-        return <div className="flex gap-0.5">
+        return <div className="flex gap-0.5" aria-hidden="true">
           <Image className="w-3 h-3 text-blue-400" />
           <Image className="w-3 h-3 text-blue-400" />
           <Image className="w-3 h-3 text-blue-400" />
         </div>;
       default:
-        return <FileText className="w-4 h-4 text-gray-400" />;
+        return <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" />;
     }
   };
 
@@ -76,7 +76,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronRight className="w-4 h-4 text-white" />
+              <ChevronRight className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronRight className="w-4 h-4 text-white" />
+              <ChevronRight className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function AdCreativePreview({ ad, onExpand }) {
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronRight className="w-4 h-4 text-white" />
+              <ChevronRight className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
           </div>
         </div>

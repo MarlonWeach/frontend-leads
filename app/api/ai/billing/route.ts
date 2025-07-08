@@ -279,7 +279,7 @@ async function fetchLocalEstimation(days: number): Promise<BillingResponse> {
   const dailyStats = new Map();
   let totalCost = 0;
   let totalTokens = 0;
-  let totalRequests = logs.length;
+  const totalRequests = logs.length;
 
   for (const log of logs) {
     const date = new Date(log.created_at).toISOString().split('T')[0];

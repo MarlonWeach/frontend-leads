@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 // Cache em memória para o Vercel (simula banco de dados)
-let cacheStats = [
+const cacheStats = [
   {
     id: 1,
     cache_type: 'general',

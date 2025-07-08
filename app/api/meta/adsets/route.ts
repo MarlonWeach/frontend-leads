@@ -266,7 +266,7 @@ async function handleRequestWithDateFilter(campaignId: string | null, status: st
 
   // Buscar nomes das campanhas
   const campaignIds = Array.from(new Set(adsets.map(a => a.campaign_id)));
-  let campaignNamesMap = new Map();
+  const campaignNamesMap = new Map();
   if (campaignIds.length > 0) {
     const { data: campaignsData, error: campaignsError } = await supabase
       .from('campaigns')
