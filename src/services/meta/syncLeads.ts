@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { MetaAdsService } from './ads';
 import { logger } from '../../utils/logger';
-import { MetaAd } from '@/types/meta';
+import { MetaAd } from '../../types/meta';
 
 interface SyncLeadsConfig {
   accessToken: string;

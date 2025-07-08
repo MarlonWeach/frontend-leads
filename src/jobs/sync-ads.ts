@@ -7,7 +7,7 @@ import {
   SyncStatus,
   SyncError,
   DEFAULT_SYNC_OPTIONS,
-} from '@/types/sync';
+} from '../types/sync';
 
 function getSupabaseClient(): SupabaseClient {
   return createClient(

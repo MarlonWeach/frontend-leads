@@ -29,7 +29,7 @@ jest.mock('@/utils/rateLimit', () => ({
   checkRateLimit: mockCheckRateLimit
 }));
 
-import { DEFAULT_SYNC_OPTIONS } from '@/types/sync';
+import { DEFAULT_SYNC_OPTIONS } from '../../../../../src/types/sync';
 
 // Mock das classes Next.js
 class MockNextRequest {

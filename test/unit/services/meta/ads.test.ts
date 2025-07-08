@@ -1,8 +1,9 @@
 import { mockLogger } from '../../../setup';
-import { MetaAdsService } from '@/services/meta/ads';
-import { MetaAd, MetaAdsResponse, MetaAPIError } from '@/types/meta';
+import { MetaAdsService } from '../../../src/services/meta/ads';
+import { MetaAd, MetaAdsResponse, MetaAPIError } from '../../../src/types/meta';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
-jest.mock('@/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   __esModule: true,
   default: mockLogger,
   logger: mockLogger
