@@ -45,7 +45,10 @@ export function useAnomalyDetection({
   const [resolvedAnomalies, setResolvedAnomalies] = useState<Set<string>>(new Set());
 
   // Memoizar campaignIds para evitar re-criação desnecessária
-  const memoizedCampaignIds = useMemo(() => campaignIds, [campaignIds]);
+  const memoizedCampaignIds = useMemo(() => {
+    if (!campaignIds || campaignIds.length === 0) return undefined;
+    return [...campaignIds].sort(); // Ordenar para garantir consistência
+  }, [campaignIds]);
 
   // Função para detectar anomalias
   const detectAnomalies = useCallback(async (forceRefresh = false) => {
@@ -186,18 +189,81 @@ export function useAnomalyDetection({
   useEffect(() => {
     if (autoRefresh && refreshInterval > 0) {
       const interval = setInterval(() => {
+        // Usar a função detectAnomalies diretamente sem dependência
         detectAnomalies(false);
       }, refreshInterval * 60 * 1000);
 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, refreshInterval, detectAnomalies]);
+  }, [autoRefresh, refreshInterval]); // Removido detectAnomalies das dependências
 
-  // Detectar anomalias apenas na primeira montagem do componente
+  // Detectar anomalias quando as dependências mudarem
   useEffect(() => {
-    // Apenas detecta na primeira montagem, não quando dependências mudarem
-    detectAnomalies(false);
-  }, [detectAnomalies]);
+    // Usar uma função interna para evitar dependência circular
+    const performDetection = async () => {
+      if (!dateRange.startDate || !dateRange.endDate) {
+        setState(prev => ({ ...prev, error: 'Período de data é obrigatório' }));
+        return;
+      }
+
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      try {
+        // Verificar cache primeiro
+        const cached = getCachedData();
+        if (cached) {
+          setState(prev => ({
+            ...prev,
+            ...cached,
+            loading: false
+          }));
+          return;
+        }
+
+        const response = await fetch('/api/ai/anomalies', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            dateRange,
+            campaignIds: memoizedCampaignIds,
+            sensitivity,
+            forceRefresh: false
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro na API: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const newState = {
+          anomalies: data.anomalies || [],
+          summary: data.summary || { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
+          lastUpdated: new Date(),
+          loading: false,
+          error: null
+        };
+
+        setState(prev => ({ ...prev, ...newState }));
+
+        // Salvar no cache
+        setCachedData(newState);
+
+      } catch (error) {
+        console.error('Erro ao detectar anomalias:', error);
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        }));
+      }
+    };
+
+    performDetection();
+  }, [dateRange.startDate, dateRange.endDate, memoizedCampaignIds, sensitivity]);
 
   // Funções de cache
   function getCachedData() {
