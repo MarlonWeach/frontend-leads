@@ -201,7 +201,7 @@ export default function DashboardOverview() {
             {formatNumberShort(metrics.leads.total)}
           </div>
           <div className="text-xs text-blue-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.leads.active)}</span> ativos • <span className="font-semibold">{formatPercentage(metrics.leads.ctr.average)}</span> conversão
+            <span className="font-semibold">{formatNumberShort(metrics.leads.active)}</span> ativos • <span className="font-semibold">{formatPercentage(metrics.ctr.average)}</span> conversão
           </div>
         </motion.div>
 
@@ -314,7 +314,7 @@ export default function DashboardOverview() {
             <CheckCircle className="w-4 h-4 text-pink-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {formatPercentage(metrics.leads.ctr.average)}
+            {formatPercentage(metrics.ctr.average)}
           </div>
           <div className="text-xs text-pink-300 mt-1">
             {formatNumberShort(metrics.leads.total)} leads / {formatNumberShort(metrics.clicks.total)} cliques
@@ -532,7 +532,7 @@ export default function DashboardOverview() {
             <AnimatedBarChart
               data={[
                 { label: 'Leads', leads: metrics.leads.total || 0, spend: metrics.spend.total || 0, impressions: Math.round((metrics.impressions.total || 0) / 1000) },
-                { label: 'Taxa Conv', leads: Math.round((metrics.leads.ctr.average || 0) * 100), spend: Math.round((metrics.ctr.average || 0) * 100), impressions: Math.round((metrics.spend.total || 0) / (metrics.leads.total || 1)) },
+                { label: 'Taxa Conv', leads: Math.round((metrics.ctr.average || 0) * 100), spend: Math.round((metrics.ctr.average || 0) * 100), impressions: Math.round((metrics.spend.total || 0) / (metrics.leads.total || 1)) },
               ]}
               keys={['leads', 'spend', 'impressions']}
               indexBy="label"
