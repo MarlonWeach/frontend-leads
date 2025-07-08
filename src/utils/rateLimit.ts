@@ -31,11 +31,11 @@ export function checkRateLimit(req: NextRequest): { isLimited: boolean; resetTim
   const now = Date.now();
 
   // Limpa contadores expirados
-  for (const [key, value] of requestCounts.entries()) {
+  Array.from(requestCounts.entries()).forEach(([key, value]) => {
     if (value.resetTime <= now) {
       requestCounts.delete(key);
     }
-  }
+  });
 
   // Obtém ou cria contador para o IP
   let counter = requestCounts.get(ip);
