@@ -713,3 +713,43 @@ const memoizedValue = useMemo(() => {
 - ⏳ Funcionalidades avançadas de IA
 - ⏳ Melhorias de segurança
 - ⏳ Sistema de analytics
+
+## Observação sobre funcionalidades/rotas não utilizadas
+
+- **Revisão de funcionalidades:**
+  - É necessário revisar periodicamente todos os endpoints, componentes e funcionalidades do projeto para identificar e remover itens que não são mais utilizados ou não fazem sentido para o objetivo atual do dashboard.
+  - Exemplo: O bloco/endpoint **recent-sales** não será utilizado e deve ser removido do projeto.
+  - Recomenda-se criar uma task dedicada para essa revisão e limpeza, garantindo que o código permaneça enxuto, seguro e fácil de manter.
+
+### Itens Removidos na Revisão (Task REVIEW-1)
+
+#### Endpoints/APIs Removidos:
+- `app/api/dashboard/recent-sales/route.jsx` - Endpoint de vendas recentes (não utilizado)
+- `app/api/dashboard/activity/route.jsx` - Endpoint de atividade (não utilizado)
+- `app/api/dashboard/search/route.jsx` - Endpoint de busca (não utilizado)
+
+#### Componentes Removidos:
+- `src/components/RecentSales.jsx` - Componente de vendas recentes (não utilizado)
+- `src/components/Activity.jsx` - Componente de atividade (não utilizado)
+- `src/components/Search.jsx` - Componente de gráfico de busca (não utilizado, confundido com ícone Search do Lucide)
+
+#### Hooks Comentados:
+- `useDashboardRecentSales()` - Hook para vendas recentes (comentado)
+- `useDashboardActivity()` - Hook para atividade (comentado)
+- `useDashboardSearch()` - Hook para busca (comentado)
+
+#### Tipos de Cache Removidos:
+- `DASHBOARD_ACTIVITY` - Cache de atividade (removido)
+- `DASHBOARD_RECENT_SALES` - Cache de vendas recentes (removido)
+- `DASHBOARD_SEARCH` - Cache de busca (removido)
+
+#### Testes Atualizados:
+- `test/unit/hooks/useDashboardData.test.tsx` - Removidas referências aos hooks comentados
+- `test/unit/utils/server-cache.test.ts` - Atualizados para usar apenas tipos de cache ativos
+
+### Justificativa das Remoções:
+- **Funcionalidades não utilizadas:** Nenhum componente ou página fazia uso dessas funcionalidades
+- **Código morto:** Endpoints e hooks que não eram chamados em lugar nenhum
+- **Manutenção:** Redução da complexidade e manutenção do código
+- **Performance:** Menos código para carregar e processar
+- **Segurança:** Menos superfície de ataque e endpoints expostos

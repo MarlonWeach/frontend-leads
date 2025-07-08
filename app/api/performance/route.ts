@@ -2,9 +2,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Criar cliente Supabase sem realtime para evitar warning de critical dependency
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 0
+      }
+    }
+  }
 );
 
 // Forçar rota dinâmica para evitar erro de renderização estática

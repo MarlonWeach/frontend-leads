@@ -192,7 +192,7 @@ describe('ServerCache', () => {
 
     it('deve invalidar um tipo específico de cache', () => {
       const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param1: 'value1' });
-      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY, { param2: 'value2' });
+      const key2 = ServerCache.generateKey(CacheType.PERFORMANCE_DATA, { param2: 'value2' });
       const value = { data: 'test-data' };
 
       cache.set(key1, value);
@@ -212,7 +212,7 @@ describe('ServerCache', () => {
   describe('Estatísticas', () => {
     it('deve retornar estatísticas corretas', () => {
       const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
-      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_ACTIVITY);
+      const key2 = ServerCache.generateKey(CacheType.PERFORMANCE_DATA);
       const value = { data: 'test-data' };
 
       // Simular hits e misses
@@ -255,6 +255,30 @@ describe('ServerCache', () => {
       };
       const key = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, params);
       expect(key).toBe('dashboard_overview:startDate=2024-01-01');
+    });
+
+    it('deve gerar chaves únicas para diferentes parâmetros', () => {
+      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param1: 'value1' });
+      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param2: 'value2' });
+      
+      expect(key1).not.toBe(key2);
+      expect(key1).toContain('param1=value1');
+      expect(key2).toContain('param2=value2');
+    });
+
+    it('deve gerar chaves consistentes para os mesmos parâmetros', () => {
+      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param1: 'value1', param2: 'value2' });
+      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW, { param2: 'value2', param1: 'value1' });
+      
+      expect(key1).toBe(key2);
+    });
+
+    it('deve gerar chaves sem parâmetros', () => {
+      const key1 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      const key2 = ServerCache.generateKey(CacheType.DASHBOARD_OVERVIEW);
+      
+      expect(key1).toBe(key2);
+      expect(key1).toBe('dashboard_overview');
     });
   });
 }); 

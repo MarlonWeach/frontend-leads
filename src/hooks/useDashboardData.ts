@@ -137,121 +137,13 @@ export function useDashboardOverview(dateFrom?: string, dateTo?: string, options
   };
 }
 
-// Hook para buscar dados de atividade do dashboard
-export function useDashboardActivity() {
-  const _queryClient = useQueryClient();
-  
-  const queryKey = ['dashboard', 'activity'];
-  
-  const fetchActivity = async (): Promise<DashboardActivityItem[]> => {
-    const response = await fetch('/api/dashboard/activity');
-    
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar dados de atividade: ${response.statusText}`);
-    }
-    
-    return response.json();
-  };
-  
-  const result = useQueryWithCache<DashboardActivityItem[]>(
-    queryKey,
-    fetchActivity,
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      refetchOnWindowFocus: false
-    }
-  );
-  
-  const refetch = async () => {
-    await result.refetch();
-  };
-  
-  return {
-    ...result,
-    refetch
-  };
-}
-
-// Hook para buscar dados de vendas recentes do dashboard
-export function useDashboardRecentSales() {
-  const _queryClient = useQueryClient();
-  
-  const queryKey = ['dashboard', 'recent-sales'];
-  
-  const fetchRecentSales = async (): Promise<DashboardRecentSalesItem[]> => {
-    const response = await fetch('/api/dashboard/recent-sales');
-    
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar dados de vendas recentes: ${response.statusText}`);
-    }
-    
-    return response.json();
-  };
-  
-  const result = useQueryWithCache<DashboardRecentSalesItem[]>(
-    queryKey,
-    fetchRecentSales,
-    {
-      staleTime: 2 * 60 * 1000, // 2 minutos
-      refetchOnWindowFocus: false
-    }
-  );
-  
-  const refetch = async () => {
-    await result.refetch();
-  };
-  
-  return {
-    ...result,
-    refetch
-  };
-}
-
-// Hook para buscar dados de busca do dashboard
-export function useDashboardSearch() {
-  const _queryClient = useQueryClient();
-  
-  const queryKey = ['dashboard', 'search'];
-  
-  const fetchSearch = async (): Promise<DashboardSearchItem[]> => {
-    const response = await fetch('/api/dashboard/search');
-    
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar dados de busca: ${response.statusText}`);
-    }
-    
-    return response.json();
-  };
-  
-  const result = useQueryWithCache<DashboardSearchItem[]>(
-    queryKey,
-    fetchSearch,
-    {
-      staleTime: 10 * 60 * 1000, // 10 minutos
-      refetchOnWindowFocus: false
-    }
-  );
-  
-  const refetch = async () => {
-    await result.refetch();
-  };
-  
-  return {
-    ...result,
-    refetch
-  };
-}
-
 // Hook para invalidar todos os dados do dashboard
 export function useInvalidateDashboard() {
   const queryClient = useQueryClient();
   
   return async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'overview'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'activity'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recent-sales'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'overview'] })
     ]);
   };
 } 

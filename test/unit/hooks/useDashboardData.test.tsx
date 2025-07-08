@@ -3,9 +3,6 @@ import { render, screen, waitFor, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useDashboardOverview,
-  useDashboardActivity,
-  useDashboardRecentSales,
-  useDashboardSearch,
   useInvalidateDashboard
 } from '../../../src/hooks/useDashboardData';
 import { ReactNode } from 'react';
@@ -153,90 +150,6 @@ describe('useDashboardData hooks', () => {
     });
   });
   
-  describe('useDashboardActivity', () => {
-    it('deve buscar dados de atividade corretamente', async () => {
-      const mockData = [
-        { status: 'pendente', total: 10 },
-        { status: 'convertido', total: 5 }
-      ];
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData
-      });
-      
-      const { result } = renderHook(() => useDashboardActivity(), {
-        wrapper: createWrapper()
-      });
-      
-      // Aguardar a conclusão da consulta com timeout aumentado
-      await waitFor(() => expect(result.current.isSuccess).toBe(true), {
-        timeout: 5000
-      });
-      
-      // Verificar se os dados foram retornados corretamente
-      expect(result.current.data).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/activity');
-      expect(mockLogger.info).toHaveBeenCalled();
-    });
-  });
-  
-  describe('useDashboardRecentSales', () => {
-    it('deve buscar dados de vendas recentes corretamente', async () => {
-      const mockData = [
-        {
-          id: '1',
-          name: 'Anúncio 1',
-          email: '10 leads',
-          status: 'convertido',
-          amount: 'R$ 100.00',
-          created_at: '2023-01-01T12:00:00Z'
-        }
-      ];
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData
-      });
-      
-      const { result } = renderHook(() => useDashboardRecentSales(), {
-        wrapper: createWrapper()
-      });
-      
-      // Aguardar a conclusão da consulta
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      
-      // Verificar se os dados foram retornados corretamente
-      expect(result.current.data).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/recent-sales');
-    });
-  });
-  
-  describe('useDashboardSearch', () => {
-    it('deve buscar dados de busca corretamente', async () => {
-      const mockData = [
-        { source: 'Facebook', total: 50 },
-        { source: 'Instagram', total: 30 }
-      ];
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData
-      });
-      
-      const { result } = renderHook(() => useDashboardSearch(), {
-        wrapper: createWrapper()
-      });
-      
-      // Aguardar a conclusão da consulta
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      
-      // Verificar se os dados foram retornados corretamente
-      expect(result.current.data).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/search');
-    });
-  });
-  
   describe('useInvalidateDashboard', () => {
     it('deve invalidar todas as consultas do dashboard', async () => {
       const queryClient = new QueryClient();
@@ -252,11 +165,9 @@ describe('useDashboardData hooks', () => {
       
       await result.current();
       
-      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(4);
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['dashboard', 'overview'] });
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['dashboard', 'activity'] });
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['dashboard', 'recent-sales'] });
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['dashboard', 'search'] });
+      // Removidos: activity, recent-sales e search (não utilizados)
     });
   });
 }); 

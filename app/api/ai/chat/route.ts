@@ -4,9 +4,21 @@ import { aiService } from '../../../../src/lib/ai/aiService';
 
 export const dynamic = 'force-dynamic';
 
+// Criar cliente Supabase sem realtime para evitar warning de critical dependency
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 0
+      }
+    }
+  }
 );
 
 interface ChatMessage {

@@ -3,20 +3,28 @@ import { logger } from './logger';
 
 // Tipos de cache disponíveis
 export enum CacheType {
-  ACTIVE_ADS = 'active_ads',
   DASHBOARD_OVERVIEW = 'dashboard_overview',
-  DASHBOARD_ACTIVITY = 'dashboard_activity',
-  DASHBOARD_RECENT_SALES = 'dashboard_recent_sales',
-  DASHBOARD_SEARCH = 'dashboard_search'
+  PERFORMANCE_DATA = 'performance_data',
+  CAMPAIGNS_DATA = 'campaigns_data',
+  ADSETS_DATA = 'adsets_data',
+  ADS_DATA = 'ads_data',
+  LEADS_DATA = 'leads_data',
+  AI_ANALYSIS = 'ai_analysis',
+  AI_ANOMALIES = 'ai_anomalies',
+  AI_BILLING = 'ai_billing'
 }
 
-// Configuração de TTL para cada tipo de cache
-const TTL_CONFIG = {
-  [CacheType.ACTIVE_ADS]: 15 * 60, // 15 minutos
+// Configuração de TTL para cada tipo de cache (em segundos)
+const CACHE_TTL: Record<CacheType, number> = {
   [CacheType.DASHBOARD_OVERVIEW]: 5 * 60, // 5 minutos
-  [CacheType.DASHBOARD_ACTIVITY]: 5 * 60, // 5 minutos
-  [CacheType.DASHBOARD_RECENT_SALES]: 2 * 60, // 2 minutos
-  [CacheType.DASHBOARD_SEARCH]: 10 * 60 // 10 minutos
+  [CacheType.PERFORMANCE_DATA]: 10 * 60, // 10 minutos
+  [CacheType.CAMPAIGNS_DATA]: 15 * 60, // 15 minutos
+  [CacheType.ADSETS_DATA]: 15 * 60, // 15 minutos
+  [CacheType.ADS_DATA]: 15 * 60, // 15 minutos
+  [CacheType.LEADS_DATA]: 5 * 60, // 5 minutos
+  [CacheType.AI_ANALYSIS]: 30 * 60, // 30 minutos
+  [CacheType.AI_ANOMALIES]: 10 * 60, // 10 minutos
+  [CacheType.AI_BILLING]: 60 * 60 // 1 hora
 };
 
 // Opções para o cache
@@ -115,7 +123,7 @@ export class ServerCache {
     
     try {
       const value = await fetchFn();
-      this.set(key, value, TTL_CONFIG[type]);
+      this.set(key, value, CACHE_TTL[type]);
       return value;
     } catch (error) {
       logger.error({

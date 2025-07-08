@@ -18,4 +18,22 @@
 | 18 | Gestor de Marketing | Corrigir problemas críticos de dados e funcionalidade que impedem a análise correta e o uso básico da plataforma. | Done | Dashboard funcional com dados reais, filtros corrigidos, tratamento de erro padronizado e indicador de sincronização. |
 | 22 | Usuário | Como usuário, quero que o dashboard utilize inteligência artificial para analisar dados, detectar anomalias e sugerir otimizações, tornando a gestão de campanhas mais inteligente e proativa. | Done | 1. Integração com OpenAI para análises automáticas<br>2. Painel de IA na página de performance<br>3. Análise de performance em linguagem natural<br>4. Detecção automática de anomalias<br>5. Sugestões de otimização baseadas em IA<br>6. Assistente virtual para dúvidas sobre campanhas<br>7. Observação: É necessário obter uma chave de API da OpenAI e adicioná-la ao arquivo `.env.local` como `OPENAI_API_KEY`. Para obter a chave, acesse https://platform.openai.com/api-keys, crie uma conta (ou faça login), gere uma nova API Key e copie para o arquivo de ambiente.
 [View Details](./22/prd.md) |
-| 23 | Desenvolvedor | Como desenvolvedor, quero que todos os warnings de build sejam corrigidos para garantir código limpo, sem avisos críticos e melhor manutenibilidade do projeto. | Done | 1. ✅ Remover todas as variáveis e imports não utilizados<br>2. ✅ Corrigir dependências de hooks React (useEffect, useMemo, useCallback)<br>3. ✅ Corrigir warnings de acessibilidade (alt em imagens, ARIA labels)<br>4. ✅ Garantir que o build seja executado sem warnings críticos<br>5. ✅ Manter código limpo e organizado seguindo padrões do projeto<br>6. ✅ Documentar padrões de código para evitar warnings futuros<br>7. ✅ Implementar linting automático para prevenir regressões<br>8. ✅ Garantir que todos os testes continuem passando após as correções<br>[View Details](./23/prd.md) | 
+| 23 | Desenvolvedor | Como desenvolvedor, quero que todos os warnings de build sejam corrigidos para garantir código limpo, sem avisos críticos e melhor manutenibilidade do projeto. | Done | 1. ✅ Remover todas as variáveis e imports não utilizados<br>2. ✅ Corrigir dependências de hooks React (useEffect, useMemo, useCallback)<br>3. ✅ Corrigir warnings de acessibilidade (alt em imagens, ARIA labels)<br>4. ✅ Garantir que o build seja executado sem warnings críticos<br>5. ✅ Manter código limpo e organizado seguindo padrões do projeto<br>6. ✅ Documentar padrões de código para evitar warnings futuros<br>7. ✅ Implementar linting automático para prevenir regressões<br>8. ✅ Garantir que todos os testes continuem passando após as correções<br>[View Details](./23/prd.md) |
+
+## Tasks de Revisão e Limpeza
+
+### REVIEW-1: Revisar e remover funcionalidades não utilizadas ✅
+- **Status:** Concluído
+- **Descrição:** Revisar e remover endpoints, componentes e funcionalidades não utilizados no projeto
+- **Itens removidos:**
+  - Endpoints: recent-sales, activity, search
+  - Componentes: RecentSales, Activity, Search
+  - Hooks: useDashboardRecentSales, useDashboardActivity, useDashboardSearch
+  - Tipos de cache: DASHBOARD_ACTIVITY, DASHBOARD_RECENT_SALES, DASHBOARD_SEARCH
+- **Data de conclusão:** 2025-07-08
+
+### REVIEW-2: Documentar itens removidos ✅
+- **Status:** Concluído
+- **Descrição:** Documentar no PROBLEMS.md e no backlog todos os itens removidos ou marcados como obsoletos
+- **Documentação:** Atualizada em docs/PROBLEMS.md com justificativas detalhadas
+- **Data de conclusão:** 2025-07-08 
