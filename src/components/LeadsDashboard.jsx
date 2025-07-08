@@ -20,7 +20,7 @@ import { useFilters } from '@/hooks/useFilters';
 import DateRangePicker from '@/components/filters/DateRangePicker';
 import MetricSelector from '@/components/filters/MetricSelector';
 import SegmentFilter from '@/components/filters/SegmentFilter';
-import { formatNumberShort, formatCurrency, formatDate } from '@/lib/utils';
+import { formatNumberShort, formatCurrency, formatDate } from '../lib/utils';
 import { RefreshCw } from 'lucide-react';
 
 export default function LeadsDashboard() {

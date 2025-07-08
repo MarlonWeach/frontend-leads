@@ -99,48 +99,12 @@ export interface DashboardSearchItem {
 
 // Hook para buscar dados do overview do dashboard
 export function useDashboardOverview(dateFrom?: string, dateTo?: string, optionsOverride: any = {}) {
-  const _queryClient = useQueryClient();
-  
-  const queryKey = ['dashboard', 'overview', dateFrom && dateTo ? `${dateFrom}_${dateTo}` : 'all'];
-  
-  const fetchOverview = async (): Promise<DashboardOverviewResponse> => {
-    const params = new URLSearchParams();
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
-    
-    const queryString = params.toString();
-    const url = queryString ? `/api/dashboard/overview?${queryString}` : '/api/dashboard/overview';
-    try {
-      const response = await fetch(url);
-      if (!response || typeof response.ok !== 'boolean') {
-        throw new Error('Erro ao buscar dados do dashboard');
-      }
-      if (!response.ok) {
-        throw new Error('Erro ao buscar dados do dashboard');
-      }
-      return response.json();
-    } catch (err: any) {
-      throw new Error(err?.message || 'Erro ao buscar dados do dashboard');
-    }
-  };
-  
-  const result = useQueryWithCache<DashboardOverviewResponse>(
-    queryKey,
-    fetchOverview,
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      refetchOnWindowFocus: false,
-      ...optionsOverride
-    }
-  );
-  
-  const refetch = async () => {
-    await result.refetch();
-  };
-  
+  // Endpoint removido. Retorna erro amigável.
   return {
-    ...result,
-    refetch
+    data: null,
+    error: 'O endpoint /api/dashboard/overview foi removido do sistema.',
+    isLoading: false,
+    refetch: async () => {},
   };
 }
 

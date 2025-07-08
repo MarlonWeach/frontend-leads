@@ -67,19 +67,19 @@ export function useOpenAIBilling(options: UseOpenAIBillingOptions = {}): UseOpen
     setError(null);
 
     try {
-      const response = await fetch(`/api/ai/billing?days=${days}`);
+      // const response = await fetch(`/api/ai/billing?days=${days}`); // Removido: endpoint não existe mais
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
-      const result = await response.json();
+      // const result = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Erro ao buscar dados de billing');
-      }
+      // if (!result.success) {
+      //   throw new Error(result.error || 'Erro ao buscar dados de billing');
+      // }
 
-      setData(result);
+      // setData(result);
       setLastUpdated(new Date().toISOString());
       setError(null);
     } catch (err) {

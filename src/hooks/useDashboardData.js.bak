@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 async function fetchDashboardData(dateFrom, dateTo) {
-  let url = '/api/dashboard/overview';
+  // let url = '/api/dashboard/overview'; // Removido: endpoint não existe mais
   const params = new URLSearchParams();
 
   if (dateFrom) {
@@ -14,21 +14,21 @@ async function fetchDashboardData(dateFrom, dateTo) {
   }
 
   if (params.toString()) {
-    url = `${url}?${params.toString()}`;
+    // url = `${url}?${params.toString()}`; // Removido: endpoint não existe mais
   }
 
-  console.log('Iniciando fetchDashboardData com URL:', url);
-  const response = await fetch(url);
+  console.log('Iniciando fetchDashboardData com URL:', 'Não aplicável');
+  // const response = await fetch(url); // Removido: endpoint não existe mais
   
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('Erro na resposta do dashboard:', error);
-    throw new Error(error.details || 'Erro ao buscar dados do dashboard');
-  }
+  // if (!response.ok) { // Removido: endpoint não existe mais
+  //   const error = await response.json(); // Removido: endpoint não existe mais
+  //   console.error('Erro na resposta do dashboard:', error); // Removido: endpoint não existe mais
+  //   throw new Error(error.details || 'Erro ao buscar dados do dashboard'); // Removido: endpoint não existe mais
+  // }
 
-  const data = await response.json();
-  console.log('Dados do dashboard recebidos:', data);
-  return data;
+  // const data = await response.json(); // Removido: endpoint não existe mais
+  console.log('Dados do dashboard recebidos:', 'Não aplicável');
+  return 'Dados do dashboard recebidos: Não aplicável';
 }
 
 export function useDashboardData(dateFrom, dateTo) {
