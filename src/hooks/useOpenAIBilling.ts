@@ -89,7 +89,7 @@ export function useOpenAIBilling(options: UseOpenAIBillingOptions = {}): UseOpen
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, []); // Removido 'days' das dependências
 
   // Carregar dados iniciais
   useEffect(() => {

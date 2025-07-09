@@ -7,6 +7,22 @@ module.exports = {
     './src/**/*.{js,ts,jsx,tsx,mdx}', // ← ESTA LINHA É ESSENCIAL
   ],
   darkMode: 'class', // Habilita dark mode via classe
+  safelist: [
+    'bg-blue-900/80',
+    'bg-green-900/80',
+    'bg-purple-900/80',
+    'bg-indigo-900/80',
+    'bg-pink-900/80',
+    'bg-cyan-900/80',
+    'bg-orange-900/80',
+    'border-blue-800',
+    'border-green-800',
+    'border-purple-800',
+    'border-indigo-800',
+    'border-pink-800',
+    'border-cyan-800',
+    'border-orange-800',
+  ],
   theme: {
     extend: {
       // 🎨 Nova paleta de cores da Weach

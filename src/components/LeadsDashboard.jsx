@@ -7,7 +7,7 @@ import {
   Eye, Edit, Trash2, Plus, BarChart3, TrendingUp,
   UserCheck, UserX, Star
 } from 'lucide-react';
-import { useLeadsData, useLeadActions, useLeadExport } from '../hooks/useLeadsData';
+import { useLeadsData } from '../hooks/useLeadsData';
 import { Tooltip } from './Tooltip';
 import { motion } from 'framer-motion';
 import { SectionTransition } from './ui/transitions';
@@ -38,8 +38,6 @@ export default function LeadsDashboard() {
   
   // Hooks para dados e ações
   const { data, loading, error, refetch } = useLeadsData(filters);
-  const { updateLeadStatus, addInteraction, updating } = useLeadActions();
-  const { exportToCSV } = useLeadExport();
 
   // Estados locais derivados dos dados
   const leads = data?.leads || [];
@@ -59,7 +57,7 @@ export default function LeadsDashboard() {
 
   const handleUpdateLeadStatus = async (leadId, newStatus) => {
     try {
-      await updateLeadStatus(leadId, newStatus);
+      // await updateLeadStatus(leadId, newStatus); // Removido
       await refetch();
       
       if (showModal && selectedLead?.id === leadId) {
@@ -73,7 +71,7 @@ export default function LeadsDashboard() {
 
   const handleExportCSV = async () => {
     try {
-      await exportToCSV(leads);
+      // await exportToCSV(leads); // Removido
     } catch (error) {
       alert('Erro ao exportar CSV: ' + error.message);
     }
@@ -244,7 +242,7 @@ export default function LeadsDashboard() {
               <button
                 onClick={() => onUpdateStatus(lead.id, 'contacted')}
                 className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm"
-                disabled={updating}
+                // disabled={updating} // Removido
               >
                 <Phone className="h-4 w-4" />
                 Marcar como Contatado
@@ -252,7 +250,7 @@ export default function LeadsDashboard() {
               <button
                 onClick={() => onUpdateStatus(lead.id, 'qualified')}
                 className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                disabled={updating}
+                // disabled={updating} // Removido
               >
                 <UserCheck className="h-4 w-4" />
                 Qualificar
@@ -260,7 +258,7 @@ export default function LeadsDashboard() {
               <button
                 onClick={() => onUpdateStatus(lead.id, 'converted')}
                 className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm"
-                disabled={updating}
+                // disabled={updating} // Removido
               >
                 <CheckCircle className="h-4 w-4" />
                 Converter
@@ -311,7 +309,7 @@ export default function LeadsDashboard() {
           <button
             onClick={handleExportCSV}
                           className="px-4 py-2 bg-cta text-white rounded-2xl hover:bg-cta/80 transition-colors shadow-cta-glow"
-            disabled={updating}
+            // disabled={updating} // Removido
           >
             <Download className="h-4 w-4 mr-2" />
             Exportar

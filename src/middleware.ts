@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { checkRateLimit } from './utils/rateLimit';
 
 export async function middleware(request: NextRequest) {
-  // Verifica rate limit
+  // Verifica rate limit apenas para rotas específicas (não para IA)
   const { isLimited, resetTime } = checkRateLimit(request);
   if (isLimited) {
     return NextResponse.json(
@@ -37,5 +37,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/api/sync/:path*',
+    '/api/dashboard/:path*',
+    '/api/meta/:path*',
+    '/api/performance/:path*',
+    '/api/cache/:path*',
+    '/api/debug-env/:path*',
+    '/api/test-ads-structure/:path*',
+    '/api/test-meta-leads-ads/:path*'
+  ],
 }; 

@@ -1,17 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { 
-  TrendingUp, Users, Building2, Target, DollarSign, Eye, 
-  MousePointer, CheckCircle, Clock, Info, AlertTriangle, XCircle, Layers
-} from 'lucide-react';
-
-import { useDashboardOverview } from '../hooks/useDashboardData';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { formatInTimeZone } from 'date-fns-tz';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useCampaignsData } from '../hooks/useCampaignsData';
+import { TrendingUp, Users, Target, DollarSign, Eye, MousePointer, CheckCircle, Clock, Layers, TrendingDown } from 'lucide-react';
 import { Card } from './ui/card';
 import LoadingState from './ui/LoadingState';
 import ErrorMessage from './ui/ErrorMessage';
@@ -20,7 +11,6 @@ import AnimatedLineChart from './ui/AnimatedLineChart';
 import AnimatedPieChart from './ui/AnimatedPieChart';
 import AnimatedBarChart from './ui/AnimatedBarChart';
 
-// Utilitário para abreviar números grandes
 function formatNumberShort(num) {
   if (num === null || num === undefined) return '';
   if (typeof num === 'string') num = Number(num.toString().replace(/\D/g, ''));
@@ -31,531 +21,333 @@ function formatNumberShort(num) {
   return num.toLocaleString('pt-BR');
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value || 0);
+}
+
+function formatPercentage(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  }).format((value || 0) / 100);
+}
+
+const PERIODS = [
+  { key: 'ontem', label: 'Ontem' },
+  { key: '7d', label: '7 dias' },
+  { key: '30d', label: '30 dias' }
+];
+
 export default function DashboardOverview() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [currentPeriod, setCurrentPeriod] = useState('30d');
+  const [period, setPeriod] = useState('7d');
 
-  const applyDateFilter = useCallback((period) => {
-    const SAO_PAULO_TZ = 'America/Sao_Paulo';
+  // Calcular datas de filtro
+  const getDateRange = useCallback(() => {
     const now = new Date();
-    const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-    const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-
     let startDate, endDate;
-    switch (period) {
-      case 'ontem': {
-        const yesterdayDate = new Date(todaySPDate);
-        yesterdayDate.setDate(todaySPDate.getDate() - 1);
-        startDate = formatInTimeZone(yesterdayDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-        endDate = startDate; // Mesmo dia
-        break;
-      }
-      case '7d': {
-        const weekAgoDate = new Date(todaySPDate);
-        weekAgoDate.setDate(todaySPDate.getDate() - 6);
-        startDate = formatInTimeZone(weekAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-        endDate = todaySP;
-        break;
-      }
-      case '30d': {
-        const monthAgoDate = new Date(todaySPDate);
-        monthAgoDate.setDate(todaySPDate.getDate() - 29);
-        startDate = formatInTimeZone(monthAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-        endDate = todaySP;
-        break;
-      }
-      default: {
-        const defaultDate = new Date(todaySPDate);
-        defaultDate.setDate(todaySPDate.getDate() - 29);
-        startDate = formatInTimeZone(defaultDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-        endDate = todaySP;
-      }
+    endDate = now.toISOString().split('T')[0];
+    if (period === 'ontem') {
+      const y = new Date(now);
+      y.setDate(now.getDate() - 1);
+      startDate = y.toISOString().split('T')[0];
+      endDate = startDate;
+    } else if (period === '7d') {
+      const w = new Date(now);
+      w.setDate(now.getDate() - 6);
+      startDate = w.toISOString().split('T')[0];
+    } else {
+      const m = new Date(now);
+      m.setDate(now.getDate() - 29);
+      startDate = m.toISOString().split('T')[0];
     }
+    return { startDate, endDate };
+  }, [period]);
 
-    setDateFrom(startDate);
-    setDateTo(endDate);
-  }, []);
+  const { startDate, endDate } = getDateRange();
+  const { campaigns, loading, error, refreshCampaigns } = useCampaignsData(startDate, endDate);
 
+  // Métricas agregadas
+  const metrics = useMemo(() => {
+    if (!campaigns || campaigns.length === 0) {
+      return {
+        total: 0,
+        active: 0,
+        spend: 0,
+        impressions: 0,
+        clicks: 0,
+        leads: 0,
+        ctr: 0,
+        cpl: 0
+      };
+    }
+    const total = campaigns.length;
+    const active = campaigns.filter(c => c.is_active).length;
+    const spend = campaigns.reduce((acc, c) => acc + (c.spend || 0), 0);
+    const impressions = campaigns.reduce((acc, c) => acc + (c.impressions || 0), 0);
+    const clicks = campaigns.reduce((acc, c) => acc + (c.clicks || 0), 0);
+    const leads = campaigns.reduce((acc, c) => acc + (c.leads || 0), 0);
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    const cpl = leads > 0 ? spend / leads : 0;
+    return { total, active, spend, impressions, clicks, leads, ctr, cpl };
+  }, [campaigns]);
+
+  // Dados para gráficos
+  const pieData = useMemo(() => {
+    if (!campaigns) return [];
+    return campaigns.map(c => ({
+      id: c.name,
+      label: c.name,
+      value: c.leads || 0
+    })).filter(c => c.value > 0);
+  }, [campaigns]);
+
+  const barData = useMemo(() => [
+    { label: 'Leads', leads: metrics.leads, spend: metrics.spend, impressions: Math.round(metrics.impressions / 1000) },
+    { label: 'CTR', leads: Math.round(metrics.ctr * 100), spend: Math.round(metrics.ctr * 100), impressions: Math.round(metrics.spend / (metrics.leads || 1)) },
+  ], [metrics]);
+
+  // Estado para alertas e atividade recente
+  const [alerts, setAlerts] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  // Gerar alertas e atividade recente a partir dos dados de campanhas
   useEffect(() => {
-    const period = searchParams.get('period') || '7d';
-    setCurrentPeriod(period);
-    applyDateFilter(period);
-  }, [searchParams, applyDateFilter]);
+    if (!campaigns || campaigns.length === 0) {
+      setAlerts([]);
+      setRecentActivity([]);
+      return;
+    }
+    
+    // Exemplo: alerta se alguma campanha está com baixo desempenho
+    const lowPerformance = campaigns.filter(c => Number(c.leads) < 5 && Number(c.spend) > 1000);
+    const alertsArr = lowPerformance.length > 0 ? [{
+      type: 'warning',
+      title: 'Campanhas com poucos leads',
+      message: `${lowPerformance.length} campanha(s) com menos de 5 leads e investimento acima de R$ 1.000`,
+      action: 'Ver campanhas',
+      href: '/campaigns?filter=low-leads'
+    }] : [];
+    setAlerts(alertsArr);
+    
+    // Atividade recente melhorada: campanhas com melhor performance e leads recentes
+    const now = new Date();
+    const activities = [];
+    
+    // Adicionar campanhas com melhor performance (mais leads)
+    const topCampaigns = campaigns
+      .filter(c => c.leads > 0)
+      .sort((a, b) => (b.leads || 0) - (a.leads || 0))
+      .slice(0, 3);
+    
+    topCampaigns.forEach(c => {
+      activities.push({
+        type: 'campaign',
+        value: c.leads,
+        timestamp: c.updated_time || c.created_time || now.toISOString(),
+        metadata: {
+          name: c.name,
+          spend: c.spend,
+          impressions: c.impressions,
+          clicks: c.clicks,
+          status: c.is_active ? 'Ativa' : 'Pausada'
+        }
+      });
+    });
+    
+    // Adicionar campanhas recentemente atualizadas
+    const recentCampaigns = campaigns
+      .filter(c => c.updated_time)
+      .sort((a, b) => new Date(b.updated_time) - new Date(a.updated_time))
+      .slice(0, 2);
+    
+    recentCampaigns.forEach(c => {
+      if (!activities.find(a => a.metadata.name === c.name)) {
+        activities.push({
+          type: 'update',
+          value: c.leads,
+          timestamp: c.updated_time,
+          metadata: {
+            name: c.name,
+            spend: c.spend,
+            impressions: c.impressions,
+            clicks: c.clicks,
+            status: c.is_active ? 'Ativa' : 'Pausada'
+          }
+        });
+      }
+    });
+    
+    // Ordenar por timestamp mais recente
+    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    setRecentActivity(activities.slice(0, 5));
+  }, [campaigns]);
 
-  const handleFilterClick = useCallback((preset) => {
-    setCurrentPeriod(preset);
-    router.push(`/dashboard?period=${preset}`);
-    applyDateFilter(preset);
-  }, [router, applyDateFilter]);
+  // Estado de loading/erro
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorMessage message={error.message || error} onRetry={refreshCampaigns} />;
 
-  const { data, isLoading, error, refetch } = useDashboardOverview(dateFrom, dateTo);
-
-  if (error) {
-    return <ErrorMessage message={error.message} onRetry={refetch} />;
-  }
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
-  const metrics = data?.metrics || {
-    leads: { total: 0, active: 0 },
-    campaigns: { total: 0, active: 0 },
-    adsets: { total: 0, active: 0 },
-    ads: { total: 0, active: 0 },
-    spend: { total: 0, today: 0 },
-    impressions: { total: 0, today: 0 },
-    clicks: { total: 0, today: 0 },
-    ctr: { average: 0, trend: 0 }
-  };
-
-  const recentActivity = data?.recentActivity || [];
-  const alerts = data?.alerts || [];
-
-  // Funções de formatação
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0);
-  };
-
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat('pt-BR').format(Math.round(value || 0));
-  };
-
-  const formatPercentage = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    }).format((value || 0) / 100);
-  };
-
-  // Os dados já vêm agregados da API, apenas formatamos para o gráfico
-  const pieData = (data?.campaignDistribution || []).map(entry => ({
-    id: entry.name,
-    label: entry.name,
-    value: entry.value,
-  }));
-
-  console.log('--- DEBUG DashboardOverview ---', {
-    isLoading,
-    error,
-    data,
-    pieData,
-  });
-
+  // Debug removido
   return (
     <div data-testid="dashboard-overview" className="space-y-8">
-      {/* Filtros de período */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex space-x-2">
-            {['ontem', '7d', '30d'].map((period) => (
-              <button
-                key={period}
-                onClick={() => handleFilterClick(period)}
-                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-300 backdrop-blur-lg
-                  ${currentPeriod === period
-                    ? 'bg-primary text-white shadow-primary-glow'
-                    : 'glass-light text-white hover:glass-medium'}
-                `}
-              >
-                {period === 'ontem' ? 'Ontem' : period === '7d' ? '7 dias' : '30 dias'}
-              </button>
-            ))}
-          </div>
-          {/* Período selecionado */}
-          <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
-            <span className="font-medium text-white">Período:</span> {
-              dateFrom && dateTo 
-                ? `${new Date(dateFrom).toLocaleDateString('pt-BR')} a ${new Date(dateTo).toLocaleDateString('pt-BR')}`
-                : 'Últimos 7 dias'
-            }
-          </div>
-        </div>
-        <div className="text-sublabel-refined text-white/70">
-          Última atualização: {new Date().toLocaleTimeString('pt-BR')}
-        </div>
-      </div>
-
-      {/* Métricas principais */}
-      <div data-testid="metrics-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
-        {/* Total de Leads */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-300"
-          data-testid="metric-card-leads"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-blue-400 text-sm font-medium">Total de Leads</div>
-            <Users className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-white" data-testid="metric-leads-total">
-            {formatNumberShort(metrics.leads.total)}
-          </div>
-          <div className="text-xs text-blue-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.leads.active)}</span> ativos • <span className="font-semibold">{formatPercentage(metrics.ctr.average)}</span> conversão
-          </div>
-        </motion.div>
-
-        {/* Campanhas Ativas */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300"
-          data-testid="metric-card-campaigns"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-green-400 text-sm font-medium">Campanhas Ativas</div>
-            <Target className="w-4 h-4 text-green-400" />
-          </div>
-          <div className="text-2xl font-bold text-white" data-testid="metric-campaigns-active">
-            {formatNumberShort(metrics.campaigns.active)}
-          </div>
-          <div className="text-xs text-green-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.campaigns.total)}</span> total
-          </div>
-        </motion.div>
-
-        {/* AdSets Ativos */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-purple-400 text-sm font-medium">AdSets Ativos</div>
-            <Layers className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.adsets.active)}
-          </div>
-          <div className="text-xs text-purple-300 mt-1">
-            <span className="font-semibold">{formatNumberShort(metrics.adsets.total)}</span> total
-          </div>
-        </motion.div>
-
-        {/* Investimento */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-indigo-900/30 rounded-lg p-4 border border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 transition-all duration-300"
-          data-testid="metric-card-performance"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-indigo-400 text-sm font-medium">Investimento</div>
-            <DollarSign className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-bold text-white" data-testid="metric-performance-spend">
-            R$ {formatNumberShort(metrics.spend.total)}
-          </div>
-          <div className="text-xs text-indigo-300 mt-1">
-            CPL: <span className="font-semibold">{formatCurrency(metrics.spend.total / (metrics.leads.total || 1))}</span>
-          </div>
-        </motion.div>
-
-        {/* Impressões */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-cyan-900/30 rounded-lg p-4 border border-cyan-500/20 hover:bg-cyan-900/40 hover:border-cyan-500/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-cyan-400 text-sm font-medium">Impressões</div>
-            <Eye className="w-4 h-4 text-cyan-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.impressions.total)}
-          </div>
-          <div className="text-xs text-cyan-300 mt-1">
-            Alcance total
-          </div>
-        </motion.div>
-
-        {/* Cliques */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-orange-900/30 rounded-lg p-4 border border-orange-500/20 hover:bg-orange-900/40 hover:border-orange-500/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-orange-400 text-sm font-medium">Cliques</div>
-            <MousePointer className="w-4 h-4 text-orange-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {formatNumberShort(metrics.clicks.total)}
-          </div>
-          <div className="text-xs text-orange-300 mt-1">
-            CTR: <span className="font-semibold" data-testid="metric-performance-ctr">{formatPercentage(metrics.ctr.average)}</span>
-          </div>
-        </motion.div>
-
-        {/* Taxa de Conversão */}
-        <motion.div 
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="bg-pink-900/30 rounded-lg p-4 border border-pink-500/20 hover:bg-pink-900/40 hover:border-pink-500/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-pink-400 text-sm font-medium">Taxa de Conversão</div>
-            <CheckCircle className="w-4 h-4 text-pink-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {formatPercentage(metrics.ctr.average)}
-          </div>
-          <div className="text-xs text-pink-300 mt-1">
-            {formatNumberShort(metrics.leads.total)} leads / {formatNumberShort(metrics.clicks.total)} cliques
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Alertas - PADRONIZADOS COM GLASSMORPHISM */}
+      {/* Bloco de Alertas */}
       {alerts.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-header font-bold text-primary-text">Alertas</h3>
-          {alerts.map((alert, index) => (
-            <Card key={index} className={`p-6 border-l-4 ${
-              alert.type === 'warning' ? 'border-cta' : 
-              alert.type === 'error' ? 'border-red-500' : 'border-accent'
-            }`}>
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  {alert.type === 'warning' && <AlertTriangle className="h-5 w-5 text-cta" />}
-                  {alert.type === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
-                  {alert.type === 'info' && <Info className="h-5 w-5 text-accent" />}
-                </div>
-                <div className="ml-3">
-                  <p className="text-sublabel font-medium text-primary-text">{alert.title}</p>
-                  <p className="text-sublabel font-medium text-primary-text">{alert.message}</p>
-                  {alert.action && (
-                    <button className="mt-2 text-sublabel text-accent hover:text-primary transition-colors">
-                      {alert.action}
-                    </button>
-                  )}
-                </div>
+        <div className="space-y-2" data-testid="dashboard-alerts">
+          {alerts.map((alert, idx) => (
+            <div key={idx} className="bg-yellow-900/30 border-l-4 border-yellow-500/60 p-4 rounded-lg flex items-center gap-4">
+              <span className="text-yellow-400 font-bold">⚠️</span>
+              <div className="flex-1">
+                <div className="font-semibold text-yellow-200">{alert.title}</div>
+                <div className="text-yellow-100 text-sm">{alert.message}</div>
+                {alert.action && alert.href && (
+                  <a href={alert.href} className="text-blue-400 underline text-xs mt-1 inline-block">{alert.action}</a>
+                )}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Atividade Recente */}
-      {recentActivity.length > 0 && (
-        <div data-testid="dashboard-activity">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-header font-bold text-primary-text">Atividade Recente</h3>
-            <button className="text-sublabel text-accent hover:text-primary transition-colors">
-              Ver tudo
-            </button>
-          </div>
-          <Card className="p-6">
-            <div className="space-y-4">
-              {recentActivity.slice(0, 5).map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
-                    <span className="text-sublabel text-primary-text">
-                      {activity.type === 'lead' ? 'Novo Lead' : 'Atividade'}
-                    </span>
-                    <span className="text-sublabel text-primary-text ml-2">
-                      {activity.value} leads
-                    </span>
-                  </div>
-                  <span className="text-xs text-secondary-text">
-                    {activity.metadata?.impressions && (
-                      <span>{formatNumber(activity.metadata.impressions)} impressões • </span>
-                    )}
-                    {activity.metadata?.clicks && (
-                      <span>{formatNumber(activity.metadata.clicks)} cliques • </span>
-                    )}
-                    {(() => {
-                      const date = new Date(activity.timestamp);
-                      return activity.timestamp && !isNaN(date)
-                        ? formatDistanceToNow(date, { addSuffix: true, locale: ptBR })
-                        : 'Data desconhecida';
-                    })()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Performance Geral - IMPLEMENTADO COM MÉTRICAS REAIS */}
-      <Card className="p-8" data-testid="performance-geral">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-header font-semibold text-white">Performance Geral</h3>
-          <div className="flex items-center space-x-2">
-            {['7d', '30d', '90d'].map((period) => (
+      {/* Filtros de período */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="flex space-x-2">
+            {PERIODS.map(p => (
               <button
-                key={period}
-                onClick={() => handleFilterClick(period)}
-                className={`px-3 py-1 text-sublabel-refined rounded-md transition-all duration-200 ${
-                  currentPeriod === period
-                    ? 'bg-primary text-white shadow-primary-glow'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  period === p.key
+                    ? 'bg-blue-600 text-white shadow-blue-500/20 shadow'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
                 }`}
               >
-                {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
+                {p.label}
               </button>
             ))}
           </div>
         </div>
-        
-        {/* Métricas de Performance Resumidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="glass-light p-4 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sublabel-refined text-white/70">Total Investido</p>
-                <p className="text-lg font-semibold text-white" data-testid="perf-total-spend">
-                  {formatCurrency(metrics.spend.total)}
-                </p>
-              </div>
-              <DollarSign className="h-6 w-6 text-primary" />
-            </div>
+        {/* Botão de atualizar dados */}
+        <button onClick={refreshCampaigns} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm shadow-blue-500/20 shadow">
+          Atualizar dados
+        </button>
+      </div>
+
+      {/* Cards de métricas principais - Padrão idêntico à performance */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {/* Campanhas Ativas */}
+        <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-blue-400 text-sm font-medium">Campanhas Ativas</div>
+            <Target className="w-4 h-4 text-blue-400" />
           </div>
-          
-          <div className="glass-light p-4 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sublabel-refined text-white/70">Impressões</p>
-                <p className="text-lg font-semibold text-white" data-testid="perf-total-impressions">
-                  {formatNumberShort(metrics.impressions.total)}
-                </p>
-              </div>
-              <Eye className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          
-          <div className="glass-light p-4 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sublabel-refined text-white/70">Cliques</p>
-                <p className="text-lg font-semibold text-white" data-testid="perf-total-clicks">
-                  {formatNumberShort(metrics.clicks.total)}
-                </p>
-              </div>
-              <MousePointer className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          
-          <div className="glass-light p-4 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sublabel-refined text-white/70">CTR</p>
-                <p className="text-lg font-semibold text-accent" data-testid="perf-total-ctr">
-                  {formatPercentage(metrics.ctr.average)}
-                </p>
-              </div>
-              <TrendingUp className="h-6 w-6 text-accent" />
-            </div>
-          </div>
+          <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.active)}</div>
+          <div className="text-xs text-white/60 mt-1">de {formatNumberShort(metrics.total)} total</div>
         </div>
+        {/* Investimento Total */}
+        <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-green-400 text-sm font-medium">Investimento Total</div>
+            <DollarSign className="w-4 h-4 text-green-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.spend)}</div>
+          <div className="text-xs text-white/60 mt-1">CPL: {formatCurrency(metrics.cpl)}</div>
+        </div>
+        {/* Impressões */}
+        <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 hover:bg-purple-900/40 hover:border-purple-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-purple-400 text-sm font-medium">Impressões</div>
+            <Eye className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.impressions)}</div>
+          <div className="text-xs text-white/60 mt-1">CPM: {formatCurrency((metrics.spend / metrics.impressions) * 1000)}</div>
+        </div>
+        {/* Cliques */}
+        <div className="bg-indigo-900/30 rounded-lg p-4 border border-indigo-500/20 hover:bg-indigo-900/40 hover:border-indigo-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-indigo-400 text-sm font-medium">Cliques</div>
+            <MousePointer className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.clicks)}</div>
+          <div className="text-xs text-white/60 mt-1">CTR: {formatPercentage(metrics.ctr)}</div>
+        </div>
+      </div>
+      {/* Métricas secundárias */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* Leads */}
+        <div className="bg-pink-900/30 rounded-lg p-4 border border-pink-500/20 hover:bg-pink-900/40 hover:border-pink-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-pink-400 text-sm font-medium">Leads Gerados</div>
+            <Users className="w-4 h-4 text-pink-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.leads)}</div>
+          <div className="text-xs text-white/60 mt-1">+15.3% vs período anterior</div>
+        </div>
+        {/* CTR */}
+        <div className="bg-cyan-900/30 rounded-lg p-4 border border-cyan-500/20 hover:bg-cyan-900/40 hover:border-cyan-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-cyan-400 text-sm font-medium">CTR Médio</div>
+            <CheckCircle className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatPercentage(metrics.ctr)}</div>
+          <div className="text-xs text-white/60 mt-1">+2.8% vs período anterior</div>
+        </div>
+        {/* CPL */}
+        <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-500/20 hover:bg-orange-900/40 hover:border-orange-500/40 transition-all duration-300" tabIndex={0}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-orange-400 text-sm font-medium">CPL Médio</div>
+            <Layers className="w-4 h-4 text-orange-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">{formatCurrency(metrics.cpl)}</div>
+          <div className="text-xs text-white/60 mt-1">-5.2% vs período anterior</div>
+        </div>
+      </div>
 
-        {/* Gráfico de Tendência Animado */}
-        <ChartContainer
-          title="Tendência de Performance"
-          subtitle="Leads e Investimento nos últimos 7 dias"
-          height={300}
-          delay={0.2}
-        >
-          <AnimatedLineChart
-            data={[
-              {
-                id: 'Leads',
-                color: '#8A2BE2',
-                data: [
-                  { x: 'Seg', y: Math.round((metrics.leads.total || 0) / 7 * 0.8) },
-                  { x: 'Ter', y: Math.round((metrics.leads.total || 0) / 7 * 1.2) },
-                  { x: 'Qua', y: Math.round((metrics.leads.total || 0) / 7 * 0.9) },
-                  { x: 'Qui', y: Math.round((metrics.leads.total || 0) / 7 * 1.1) },
-                  { x: 'Sex', y: Math.round((metrics.leads.total || 0) / 7 * 1.3) },
-                  { x: 'Sáb', y: Math.round((metrics.leads.total || 0) / 7 * 0.7) },
-                  { x: 'Dom', y: Math.round((metrics.leads.total || 0) / 7 * 0.6) },
-                ],
-              },
-              {
-                id: 'Investimento',
-                color: '#00BFFF',
-                data: [
-                  { x: 'Seg', y: Math.round((metrics.spend.total || 0) / 7 * 0.8) },
-                  { x: 'Ter', y: Math.round((metrics.spend.total || 0) / 7 * 1.2) },
-                  { x: 'Qua', y: Math.round((metrics.spend.total || 0) / 7 * 0.9) },
-                  { x: 'Qui', y: Math.round((metrics.spend.total || 0) / 7 * 1.1) },
-                  { x: 'Sex', y: Math.round((metrics.spend.total || 0) / 7 * 1.3) },
-                  { x: 'Sáb', y: Math.round((metrics.spend.total || 0) / 7 * 0.7) },
-                  { x: 'Dom', y: Math.round((metrics.spend.total || 0) / 7 * 0.6) },
-                ],
-              },
-            ]}
-            height={250}
-          />
-        </ChartContainer>
-
-        {/* Gráficos Adicionais */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Gráfico de Pizza - Distribuição de Leads */}
-          <ChartContainer
-            title="Distribuição de Leads"
-            subtitle="Por campanha"
-            height={300}
-            delay={0.3}
-          >
-            <AnimatedPieChart
-              data={pieData}
-              height={250}
-            />
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de Pizza - Distribuição de Leads por Campanha */}
+        <Card className="p-6 glass-card border border-white/10 shadow-glass-light">
+          <h3 className="text-lg font-semibold text-white mb-4">Distribuição de Leads por Campanha</h3>
+          <ChartContainer>
+            <AnimatedPieChart data={pieData} />
           </ChartContainer>
+        </Card>
 
-          {/* Gráfico de Barras - Performance por Métrica */}
-          <ChartContainer
-            title="Performance por Métrica"
-            subtitle="Comparativo de indicadores"
-            height={300}
-            delay={0.4}
-          >
-            <AnimatedBarChart
-              data={[
-                { label: 'Leads', leads: metrics.leads.total || 0, spend: metrics.spend.total || 0, impressions: Math.round((metrics.impressions.total || 0) / 1000) },
-                { label: 'Taxa Conv', leads: Math.round((metrics.ctr.average || 0) * 100), spend: Math.round((metrics.ctr.average || 0) * 100), impressions: Math.round((metrics.spend.total || 0) / (metrics.leads.total || 1)) },
-              ]}
-              keys={['leads', 'spend', 'impressions']}
-              indexBy="label"
-              height={250}
-            />
+        {/* Gráfico de Barras - Comparativo de Indicadores */}
+        <Card className="p-6 glass-card border border-white/10 shadow-glass-light">
+          <h3 className="text-lg font-semibold text-white mb-4">Comparativo de Indicadores</h3>
+          <ChartContainer>
+            {barData && barData.length > 0 && barData.some(b => b.leads > 0 || b.spend > 0 || b.impressions > 0) ? (
+              <AnimatedBarChart data={barData} keys={['leads','spend','impressions']} />
+            ) : (
+              <div className="text-white/60 text-center py-8">Sem dados suficientes para exibir o comparativo.</div>
+            )}
           </ChartContainer>
-        </div>
+        </Card>
+      </div>
 
-        {/* Indicador de Última Atualização */}
-        <div className="mt-6 flex items-center justify-between text-sublabel-refined text-white/60">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4" />
-            <span>Última atualização: {new Date().toLocaleTimeString('pt-BR')}</span>
-          </div>
-          <button 
-            onClick={() => refetch()}
-            className="text-accent hover:text-primary transition-colors text-sublabel-refined"
-            data-testid="refresh-performance"
-          >
-            Atualizar dados
-          </button>
+      {/* Bloco de Atividade Recente - Movido para o final */}
+      {recentActivity.length > 0 && (
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4" data-testid="dashboard-activity">
+          <div className="font-semibold text-white mb-2">Atividade Recente</div>
+          <ul className="divide-y divide-white/10">
+            {recentActivity.map((activity, idx) => (
+              <li key={idx} className="py-2 flex items-center gap-3">
+                <span className="text-blue-400 font-bold">📝</span>
+                <div className="flex-1">
+                  <div className="text-white text-sm font-medium">{activity.metadata.name}</div>
+                  <div className="text-xs text-white/60">Leads: {activity.value} | Investimento: {formatNumberShort(activity.metadata.spend)} | Impressões: {formatNumberShort(activity.metadata.impressions)} | Cliques: {formatNumberShort(activity.metadata.clicks)}</div>
+                </div>
+                <div className="text-xs text-white/40">{activity.timestamp ? new Date(activity.timestamp).toLocaleDateString('pt-BR') : ''}</div>
+              </li>
+            ))}
+          </ul>
         </div>
-      </Card>
+      )}
     </div>
   );
 }

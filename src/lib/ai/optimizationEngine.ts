@@ -522,9 +522,27 @@ Gere entre 1-3 sugestões específicas e acionáveis para o tipo ${type}.
   }
 
   async trackSuggestionResults(suggestionId: string, beforeMetrics: any, afterMetrics: any) {
-    // TODO: Implementar tracking de resultados
-    // Comparar métricas antes e depois da aplicação
-    // Calcular ROI real vs estimado
-    // Usar dados para melhorar futuras sugestões
+    // Salva comparação de métricas antes/depois da sugestão aplicada
+    const tracked = {
+      suggestionId,
+      before: beforeMetrics,
+      after: afterMetrics,
+      timestamp: new Date().toISOString(),
+    };
+    // Calcular ROI real (exemplo: leads ou CPL)
+    let roi = null;
+    if (beforeMetrics && afterMetrics && typeof beforeMetrics.cpl === 'number' && typeof afterMetrics.cpl === 'number') {
+      roi = ((beforeMetrics.cpl - afterMetrics.cpl) / beforeMetrics.cpl) * 100;
+    }
+    // Log para futura análise
+    console.log('[TRACKING] Resultados da sugestão', {
+      suggestionId,
+      before: beforeMetrics,
+      after: afterMetrics,
+      roi,
+      timestamp: tracked.timestamp
+    });
+    // Futuro: salvar em banco/log externo
+    return { success: true, roi, tracked };
   }
 } 

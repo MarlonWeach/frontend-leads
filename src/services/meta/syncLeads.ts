@@ -129,14 +129,16 @@ export class MetaLeadsSyncService {
 
   private async upsertLead(leadData: any): Promise<void> {
     try {
-      // Por enquanto, usar INSERT simples
-      // TODO: Adicionar constraint única e usar upsert
+      // Implementado upsert com constraint única baseada em created_time e ad_id
       const { error } = await this.supabase
         .from('meta_leads')
-        .insert(leadData);
+        .upsert(leadData, { 
+          onConflict: 'created_time,ad_id',
+          ignoreDuplicates: false 
+        });
 
       if (error) {
-        logger.error({ msg: 'Erro ao inserir lead', lead: leadData, error });
+        logger.error({ msg: 'Erro ao fazer upsert do lead', lead: leadData, error });
         throw error;
       }
     } catch (error) {

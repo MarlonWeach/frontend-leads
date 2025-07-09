@@ -157,8 +157,15 @@ export async function syncAdsets(options: SyncOptions = {}): Promise<SyncResult>
   }
 }
 
-export async function syncAdsetsJob() {
+export async function syncAdsetsJob(startDateArg?: string, endDateArg?: string) {
   logger.info('Iniciando sincronização de adsets e insights da Meta API para o Supabase.');
+
+  // Datas parametrizáveis
+  const today = new Date();
+  const defaultEnd = today.toISOString().slice(0, 10);
+  const defaultStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const startDate = startDateArg || process.env.ADSYNC_START_DATE || defaultStart;
+  const endDate = endDateArg || process.env.ADSYNC_END_DATE || defaultEnd;
 
   // 1. Buscar campanhas ativas
   const campaignsService = new MetaCampaignsService({
@@ -181,9 +188,7 @@ export async function syncAdsetsJob() {
 
     // 3. Para cada adset, buscar insights e preparar upsert
     for (const adset of adsets) {
-      // Buscar insights do adset para o período desejado (exemplo: últimos 7 dias)
-      const startDate = '2024-07-15'; // TODO: parametrizar datas
-      const endDate = '2024-07-21';
+      // Buscar insights do adset para o período desejado (parametrizado)
       let insights: any[] = [];
       try {
         insights = await adsetsService.getAdsetInsights(adset.id, startDate, endDate);
@@ -247,7 +252,8 @@ export async function syncAdsetsJob() {
 
 // Permite execução direta via CLI
 if (require.main === module) {
-  syncAdsetsJob().catch((err) => {
+  const [,, startDateArg, endDateArg] = process.argv;
+  syncAdsetsJob(startDateArg, endDateArg).catch((err) => {
     logger.error({ err }, 'Erro na sincronização de adsets');
     process.exit(1);
   });

@@ -51,102 +51,39 @@ describe('useDashboardData hooks', () => {
   });
   
   describe('useDashboardOverview', () => {
-    it('deve buscar dados do overview corretamente', async () => {
-      const mockData = {
-        metrics: {
-          campaigns: { total: 10, active: 5 },
-          leads: { total: 100, new: 50, converted: 30, conversion_rate: 60 },
-          advertisers: { total: 20, active: 15 },
-          performance: { spend: 1000, impressions: 5000, clicks: 200, ctr: 4 }
-        },
-        recentActivity: [],
-        alerts: [],
-        overviewData: []
-      };
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData
-      });
-      
+    it('deve retornar erro amigável pois o endpoint foi removido', () => {
       const { result } = renderHook(() => useDashboardOverview(), {
         wrapper: createWrapper()
       });
       
-      // Inicialmente, deve estar carregando
-      expect(result.current.isLoading).toBe(true);
-      
-      // Aguardar a conclusão da consulta com timeout aumentado
-      await waitFor(() => expect(result.current.isSuccess).toBe(true), {
-        timeout: 5000
-      });
-      
-      // Verificar se os dados foram retornados corretamente
-      expect(result.current.data).toEqual(mockData);
-      expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/overview');
-      expect(mockLogger.info).toHaveBeenCalled();
+      // O hook agora retorna erro amigável imediatamente
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.data).toBe(null);
+      expect(result.current.error).toBe('O endpoint /api/dashboard/overview foi removido do sistema.');
     });
     
-    it('deve incluir parâmetros de data na URL quando fornecidos', async () => {
+    it('deve retornar erro amigável mesmo com parâmetros de data', () => {
       const dateFrom = '2023-01-01';
       const dateTo = '2023-01-31';
       
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({})
-      });
-      
-      renderHook(() => useDashboardOverview(dateFrom, dateTo), {
+      const { result } = renderHook(() => useDashboardOverview(dateFrom, dateTo), {
         wrapper: createWrapper()
       });
       
-      expect(global.fetch).toHaveBeenCalledWith(
-        `/api/dashboard/overview?date_from=${dateFrom}&date_to=${dateTo}`
-      );
+      // O hook agora retorna erro amigável imediatamente
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.data).toBe(null);
+      expect(result.current.error).toBe('O endpoint /api/dashboard/overview foi removido do sistema.');
     });
     
-    it('deve lidar com erros na API', async () => {
-      const errorMessage = 'Erro ao buscar dados';
-      
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error(errorMessage));
-      
+    it('deve ter função refetch vazia', () => {
       const { result } = renderHook(() => useDashboardOverview(), {
         wrapper: createWrapper()
       });
       
-      // Aguardar a conclusão da consulta com timeout aumentado
-      await waitFor(() => expect(result.current.isError).toBe(true), {
-        timeout: 5000
-      });
-      
-      // Verificar se o erro foi capturado corretamente
-      expect(result.current.error).toBeInstanceOf(Error);
-      expect((result.current.error as Error).message).toBe('Erro ao buscar dados do dashboard');
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-    
-    it('deve lidar com respostas não-ok da API', async () => {
-      const errorMessage = 'Erro interno do servidor';
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: errorMessage
-      });
-      
-      const { result } = renderHook(() => useDashboardOverview(), {
-        wrapper: createWrapper()
-      });
-      
-      // Aguardar a conclusão da consulta com timeout aumentado
-      await waitFor(() => expect(result.current.isError).toBe(true), {
-        timeout: 5000
-      });
-      
-      // Verificar se o erro foi capturado corretamente
-      expect(result.current.error).toBeInstanceOf(Error);
-      expect((result.current.error as Error).message).toBe('Erro ao buscar dados do dashboard');
-      expect(mockLogger.error).toHaveBeenCalled();
+      // A função refetch existe mas não faz nada
+      expect(typeof result.current.refetch).toBe('function');
+      expect(() => result.current.refetch()).not.toThrow();
     });
   });
   
