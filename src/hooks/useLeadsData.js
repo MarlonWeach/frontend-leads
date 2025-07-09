@@ -32,7 +32,7 @@ export function useLeadsData(filters = {}) {
             completed_at
           )
         `)
-        .order('created_time', { ascending: false });
+        .order('created_at', { ascending: false });
 
       // Aplicar filtros
       if (filters.status && filters.status !== 'all') {
@@ -52,15 +52,15 @@ export function useLeadsData(filters = {}) {
       // Filtros de data
       if (filters.date_range) {
         const dateLimit = getDateLimit(filters.date_range);
-        query = query.gte('created_time', dateLimit.toISOString());
+        query = query.gte('created_at', dateLimit.toISOString());
       }
 
       if (filters.date_from) {
-        query = query.gte('created_time', filters.date_from);
+        query = query.gte('created_at', filters.date_from);
       }
 
       if (filters.date_to) {
-        query = query.lte('created_time', filters.date_to);
+        query = query.lte('created_at', filters.date_to);
       }
 
       const { data: leads, error } = await query;
@@ -105,10 +105,10 @@ export function useLeadsData(filters = {}) {
       conversion_rate: leads.length > 0 ? 
         ((leads.filter(l => l.status === 'converted').length / leads.length) * 100).toFixed(1) : 0,
       today: leads.filter(l => 
-        new Date(l.created_time).toDateString() === today.toDateString()
+        new Date(l.created_at).toDateString() === today.toDateString()
       ).length,
       this_week: leads.filter(l => 
-        new Date(l.created_time) >= weekAgo
+        new Date(l.created_at) >= weekAgo
       ).length
     };
   };
@@ -289,7 +289,7 @@ export function useLeadMetrics(filters = {}) {
 
       if (filters.date_range) {
         const dateLimit = getDateLimit(filters.date_range);
-        query = query.gte('created_time', dateLimit.toISOString());
+        query = query.gte('created_at', dateLimit.toISOString());
       }
 
       const { data: leads, error } = await query;
@@ -383,7 +383,7 @@ function groupByPeriod(leads) {
   const periods = {};
   
   leads.forEach(lead => {
-    const date = new Date(lead.created_time).toISOString().split('T')[0];
+    const date = new Date(lead.created_at).toISOString().split('T')[0];
     if (!periods[date]) {
       periods[date] = { total: 0, converted: 0 };
     }
@@ -402,7 +402,7 @@ function calculateAvgConversionTime(leads) {
   if (convertedLeads.length === 0) return 0;
 
   const totalTime = convertedLeads.reduce((sum, lead) => {
-    const createdTime = new Date(lead.created_time).getTime();
+    const createdTime = new Date(lead.created_at).getTime();
     const contactedTime = new Date(lead.contacted_at).getTime();
     return sum + (contactedTime - createdTime);
   }, 0);
@@ -432,7 +432,7 @@ export function useLeadExport() {
         'Telefone': lead.phone || '',
         'Status': lead.status || '',
         'Campanha': lead.campaign_name || lead.campaign_id || '',
-        'Data Criação': new Date(lead.created_time).toLocaleDateString('pt-BR'),
+        'Data Criação': new Date(lead.created_at).toLocaleDateString('pt-BR'),
         'Data Contato': lead.contacted_at ? new Date(lead.contacted_at).toLocaleDateString('pt-BR') : '',
         'Cidade': lead.form_data?.cidade || '',
         'Interesse': lead.form_data?.interest || '',

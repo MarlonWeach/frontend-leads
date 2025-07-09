@@ -36,7 +36,7 @@ export function useCampaignsData(dateFrom, dateTo) {
               .from('campaigns')
               .select('*')
               .eq('status', 'ACTIVE')
-              .order('created_time', { ascending: false });
+              .order('created_at', { ascending: false });
             
             if (campaignsError) {
               console.error('Erro ao buscar campanhas do Supabase:', campaignsError);
