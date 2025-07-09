@@ -333,6 +333,15 @@ export async function POST(request: NextRequest) {
     const { data, analysisType: requestedAnalysisType, model } = body;
     analysisType = requestedAnalysisType || 'performance';
 
+    console.log('🔍 [ANÁLISE] Recebida requisição:', {
+      analysisType,
+      model,
+      hasCampaigns: !!data?.campaigns?.length,
+      hasAdsets: !!data?.adsets?.length,
+      hasAds: !!data?.ads?.length,
+      period: data?.period
+    });
+
     // Determinar modelo preferido
     let preferredModel = AIModel._AUTO;
     if (model === 'openai') {
@@ -342,13 +351,39 @@ export async function POST(request: NextRequest) {
     }
 
     if (!data) {
+      console.error('🔍 [ANÁLISE] Erro: Dados de performance são obrigatórios');
       return NextResponse.json(
         { error: 'Dados de performance são obrigatórios' },
         { status: 400 }
       );
     }
 
+    // Validar dados recebidos
     const performanceData: PerformanceData = data;
+    
+    // Verificar se há dados válidos para análise
+    const hasValidData = (
+      (performanceData.campaigns && performanceData.campaigns.length > 0) ||
+      (performanceData.adsets && performanceData.adsets.length > 0) ||
+      (performanceData.ads && performanceData.ads.length > 0)
+    );
+
+    if (!hasValidData) {
+      console.error('🔍 [ANÁLISE] Erro: Nenhum dado válido encontrado para análise');
+      return NextResponse.json(
+        { 
+          error: 'Nenhum dado válido encontrado para análise',
+          message: 'Verifique se os dados da campanha/adset/ad estão sendo enviados corretamente'
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('🔍 [ANÁLISE] Dados válidos encontrados:', {
+      campaigns: performanceData.campaigns?.length || 0,
+      adsets: performanceData.adsets?.length || 0,
+      ads: performanceData.ads?.length || 0
+    });
 
     let result: any;
     let modelUsed: string;
@@ -363,6 +398,7 @@ export async function POST(request: NextRequest) {
       case 'variations':
       case 'efficiency':
       case 'insights': {
+        console.log('🔍 [ANÁLISE] Iniciando análise de performance');
         const analysisResult = await analyzeWithAI(performanceData, analysisType, preferredModel);
         result = analysisResult.result;
         modelUsed = analysisResult.modelUsed;
@@ -373,6 +409,7 @@ export async function POST(request: NextRequest) {
       }
         
       case 'anomaly': {
+        console.log('🔍 [ANÁLISE] Iniciando detecção de anomalias');
         const anomalyResult = await detectAnomalies(performanceData, preferredModel);
         result = anomalyResult.result;
         modelUsed = anomalyResult.modelUsed;
@@ -383,6 +420,7 @@ export async function POST(request: NextRequest) {
       }
         
       case 'optimization': {
+        console.log('🔍 [ANÁLISE] Iniciando geração de sugestões de otimização');
         const optimizationResult = await generateOptimizationSuggestions(performanceData, preferredModel);
         result = optimizationResult.result;
         modelUsed = optimizationResult.modelUsed;
@@ -393,11 +431,19 @@ export async function POST(request: NextRequest) {
       }
         
       default:
+        console.error('🔍 [ANÁLISE] Erro: Tipo de análise inválido:', analysisType);
         return NextResponse.json(
           { error: 'Tipo de análise inválido' },
           { status: 400 }
         );
     }
+
+    console.log('🔍 [ANÁLISE] Análise concluída com sucesso:', {
+      analysisType,
+      modelUsed,
+      isFallback,
+      resultLength: typeof result === 'string' ? result.length : JSON.stringify(result).length
+    });
 
     // Registrar uso da IA
     const campaignIds = (performanceData.campaigns?.map(c => c.id || c.campaign_id).filter(Boolean) as string[]) || [];
@@ -451,7 +497,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro na análise de IA:', error);
+    console.error('🔍 [ANÁLISE] Erro na análise de IA:', error);
     
     // Tratar erro 429 da OpenAI especificamente
     if (error && typeof error === 'object' && 'status' in error && error.status === 429) {

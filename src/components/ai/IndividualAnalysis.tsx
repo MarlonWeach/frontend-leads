@@ -130,6 +130,14 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
           campaign_id: item.id,
           campaign_name: item.name,
           name: item.name,
+          // Garantir que todos os campos numéricos sejam números válidos
+          leads: Number(item.data?.leads || 0),
+          spend: Number(item.data?.spend || 0),
+          ctr: Number(item.data?.ctr || 0),
+          cpl: Number(item.data?.cpl || 0),
+          impressions: Number(item.data?.impressions || 0),
+          clicks: Number(item.data?.clicks || 0),
+          // Adicionar campos adicionais que podem estar disponíveis
           ...item.data
         }];
       } else if (item.type === 'adset') {
@@ -138,6 +146,14 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
           adset_id: item.id,
           adset_name: item.name,
           name: item.name,
+          // Garantir que todos os campos numéricos sejam números válidos
+          leads: Number(item.data?.leads || 0),
+          spend: Number(item.data?.spend || 0),
+          ctr: Number(item.data?.ctr || 0),
+          cpl: Number(item.data?.cpl || 0),
+          impressions: Number(item.data?.impressions || 0),
+          clicks: Number(item.data?.clicks || 0),
+          // Adicionar campos adicionais que podem estar disponíveis
           ...item.data
         }];
       } else if (item.type === 'ad') {
@@ -146,10 +162,19 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
           ad_id: item.id,
           ad_name: item.name,
           name: item.name,
+          // Garantir que todos os campos numéricos sejam números válidos
+          leads: Number(item.data?.leads || 0),
+          spend: Number(item.data?.spend || 0),
+          ctr: Number(item.data?.ctr || 0),
+          cpl: Number(item.data?.cpl || 0),
+          impressions: Number(item.data?.impressions || 0),
+          clicks: Number(item.data?.clicks || 0),
+          // Adicionar campos adicionais que podem estar disponíveis
           ...item.data
         }];
       }
 
+      console.log('Dados enviados para análise:', analysisData);
       await analyzeSpecific(analysisData, analysisType as any, selectedModel);
     } catch (error: any) {
       console.error('Error in individual analysis:', error);
