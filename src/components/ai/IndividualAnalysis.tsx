@@ -300,7 +300,39 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
                 </div>
               ) : analysis ? (
                 <div className="prose prose-sm w-full break-words whitespace-pre-line text-white/90">
-                  {typeof analysis.analysis === 'string' ? analysis.analysis : JSON.stringify(analysis, null, 2)}
+                  {analysisType === 'optimization' ? (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white mb-4">🎯 Sugestões de Otimização</h3>
+                      {Array.isArray(analysis.analysis) ? (
+                        <div className="space-y-3">
+                          {analysis.analysis.map((suggestion: any, index: number) => (
+                            <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-medium text-blue-400">
+                                  {suggestion.type?.toUpperCase() || 'OTIMIZAÇÃO'}
+                                </span>
+                                <span className="text-xs text-white/60">•</span>
+                                <span className="text-xs text-green-400 font-medium">
+                                  {suggestion.expectedImpact}
+                                </span>
+                              </div>
+                              <p className="text-white/90 text-sm leading-relaxed">
+                                {suggestion.suggestion}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
+                          <p className="text-yellow-200 text-sm">
+                            Formato de sugestões inválido. Retornando sugestões padrão.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    typeof analysis.analysis === 'string' ? analysis.analysis : JSON.stringify(analysis, null, 2)
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">

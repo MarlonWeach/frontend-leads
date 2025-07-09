@@ -247,26 +247,33 @@ export class AIService {
   }
 
   /**
-   * Gera análise de performance em linguagem natural
+   * Analisa performance usando IA
    */
   async analyzePerformance(data: any, period: string = '7 dias'): Promise<string> {
-    const cacheKey = `performance_${JSON.stringify(data)}_${period}`;
-    
-    // Verificar cache
-    const cached = responseCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < AI_CONFIG.CACHE.TTL * 1000) {
-      return cached.response;
-    }
-
     try {
       const prompt = this.buildPerformancePrompt(data, period);
       
-      const analysis = await makeAIRequest([
+      console.log('🔍 [PERFORMANCE] Enviando dados para análise:', {
+        campaigns: data.campaigns?.length || 0,
+        adsets: data.adsets?.length || 0,
+        ads: data.ads?.length || 0,
+        period
+      });
+      
+      const content = await makeAIRequest([
         {
           role: 'system',
-          content: `Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo. 
-          Analise os dados fornecidos e forneça insights úteis em português brasileiro. 
-          Seja específico, acionável e use linguagem clara.`,
+          content: `Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo.
+          Analise os dados fornecidos e forneça insights úteis em português brasileiro.
+          Seja específico, acionável e use linguagem clara e natural.
+          
+          IMPORTANTE: Formate a resposta com markdown para melhor legibilidade:
+          - Use **texto** para negrito
+          - Use ### para títulos principais
+          - Use ## para subtítulos
+          - Use - para listas
+          - Use emojis para tornar mais visual
+          - Estruture bem os parágrafos`,
         },
         {
           role: 'user',
@@ -277,19 +284,17 @@ export class AIService {
         temperature: AI_CONFIG.TEMPERATURE.ANALYSIS,
       });
       
-      // Salvar no cache
-      responseCache.set(cacheKey, {
-        response: analysis,
-        timestamp: Date.now(),
-      });
-
-      return analysis;
+      console.log('🔍 [PERFORMANCE] Análise concluída com sucesso');
+      return content;
     } catch (error) {
-      logger.error({
-        msg: 'Erro ao analisar performance',
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      console.error('🔍 [PERFORMANCE] Erro na análise:', error);
+      
+      // Se for erro de quota, usar fallback
+      if (isQuotaOrRateLimitError(error)) {
+        console.log('🔄 [PERFORMANCE] Usando fallback devido a quota excedida');
+        return AI_CONFIG.FALLBACK.RESPONSES.PERFORMANCE.analysis;
+      }
+      
       throw new Error(`Erro na análise de performance: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
@@ -518,42 +523,50 @@ export class AIService {
     }
 
     return `
-CONTEXTO AUTOMOTIVO - ANÁLISE DE PERFORMANCE
+🚗 **ANÁLISE DE PERFORMANCE AUTOMOTIVA**
 
 ${dataSection}
 
-PERÍODO ANALISADO: ${period}
+📅 **PERÍODO ANALISADO:** ${period}
 
-BENCHMARKS AUTOMOTIVOS DE REFERÊNCIA:
-- Econômicos (até R$ 80k): CPL R$ 15-35, conversão 8-15%
-- Premium (R$ 80k-200k): CPL R$ 45-80, conversão 15-25%
-- SUVs (todas faixas): CPL R$ 35-60, conversão 12-20%
-- Comerciais: CPL R$ 25-50, conversão 20-35%
-- Luxo (acima R$ 200k): CPL R$ 80-150, conversão 25-40%
+📊 **BENCHMARKS AUTOMOTIVOS DE REFERÊNCIA:**
+- 🚙 Econômicos (até R$ 80k): CPL R$ 15-35, conversão 8-15%
+- 🚗 Premium (R$ 80k-200k): CPL R$ 45-80, conversão 15-25%
+- 🚙 SUVs (todas faixas): CPL R$ 35-60, conversão 12-20%
+- 🚐 Comerciais: CPL R$ 25-50, conversão 20-35%
+- 🏎️ Luxo (acima R$ 200k): CPL R$ 80-150, conversão 25-40%
 
-ANÁLISE ESPECÍFICA PARA ${context.toUpperCase()}:
+🎯 **ANÁLISE ESPECÍFICA PARA ${context.toUpperCase()}:**
 
-1. **PERFORMANCE GERAL**
-   - Avalie a eficiência dos investimentos
-   - Compare com benchmarks do setor
-   - Identifique pontos fortes e fracos
+**1. 📈 PERFORMANCE GERAL**
+- Avalie a eficiência dos investimentos
+- Compare com benchmarks do setor
+- Identifique pontos fortes e fracos
 
-2. **QUALIDADE DOS LEADS**
-   - Analise a taxa de conversão
-   - Avalie o CPL em relação à categoria
-   - Identifique possíveis problemas de qualidade
+**2. 👥 QUALIDADE DOS LEADS**
+- Analise a taxa de conversão
+- Avalie o CPL em relação à categoria
+- Identifique oportunidades de otimização
 
-3. **OTIMIZAÇÕES SUGERIDAS**
-   - Melhorias de segmentação
-   - Ajustes de criativos
-   - Otimizações de orçamento
+**3. 💰 EFICIÊNCIA DE GASTO**
+- Compare gasto vs resultados
+- Identifique desperdícios
+- Sugira realocações de orçamento
 
-4. **INSIGHTS ACIONÁVEIS**
-   - Recomendações específicas
-   - Próximos passos
-   - Alertas importantes
+**4. 🎯 PONTOS DE ATENÇÃO**
+- Destaque problemas críticos
+- Sugira ações imediatas
+- Identifique oportunidades de melhoria
 
-Forneça uma análise detalhada, específica e acionável em português brasileiro.
+**FORMATAÇÃO OBRIGATÓRIA:**
+- Use emojis para tornar visual
+- Use **texto** para negrito
+- Use ### para títulos principais
+- Use ## para subtítulos
+- Use - para listas
+- Estruture bem os parágrafos
+- Seja específico e acionável
+- Use linguagem clara e natural
 `;
   }
 

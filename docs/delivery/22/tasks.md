@@ -8,15 +8,16 @@ This document lists all tasks associated with PBI 22.
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
-| 22-1 | [Configurar integração com OpenAI e variáveis de ambiente](./22-1.md) | Done | Instalar dependências, criar serviço de IA e documentar configuração da chave |
-| 22-2 | [Criar painel de IA na página de performance](./22-2.md) | Done | Implementar componente visual e integração básica |
-| 22-3 | [Implementar análise de performance em linguagem natural](./22-3.md) | Done | IA gera resumo e insights automáticos sobre métricas |
-| 22-4 | [Implementar detecção automática de anomalias](./22-4.md) | Done | Sistema de IA que identifica padrões suspeitos e fraudes |
-| 22-5 | [Implementar sugestões de otimização baseadas em IA](./22-5.md) | Done | IA sugere melhorias de campanha com base nos dados |
-| 22-6 | [Implementar assistente virtual básico](./22-6.md) | Done | Usuário pode tirar dúvidas sobre campanhas via chat |
-| 22-7 | [Documentar limitações, custos e uso da OpenAI](./22-7.md) | Done | Adicionar seção de FAQ e boas práticas no PRD |
-| 22-8 | [Implementar widget de monitoramento de custos da OpenAI](./22-8.md) | Done | Widget para acompanhar uso e custos da API |
-| 22-9 | [Teste E2E de todas as funcionalidades de IA](./22-9.md) | Done | Validar integração completa: análise, anomalias, otimização e chat |
-| 22-10 | [Revisar e documentar premissas heurísticas de IA](./22-10.md) | Done | Definir contexto e premissas específicas do setor automotivo para IA |
-| 22-11 | [Melhorias de UI e funcionalidade do painel de IA](./22-11.md) | Done | Ajustar cores dos botões, adicionar filtros de campanha/adset e botões de análise individual |
-| 22-12 | [Revisão e correção da análise individual de campanhas, adsets e ads](./22-12.md) | Review | Corrigir problemas na análise individual: dados específicos, otimização vazia e erros de processamento | 
+| 22-1 | [Implementar integração com OpenAI](./22-1.md) | Done | Configurar OpenAI para análises automáticas |
+| 22-2 | [Implementar painel de IA na página de performance](./22-2.md) | Done | Criar interface para análises de IA |
+| 22-3 | [Implementar análise de performance em linguagem natural](./22-3.md) | Done | Análise automática de dados de campanhas |
+| 22-4 | [Implementar detecção automática de anomalias](./22-4.md) | Done | Sistema de alertas para problemas de performance |
+| 22-5 | [Implementar sugestões de otimização baseadas em IA](./22-5.md) | Done | Sugestões inteligentes para melhorar campanhas |
+| 22-6 | [Implementar assistente virtual para dúvidas](./22-6.md) | Done | Chat bot para suporte sobre campanhas |
+| 22-7 | [Implementar sistema de logs de uso da IA](./22-7.md) | Done | Monitoramento de uso e custos da IA |
+| 22-8 | [Implementar fallback para quando IA não estiver disponível](./22-8.md) | Done | Sistema de backup quando OpenAI falha |
+| 22-9 | [Implementar testes E2E para funcionalidades de IA](./22-9.md) | Done | Validação completa do sistema de IA |
+| 22-10 | [Implementar otimização de prompts para melhor performance](./22-10.md) | Done | Melhorar eficiência e qualidade das análises |
+| 22-11 | [Implementar análise individual de campanhas, adsets e ads](./22-11.md) | Done | Análise detalhada de cada elemento |
+| 22-12 | [Corrigir problemas identificados na análise individual](./22-12.md) | Done | Resolver bugs na análise individual |
+| 22-13 | [Implementar otimizações baseadas em dados reais da Meta API](./22-13.md) | Proposed | Criar sistema de otimizações baseadas em evidências reais | 
