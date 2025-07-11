@@ -10,6 +10,7 @@ import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
 import { AIPanel } from '../../src/components/ai/AIPanel';
 import { OpenAIBillingWidget } from '../../src/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
+import { InsightsPanel } from '../../src/components/insights/InsightsPanel';
 
 // Função para abreviar números grandes (igual ao dashboard)
 function formatNumberShort(num) {
@@ -488,6 +489,24 @@ export default function PerformancePageClient() {
           <AIPanel 
             data={aiPanelData}
             filters={aiPanelFilters}
+          />
+        </div>
+      )}
+
+      {/* Painel de Insights Automáticos */}
+      {!loading && campaigns.length > 0 && (
+        <div className="mb-6">
+          <InsightsPanel 
+            dateRange={{
+              start: new Date(filters.startDate),
+              end: new Date(filters.endDate)
+            }}
+            config={{
+              threshold: 10,
+              maxInsights: 5,
+              enableAI: false
+            }}
+            className="bg-white/5 rounded-lg p-6 backdrop-blur-sm border border-white/10"
           />
         </div>
       )}

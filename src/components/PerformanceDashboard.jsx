@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, DollarSign, Users, Eye, MousePointer, Calenda
 import LineChartAnimated from './ui/AnimatedBarChart';
 import { Card } from './ui/card';
 import FilterContainer from './filters/FilterContainer';
+import { InsightsPanel } from './insights/InsightsPanel';
 
 // Função para abreviar números
 function formatNumberShort(num) {
@@ -32,8 +33,40 @@ function formatPercentage(value) {
   }).format((value || 0) / 100);
 }
 
+// Função para converter string de período em DateRange
+function getDateRangeFromPeriod(period) {
+  const end = new Date();
+  const start = new Date();
+  
+  switch (period) {
+    case '7d':
+      start.setDate(end.getDate() - 7);
+      break;
+    case '30d':
+      start.setDate(end.getDate() - 30);
+      break;
+    case '90d':
+      start.setDate(end.getDate() - 90);
+      break;
+    default:
+      start.setDate(end.getDate() - 7);
+  }
+  
+  return { start, end };
+}
+
 const PerformanceDashboard = ({ data }) => {
   const [dateRange, setDateRange] = useState('7d');
+  
+  // Converter período em DateRange para o InsightsPanel
+  const dateRangeObj = getDateRangeFromPeriod(dateRange);
+  
+  // Configuração dos insights
+  const insightsConfig = {
+    threshold: 10,
+    maxInsights: 5,
+    enableAI: false
+  };
 
   // Calcular métricas agregadas dos dados do gráfico
   const aggregatedMetrics = useMemo(() => {
@@ -198,8 +231,8 @@ const PerformanceDashboard = ({ data }) => {
               {formatCurrency(aggregatedMetrics.cpm)}
             </span>
             <span className="text-metric-subinfo text-white/60">
-              <TrendingUp className="inline h-3 w-3 mr-1 text-orange-500" />
-              +3.1% vs período anterior
+              <TrendingDown className="inline h-3 w-3 mr-1 text-green-500" />
+              -3.1% vs período anterior
             </span>
           </div>
         </Card>
@@ -218,16 +251,31 @@ const PerformanceDashboard = ({ data }) => {
         </Card>
       </div>
 
-      {/* Gráfico de performance */}
-      <Card className="p-6">
-        <h3 className="text-header font-semibold text-white mb-6">Tendências de Performance (Últimos 7 dias)</h3>
-        <LineChartAnimated 
-          data={data} 
-          width={800} 
-          height={400} 
-          title=""
+      {/* Seção de Insights Automáticos */}
+      <div className="space-y-6">
+        <div className="border-b border-white/10 pb-4">
+          <h2 className="text-lg font-semibold text-white">
+            Insights Automáticos
+          </h2>
+          <p className="text-sm text-gray-400">
+            Análise automática de mudanças significativas em suas métricas
+          </p>
+        </div>
+        
+        <InsightsPanel 
+          dateRange={dateRangeObj}
+          config={insightsConfig}
+          className="bg-white/5 rounded-lg p-6 backdrop-blur-sm border border-white/10"
         />
-      </Card>
+      </div>
+
+      {/* Gráficos e outras seções existentes */}
+      <div className="space-y-6">
+        <Card className="glass-light p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Tendências de Performance</h3>
+          <LineChartAnimated data={data} />
+        </Card>
+      </div>
     </div>
   );
 };
