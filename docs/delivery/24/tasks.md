@@ -8,16 +8,12 @@ This document lists all tasks associated with PBI 24.
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
-| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Done | Implementar hook usePerformanceInsights para comparar métricas e detectar variações significativas |
-| 24-2 | [Criar Componente de Insights Automáticos](./24-2.md) | Done | Implementar InsightsPanel para exibir cards com insights do dia e alertas |
-| 24-3 | [Implementar API de Comparações](./24-3.md) | Proposed | Criar endpoints para buscar comparações período vs período com agregações Supabase |
-| 24-4 | [Criar Componente de Comparação Visual](./24-4.md) | Proposed | Implementar PeriodComparison com seletor de períodos e cards lado a lado |
-| 24-5 | [Sistema de Detecção de Anomalias Melhorado](./24-5.md) | Proposed | Implementar algoritmos para detectar mudanças bruscas e padrões sazonais |
-| 24-6 | [Criar Heatmap de Performance](./24-6.md) | Proposed | Implementar PerformanceHeatmap usando Nivo para visualizar tendências |
-| 24-7 | [Componente de Previsões com IA](./24-7.md) | Proposed | Implementar PerformanceForecast com gráficos de previsão e intervalo de confiança |
-| 24-8 | [Sistema de Alertas e Notificações](./24-8.md) | Proposed | Implementar sistema de alertas proativos para oportunidades e riscos |
-| 24-9 | [Atualizar Performance Page](./24-9.md) | Proposed | Integrar todos os novos componentes na página de performance existente |
-| 24-10 | [Testes e Documentação](./24-10.md) | Proposed | Implementar testes completos e documentar sistema de insights |
+| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Review | Hook implementado com sucesso, mas insights não aparecem na UI - precisa investigação |
+| 24-2 | [Criar Componente de Insights](./24-2.md) | Proposed | Componente visual para exibir insights gerados pelo hook |
+| 24-3 | [Implementar API de Comparações](./24-3.md) | Proposed | API para fornecer dados de comparação entre períodos |
+| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Proposed | Visualização de tendências de performance ao longo do tempo |
+| 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Proposed | Previsões de performance para próximos 7 dias usando IA |
+| 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades do PBI |
 
 ## Ordem de Implementação Sugerida
 
