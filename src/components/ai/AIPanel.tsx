@@ -27,6 +27,7 @@ import { AlertTriangle as AlertTriangleIcon, Settings as SettingsIcon } from 'lu
 import { logger } from '../../utils/logger';
 import { ModelSelector } from './ModelSelector';
 import { ModelIndicator } from './ModelIndicator';
+import ReactMarkdown from 'react-markdown';
 
 interface AIPanelProps {
   data: any[];
@@ -506,8 +507,14 @@ function AIPanel({ data, filters }: AIPanelProps) {
                 <span className="text-white/80">Gerando análise...</span>
               </div>
             ) : analysis ? (
-              <div className="prose prose-sm w-full break-words whitespace-pre-line text-white/90">
-                {typeof analysis.analysis === 'string' ? analysis.analysis : JSON.stringify(analysis, null, 2)}
+              <div className="prose prose-invert max-w-none text-white">
+                <ReactMarkdown>
+                  {typeof analysis?.analysis === 'string' && analysis.analysis.trim()
+                    ? analysis.analysis
+                    : typeof analysis?.analysis === 'object' && analysis.analysis !== null
+                      ? JSON.stringify(analysis.analysis, null, 2)
+                      : 'Nenhuma análise disponível.'}
+                </ReactMarkdown>
               </div>
             ) : null}
           </div>

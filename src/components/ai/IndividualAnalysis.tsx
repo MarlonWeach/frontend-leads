@@ -18,6 +18,7 @@ import {
 import { useAIAnalysis, type AIModelType } from '../../hooks/useAIAnalysis';
 import { ModelSelector } from './ModelSelector';
 import { ModelIndicator } from './ModelIndicator';
+import ReactMarkdown from 'react-markdown';
 
 interface IndividualAnalysisProps {
   isOpen: boolean;
@@ -182,6 +183,9 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
     }
   };
 
+  // TESTE FORÇADO DE MARKDOWN
+  const markdownTeste = "# Título\n**Negrito**\n- Item 1\n- Item 2";
+
   if (!isOpen) return null;
 
   return (
@@ -246,114 +250,10 @@ export default function IndividualAnalysis({ isOpen, onClose, item, dateRange }:
         </CardHeader>
 
         <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* Botões de Análise */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            {analysisTypes.map((type) => {
-              const Icon = type.icon;
-              const isSelected = selectedAnalysis === type.id;
-              const isButtonLoading = isLoading && isSelected;
-              const colorClasses = getAnalysisColorClasses(type.color, isSelected);
-              
-              return (
-                <Button
-                  key={type.id}
-                  variant="outline"
-                  className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-300 border rounded-lg ${
-                    isSelected 
-                      ? colorClasses
-                      : `${colorClasses} hover:scale-105`
-                  }`}
-                  onClick={() => handleAnalysisClick(type.id)}
-                  disabled={isButtonLoading}
-                >
-                  {isButtonLoading ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Icon className="w-5 h-5" />
-                  )}
-                  <span className="text-sm font-medium">{type.label}</span>
-                  <span className="text-xs opacity-80 text-center leading-tight">
-                    {type.description}
-                  </span>
-                </Button>
-              );
-            })}
+          {/* Renderizar markdown de teste diretamente */}
+          <div className="prose prose-invert max-w-none text-white">
+            <ReactMarkdown>{markdownTeste}</ReactMarkdown>
           </div>
-
-          {/* Resultado da Análise */}
-          {selectedAnalysis && (
-            <div className="w-full">
-              {(error || aiError) && (
-                <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="w-5 h-5 text-red-400" />
-                    <span className="text-red-200 font-medium">Erro na análise</span>
-                  </div>
-                  <p className="text-red-200/80 text-sm mt-1">{error || aiError}</p>
-                </div>
-              )}
-
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin text-blue-400 mr-2" />
-                  <span className="text-white/80">Gerando análise...</span>
-                </div>
-              ) : analysis ? (
-                <div className="prose prose-sm w-full break-words whitespace-pre-line text-white/90">
-                  {analysisType === 'optimization' ? (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-white mb-4">🎯 Sugestões de Otimização</h3>
-                      {Array.isArray(analysis.analysis) ? (
-                        <div className="space-y-3">
-                          {analysis.analysis.map((suggestion: any, index: number) => (
-                            <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-sm font-medium text-blue-400">
-                                  {suggestion.type?.toUpperCase() || 'OTIMIZAÇÃO'}
-                                </span>
-                                <span className="text-xs text-white/60">•</span>
-                                <span className="text-xs text-green-400 font-medium">
-                                  {suggestion.expectedImpact}
-                                </span>
-                              </div>
-                              <p className="text-white/90 text-sm leading-relaxed">
-                                {suggestion.suggestion}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
-                          <p className="text-yellow-200 text-sm">
-                            Formato de sugestões inválido. Retornando sugestões padrão.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    typeof analysis.analysis === 'string' ? analysis.analysis : JSON.stringify(analysis, null, 2)
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Search className="w-12 h-12 text-white/40 mx-auto mb-3" />
-                  <p className="text-white/60 text-sm">
-                    Selecione um tipo de análise para começar
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Estado Inicial */}
-          {!selectedAnalysis && (
-            <div className="text-center py-8">
-              <Brain className="w-12 h-12 text-white/40 mx-auto mb-3" />
-              <p className="text-white/60 text-sm">
-                Selecione um tipo de análise para analisar {item.name}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

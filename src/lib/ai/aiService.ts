@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { AI_CONFIG, AIModel, PERFORMANCE_ANALYSIS_CONFIG, ANTHROPIC_CONFIG, AnthropicModel, anthropic, logOpenAIRequest, logOpenAIResponse, logAnthropicRequest, logAnthropicResponse } from './config';
+import { FALLBACK_CONFIG } from './config';
 import { logger } from '../../utils/logger';
 
 // Importar tipo PerformanceData
@@ -292,7 +293,7 @@ export class AIService {
       // Se for erro de quota, usar fallback
       if (isQuotaOrRateLimitError(error)) {
         console.log('🔄 [PERFORMANCE] Usando fallback devido a quota excedida');
-        return AI_CONFIG.FALLBACK.RESPONSES.PERFORMANCE.analysis;
+        return FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis;
       }
       
       throw new Error(`Erro na análise de performance: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -513,13 +514,13 @@ export class AIService {
     
     if (campaigns.length > 0) {
       context = 'campanha automotiva';
-      dataSection = `CAMPANHA ANALISADA:\n${campaigns.map(c => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL, ${c.impressions || 0} impressões, ${c.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `CAMPANHA ANALISADA:\n${campaigns.map((c: any) => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL, ${c.impressions || 0} impressões, ${c.clicks || 0} cliques`).join('\n')}`;
     } else if (adsets.length > 0) {
       context = 'adset automotivo';
-      dataSection = `ADSET ANALISADO:\n${adsets.map(a => `- ${a.adset_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `ADSET ANALISADO:\n${adsets.map((a: any) => `- ${a.adset_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
     } else if (ads.length > 0) {
       context = 'ad automotivo';
-      dataSection = `AD ANALISADO:\n${ads.map(a => `- ${a.ad_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `AD ANALISADO:\n${ads.map((a: any) => `- ${a.ad_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
     }
 
     return `
@@ -604,13 +605,13 @@ Responda apenas em formato JSON válido.
     
     if (campaigns.length > 0) {
       context = 'campanha automotiva';
-      dataSection = `CAMPANHA ANALISADA:\n${campaigns.map(c => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL, ${c.impressions || 0} impressões, ${c.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `CAMPANHA ANALISADA:\n${campaigns.map((c: any) => `- ${c.campaign_name || c.name}: ${c.leads || 0} leads, R$ ${c.spend || 0} gasto, ${c.ctr || 0}% CTR, R$ ${c.cpl || 0} CPL, ${c.impressions || 0} impressões, ${c.clicks || 0} cliques`).join('\n')}`;
     } else if (adsets.length > 0) {
       context = 'adset automotivo';
-      dataSection = `ADSET ANALISADO:\n${adsets.map(a => `- ${a.adset_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `ADSET ANALISADO:\n${adsets.map((a: any) => `- ${a.adset_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
     } else if (ads.length > 0) {
       context = 'ad automotivo';
-      dataSection = `AD ANALISADO:\n${ads.map(a => `- ${a.ad_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
+      dataSection = `AD ANALISADO:\n${ads.map((a: any) => `- ${a.ad_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
     }
 
     return `
