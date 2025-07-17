@@ -102,19 +102,10 @@ export const usePerformanceInsights = ({
   };
 
   useEffect(() => {
-    console.log('🔍 [DEBUG] usePerformanceInsights useEffect:', {
-      currentData: currentData?.length || 0,
-      previousData: previousData?.length || 0,
-      loading,
-      dateRange: { start: dateRange.start.toISOString(), end: dateRange.end.toISOString() },
-      previousPeriod: { start: previousPeriod.start.toISOString(), end: previousPeriod.end.toISOString() }
-    });
-
     if (currentData && previousData && !loading) {
       try {
         // Se não há dados suficientes, criar insights informativos
         if (currentData.length === 0 && previousData.length === 0) {
-          console.log('🔍 [DEBUG] Sem dados para análise - criando insight informativo');
           const infoInsights: PerformanceInsight[] = [{
             id: 'no-data-info',
             type: 'info',
@@ -131,20 +122,13 @@ export const usePerformanceInsights = ({
           return;
         }
 
-        console.log('🔍 [DEBUG] Calculando métricas agregadas...');
         // Calcular métricas agregadas para ambos os períodos
         const currentMetrics = calculateAggregatedMetrics(currentData);
         const previousMetrics = calculateAggregatedMetrics(previousData);
         
-        console.log('🔍 [DEBUG] Métricas calculadas:', {
-          current: currentMetrics,
-          previous: previousMetrics
-        });
-
         // Calcular variações
         const performanceMetrics = calculatePerformanceMetrics(currentMetrics, previousMetrics);
-        console.log('🔍 [DEBUG] Variações calculadas:', performanceMetrics);
-
+        
         // Gerar insights
         const generatedInsights = processMetrics(performanceMetrics, {
           threshold: 10,
@@ -152,15 +136,11 @@ export const usePerformanceInsights = ({
           enableAI: false
         });
         
-        console.log('🔍 [DEBUG] Insights gerados:', generatedInsights);
-        
         setInsights(generatedInsights);
       } catch (error) {
-        console.error('🔍 [DEBUG] Erro ao gerar insights:', error);
+        console.error('Erro ao gerar insights:', error);
         setError('Erro ao calcular insights');
       }
-    } else {
-      console.log('🔍 [DEBUG] Aguardando dados ou carregando...');
     }
   }, [currentData, previousData, loading, dateRange.start, dateRange.end, previousPeriod.start, previousPeriod.end]);
 

@@ -284,7 +284,7 @@ export function useAnomalyDetection({
             loading: false, 
             error: errorMessage,
             anomalies: [], // Retornar array vazio em caso de erro
-            summary: null
+            summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }
           }));
           return;
         }

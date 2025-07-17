@@ -224,9 +224,23 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   });
 
   const formatDateRange = (range: DateRange) => {
-    const start = range.start.toLocaleDateString('pt-BR');
-    const end = range.end.toLocaleDateString('pt-BR');
-    return `${start} - ${end}`;
+    try {
+      if (!range || !range.start || !range.end) {
+        return 'Período não definido';
+      }
+      
+      const start = range.start instanceof Date ? range.start : new Date(range.start);
+      const end = range.end instanceof Date ? range.end : new Date(range.end);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return 'Período inválido';
+      }
+      
+      return `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`;
+    } catch (error) {
+      console.warn('Erro ao formatar período:', error);
+      return 'Período não disponível';
+    }
   };
 
   // Função para obter cor baseada no tipo de métrica

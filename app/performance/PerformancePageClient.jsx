@@ -62,30 +62,45 @@ export default function PerformancePageClient() {
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
   
   const datePresets = useMemo(() => [
-    { label: 'Hoje (Jul 3)', getRange: () => {
-      return { start: '2025-07-03', end: '2025-07-03' };
+    { label: 'Hoje', getRange: () => {
+      const today = new Date();
+      const todayStr = formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      return { start: todayStr, end: todayStr };
     }},
-    { label: 'Ontem (Jul 2)', getRange: () => {
-      return { start: '2025-07-02', end: '2025-07-02' };
+    { label: 'Ontem', getRange: () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = formatInTimeZone(yesterday, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      return { start: yesterdayStr, end: yesterdayStr };
     }},
     { label: 'Últimos 3 dias', getRange: () => {
-      return { start: '2025-07-01', end: '2025-07-03' };
+      const today = new Date();
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(today.getDate() - 2);
+      
+      return { 
+        start: formatInTimeZone(threeDaysAgo, SAO_PAULO_TZ, 'yyyy-MM-dd'), 
+        end: formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd') 
+      };
     }},
     { label: 'Últimos 7 dias', getRange: () => {
-      return { start: '2025-06-27', end: '2025-07-03' };
-    }},
-    { label: 'Últimos 30 dias', getRange: () => {
-      return { start: '2025-06-16', end: '2025-07-03' };
-    }},
-    { label: 'Dados Disponíveis (Jul 1-3)', getRange: () => {
-      return {
-        start: '2025-07-01',
-        end: '2025-07-03'
+      const today = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 6);
+      
+      return { 
+        start: formatInTimeZone(sevenDaysAgo, SAO_PAULO_TZ, 'yyyy-MM-dd'), 
+        end: formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd') 
       };
+    }},
+    { label: 'Personalizado', getRange: () => {
+      // Será usado quando o usuário selecionar datas customizadas
+      return { start: '', end: '' };
     }},
   ], []);
 
-  const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 3 dias por padrão
+  const [selectedPreset, setSelectedPreset] = useState(0); // Hoje por padrão
+  const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
 
   // Atualizar horário apenas no cliente para evitar erro de hidratação
   useEffect(() => {
@@ -100,8 +115,8 @@ export default function PerformancePageClient() {
   }, []);
 
   useEffect(() => {
-    // Ao montar, aplicar o preset "Últimos 3 dias"
-    const range = datePresets[2].getRange();
+    // Ao montar, aplicar o preset "Hoje"
+    const range = datePresets[0].getRange();
     setFilters(prev => ({
       ...prev,
       startDate: range.start,
@@ -119,6 +134,17 @@ export default function PerformancePageClient() {
       page: 1 // Reset para primeira página
     }));
     setSelectedPreset(presetIndex);
+    setShowDateMenu(false);
+  };
+
+  const applyCustomDateRange = () => {
+    setFilters(prev => ({
+      ...prev,
+      startDate: customDateRange.start,
+      endDate: customDateRange.end,
+      page: 1 // Reset para primeira página
+    }));
+    setSelectedPreset(4); // Indica que é um período personalizado
     setShowDateMenu(false);
   };
 
@@ -167,7 +193,10 @@ export default function PerformancePageClient() {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return formatInTimeZone(new Date(dateString), 'America/Sao_Paulo', 'dd/MM/yyyy');
+    // Garantir interpretação correta da data evitando problemas de timezone
+    // Adicionar T00:00:00 para forçar horário local
+    const dateWithTime = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+    return formatInTimeZone(new Date(dateWithTime), 'America/Sao_Paulo', 'dd/MM/yyyy');
   };
 
   // Função para exibir label resumida do filtro de data
@@ -281,7 +310,8 @@ export default function PerformancePageClient() {
     <div className="flex flex-col gap-8">
       {/* Filtros de período - SEGUINDO PADRÃO DO DASHBOARD */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col gap-4">
+          {/* Presets de data */}
           <div className="flex space-x-2">
             {datePresets.map((preset, index) => (
               <button
@@ -297,6 +327,38 @@ export default function PerformancePageClient() {
               </button>
             ))}
           </div>
+          
+          {/* Campos de data customizada */}
+          {selectedPreset === 4 && ( // Índice 4 = "Personalizado"
+            <div className="flex space-x-4 items-center">
+              <div className="flex flex-col">
+                <label className="text-sm text-white/70 mb-1">Data inicial:</label>
+                <input
+                  type="date"
+                  value={customDateRange.start}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm text-white/70 mb-1">Data final:</label>
+                <input
+                  type="date"
+                  value={customDateRange.end}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => applyCustomDateRange()}
+                disabled={!customDateRange.start || !customDateRange.end}
+                className="px-4 py-2 mt-6 rounded-lg bg-primary text-white disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-primary/80 transition-colors"
+              >
+                Aplicar
+              </button>
+            </div>
+          )}
+          
           {/* Período selecionado */}
           <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
             <span className="font-medium text-white">Período:</span> {
@@ -484,12 +546,12 @@ export default function PerformancePageClient() {
       )}
 
       {/* Painel de Insights Automáticos */}
-      {!loading && campaigns.length > 0 && (
+      {!loading && campaigns.length > 0 && filters.startDate && filters.endDate && (
         <div className="mb-6">
           <InsightsPanel 
             dateRange={{
-              start: new Date(filters.startDate),
-              end: new Date(filters.endDate)
+              start: new Date(filters.startDate + 'T00:00:00'),
+              end: new Date(filters.endDate + 'T23:59:59')
             }}
             config={{
               threshold: 10,
