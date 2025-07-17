@@ -220,37 +220,74 @@ export function useAnomalyDetection({
           return;
         }
 
-        const response = await fetch('/api/ai/anomalies', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            dateRange,
-            campaignIds: memoizedCampaignIds,
-            sensitivity,
-            forceRefresh: false
-          })
-        });
+        // Configurar timeout para evitar travamento
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
-        if (!response.ok) {
-          throw new Error(`Erro na API: ${response.status}`);
+        try {
+          const response = await fetch('/api/ai/anomalies', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              dateRange,
+              campaignIds: memoizedCampaignIds,
+              sensitivity,
+              forceRefresh: false
+            }),
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          const newState = {
+            anomalies: data.anomalies || [],
+            summary: data.summary || { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
+            lastUpdated: new Date(),
+            loading: false,
+            error: null
+          };
+
+          setState(prev => ({ ...prev, ...newState }));
+
+          // Salvar no cache
+          setCachedData(newState);
+
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          
+          // Tratamento específico para diferentes tipos de erro
+          let errorMessage = 'Erro ao detectar anomalias';
+          
+          if (fetchError instanceof Error) {
+            if (fetchError.name === 'AbortError') {
+              errorMessage = 'Timeout na detecção de anomalias (mais de 30s). A OpenAI pode estar sobrecarregada.';
+            } else if (fetchError.message.includes('Failed to fetch')) {
+              errorMessage = 'Erro de conexão com a API de anomalias. Verifique sua conexão ou tente novamente.';
+            } else {
+              errorMessage = fetchError.message;
+            }
+          }
+          
+          console.warn('🔍 [useAnomalyDetection] Erro non-critical:', errorMessage);
+          
+          // Não quebrar a aplicação - apenas registrar o erro e continuar
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            error: errorMessage,
+            anomalies: [], // Retornar array vazio em caso de erro
+            summary: null
+          }));
+          return;
         }
-
-        const data = await response.json();
-
-        const newState = {
-          anomalies: data.anomalies || [],
-          summary: data.summary || { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
-          lastUpdated: new Date(),
-          loading: false,
-          error: null
-        };
-
-        setState(prev => ({ ...prev, ...newState }));
-
-        // Salvar no cache
-        setCachedData(newState);
 
       } catch (error) {
         console.error('Erro ao detectar anomalias:', error);

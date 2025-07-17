@@ -307,9 +307,9 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
         )}
         {!loading && !error && insights.length > 0 && (
           <ul className="insights-list space-y-3">
-            {insights.filter(insight => typeof insight.name === 'string' && insight.name).map((insight, index) => {
+            {insights.filter(insight => typeof insight.title === 'string' && insight.title).map((insight, index) => {
               // Gerar chave única combinando múltiplos campos
-              const uniqueKey = `insight-${insight.campaignId || 'global'}-${insight.name}-${insight.variation}-${index}`;
+              const uniqueKey = `insight-${insight.campaignId || 'global'}-${insight.title}-${insight.variation}-${index}`;
               
               return (
                 <li 
@@ -327,16 +327,16 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                     duration-300 
                     hover:bg-white/10 
                     hover:border-white/20
-                    ${getMetricColor(insight.name)}
+                    ${getMetricColor(insight.metric)}
                   `}
                 >
                   <div className={`
                     p-2 
                     rounded-full 
                     flex-shrink-0
-                    ${getMetricColor(insight.name)}
+                    ${getMetricColor(insight.metric)}
                   `}>
-                    {getMetricIcon(insight.name)}
+                    {getMetricIcon(insight.metric)}
                   </div>
                   
                   <div className="flex-1 min-w-0">

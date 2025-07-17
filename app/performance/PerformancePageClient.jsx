@@ -7,10 +7,10 @@ import { formatInTimeZone } from 'date-fns-tz';
 import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
 import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
 import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
-import { AIPanel } from '../../src/components/ai/AIPanel';
-import { OpenAIBillingWidget } from '../../src/components/ai/OpenAIBillingWidget';
+import { AIPanel } from '@/components/ai/AIPanel';
+import { OpenAIBillingWidget } from '@/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
-import { InsightsPanel } from '../../src/components/insights/InsightsPanel';
+import { InsightsPanel } from '@/components/insights/InsightsPanel';
 
 // Função para abreviar números grandes (igual ao dashboard)
 function formatNumberShort(num) {
@@ -62,40 +62,30 @@ export default function PerformancePageClient() {
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
   
   const datePresets = useMemo(() => [
-    { label: 'Hoje', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: todaySP, end: todaySP };
+    { label: 'Hoje (Jul 3)', getRange: () => {
+      return { start: '2025-07-03', end: '2025-07-03' };
     }},
-    { label: 'Ontem', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-      todaySPDate.setDate(todaySPDate.getDate() - 1);
-      const yestSP = formatInTimeZone(todaySPDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: yestSP, end: yestSP };
+    { label: 'Ontem (Jul 2)', getRange: () => {
+      return { start: '2025-07-02', end: '2025-07-02' };
+    }},
+    { label: 'Últimos 3 dias', getRange: () => {
+      return { start: '2025-07-01', end: '2025-07-03' };
     }},
     { label: 'Últimos 7 dias', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-      const weekAgoDate = new Date(todaySPDate);
-      weekAgoDate.setDate(todaySPDate.getDate() - 6);
-      const weekAgoSP = formatInTimeZone(weekAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: weekAgoSP, end: todaySP };
+      return { start: '2025-06-27', end: '2025-07-03' };
     }},
     { label: 'Últimos 30 dias', getRange: () => {
-      const now = new Date();
-      const past = new Date();
-      past.setDate(now.getDate() - 29);
+      return { start: '2025-06-16', end: '2025-07-03' };
+    }},
+    { label: 'Dados Disponíveis (Jul 1-3)', getRange: () => {
       return {
-        start: formatInTimeZone(past, SAO_PAULO_TZ, 'yyyy-MM-dd'),
-        end: formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd')
+        start: '2025-07-01',
+        end: '2025-07-03'
       };
     }},
   ], []);
 
-  const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias por padrão
+  const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 3 dias por padrão
 
   // Atualizar horário apenas no cliente para evitar erro de hidratação
   useEffect(() => {
@@ -110,7 +100,7 @@ export default function PerformancePageClient() {
   }, []);
 
   useEffect(() => {
-    // Ao montar, aplicar o preset "Últimos 7 dias"
+    // Ao montar, aplicar o preset "Últimos 3 dias"
     const range = datePresets[2].getRange();
     setFilters(prev => ({
       ...prev,
