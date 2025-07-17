@@ -13,6 +13,16 @@ jest.mock('next/navigation', () => ({
   useSearchParams: jest.fn()
 }));
 
+// Mock do hook usePerformanceInsights
+jest.mock('../../hooks/usePerformanceInsights', () => ({
+  usePerformanceInsights: jest.fn(() => ({
+    insights: [],
+    loading: false,
+    error: null,
+    refresh: jest.fn()
+  }))
+}));
+
 // Mock da função de serviço de performance
 jest.mock('../../services/performanceService', () => ({
   fetchPerformanceMetrics: jest.fn(() => Promise.resolve({

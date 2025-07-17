@@ -7,9 +7,9 @@ import {
   TrendingDown,
   Info
 } from 'lucide-react';
-import { usePerformanceInsights } from '@/hooks/usePerformanceInsights';
-import { DateRange, InsightConfig, PerformanceInsight } from '@/types/insights';
-import { formatVariation } from '@/utils/performanceAnalysis';
+import { usePerformanceInsights } from '../../hooks/usePerformanceInsights';
+import { DateRange, InsightConfig, PerformanceInsight } from '../../types/insights';
+import { formatVariation } from '../../utils/performanceAnalysis';
 
 interface InsightsPanelProps {
   dateRange: DateRange;

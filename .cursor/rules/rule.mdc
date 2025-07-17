@@ -1,0 +1,154 @@
+---
+alwaysApply: true
+---
+# rules.mdc
+
+## 📜 Project Policy for AI Agents & Humans
+
+A single, machine-readable source of truth that governs all work. Ensures clarity, automation, accountability, and architectural compliance.
+
+---
+
+## 1. Roles
+
+- **User**: Owns all decisions, scope, approvals.
+- **AI_Agent**: Executes explicitly defined tasks under User's authority.
+
+---
+
+## 2. Global Rules
+
+- 🔒 No task → No code.
+- 🔗 Every task → Must link to a PBI.
+- ✅ All PBIs → Must align with PRD.
+- 🧠 AI_Agent is **forbidden** to create extra files unless explicitly approved.
+- 🧪 All external packages → must be researched and cached in `<task>-<package>-guide.md`.
+- 📏 Tasks must be small, testable units.
+- 🔁 DRY: Reference data, don’t duplicate.
+- 🔢 Magic values → must be constants.
+- 📚 APIs/interfaces must have technical documentation.
+
+---
+
+## 3. Scope Discipline
+
+- 🚫 No gold plating or scope creep.
+- 🔍 Changes must match a task.
+- 👂 Any request w/o task reference → AI must ask for task creation.
+
+---
+
+## 4. PBI Management
+
+### 4.1 Backlog Location:
+- `docs/delivery/backlog.md`
+
+### 4.2 Format:
+```md
+| ID | Actor | User Story | Status | CoS |
+```
+
+### 4.3 Status Flow:
+- `Proposed` → `Agreed` → `InProgress` → `InReview` → `Done`
+- `Rejected`, `Deprioritized` also valid.
+
+### 4.4 Detail Doc:
+- `docs/delivery/<PBI-ID>/prd.md`
+- Must link to/from backlog
+- Sections: Overview, Problem, User Stories, Approach, UI, CoS, Dependencies, OpenQs, Tasks
+
+---
+
+## 5. Task Management
+
+### 5.1 Location & Naming:
+- Dir: `docs/delivery/<PBI-ID>/`
+- Files: `tasks.md` + `<PBI-ID>-<TASK-ID>.md`
+
+### 5.2 Task File Structure:
+```md
+# <Task-ID> <Title>
+## Description
+## Status History
+## Requirements
+## Implementation Plan
+## Verification
+## Files Modified
+## Test Plan
+```
+
+### 5.3 Task Workflow:
+- `Proposed` → `Agreed` → `InProgress` → `Review` → `Done`
+- `Blocked` allowed; only 1 task per PBI can be InProgress
+
+### 5.4 Task Index Table:
+```md
+| Task ID | Name | Status | Description |
+```
+
+---
+
+## 6. Task Validation Rules
+
+- Every task must:
+  - Belong to a PBI
+  - Have a dedicated file
+  - Follow naming conventions
+  - Be fully documented before `Done`
+  - Be linked in `tasks.md`
+  - Sync status across task file and index
+  - Use commit: `<task-id> <description>`
+  - PR Title: `[<task-id>] <description>`
+
+---
+
+## 7. Testing Policy
+
+- E2E CoS Test task is mandatory per PBI
+- Test plan must match task complexity
+
+### Test Plan Section:
+- Objective
+- Scope
+- Env/Setup
+- Mock Strategy
+- Scenarios
+- Criteria
+
+### Test Types:
+- 🧪 Unit: logic only, mock external
+- 🔗 Integration: real infra, mock external APIs
+- 🌐 E2E: UI, user flow
+
+---
+
+## 8. Build & Deploy Discipline
+
+- 🛑 Roll back on cascading errors
+- 🧼 Clean caches on module/type errors
+- ✅ Validate clean local builds before push
+- 🔔 Monitor builds, notify on failures
+
+### Emergency Fix Strategy:
+```bash
+git restore .
+rm -rf .next node_modules/.cache
+npm run build
+```
+
+---
+
+## 9. Config & Standards
+
+- Use `@/` imports
+- Avoid deep `../../`
+- Name unused vars with `_`
+- Remove truly unused code
+
+---
+
+This policy enables structured, efficient, and audit-proof development across AI-augmented teams.
+
+---
+
+_Any violation must be explicitly justified and approved by the User._

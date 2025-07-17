@@ -6,10 +6,10 @@ import {
   DateRange, 
   InsightConfig,
   PerformanceMetric 
-} from '@/types/insights';
-import { processMetrics, calculateVariation } from '@/utils/performanceAnalysis';
+} from '../types/insights';
+import { processMetrics, calculateVariation } from '../utils/performanceAnalysis';
 import { usePerformanceData } from './usePerformanceData';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
 interface UsePerformanceInsightsProps {
   dateRange: DateRange;
@@ -167,6 +167,10 @@ export const usePerformanceInsights = ({
  * Calcula métricas agregadas para um conjunto de dados
  */
 const calculateAggregatedMetrics = (data: any[]) => {
+  if (!data || !Array.isArray(data)) {
+    return { leads: 0, spend: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0 };
+  }
+
   const totals = data.reduce((acc, item) => {
     acc.leads += item.leads || 0;
     acc.spend += item.spend || 0;
