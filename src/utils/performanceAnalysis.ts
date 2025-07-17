@@ -1,4 +1,4 @@
-import { PerformanceMetric, PerformanceInsight, InsightConfig } from '@/types/insights';
+import { PerformanceMetric, PerformanceInsight, InsightConfig } from '../types/insights';
 
 /**
  * Calcula a variação percentual entre dois valores
