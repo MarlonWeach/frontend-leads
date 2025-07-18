@@ -12,6 +12,7 @@ import { OpenAIBillingWidget } from '@/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
 import { InsightsPanel } from '@/components/insights/InsightsPanel';
 import { PerformanceHeatmap } from '@/components/insights/PerformanceHeatmap';
+import { PerformanceForecast } from '@/components/insights/PerformanceForecast';
 
 // Função para abreviar números grandes (igual ao dashboard)
 function formatNumberShort(num) {
@@ -590,6 +591,19 @@ export default function PerformancePageClient() {
               enableAI: false
             }}
             className="bg-white/5 rounded-lg p-6 backdrop-blur-sm border border-white/10"
+          />
+        </div>
+      )}
+
+      {/* Sistema de Previsões de Performance */}
+      {!loading && campaigns.length > 0 && filters.startDate && filters.endDate && (
+        <div className="mb-6">
+          <PerformanceForecast 
+            dateRange={{
+              start: new Date(filters.startDate + 'T00:00:00'),
+              end: new Date(filters.endDate + 'T23:59:59')
+            }}
+            className="w-full"
           />
         </div>
       )}
