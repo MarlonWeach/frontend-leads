@@ -187,7 +187,7 @@ export const usePerformanceInsights = ({
 
   useEffect(() => {
     if (combinedError) {
-      setError(combinedError);
+      setError(combinedError.message || 'Erro desconhecido');
     }
   }, [combinedError]);
 
