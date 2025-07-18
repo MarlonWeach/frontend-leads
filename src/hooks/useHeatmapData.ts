@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, eachDayOfInterval, startOfWeek, endOfWeek, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '../lib/supabaseClient';
 import type { 
   HeatmapData, 
   HeatmapFilters, 
@@ -102,24 +103,25 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
         const startDate = format(filters.startDate, 'yyyy-MM-dd');
         const endDate = format(filters.endDate, 'yyyy-MM-dd');
         
-        const params = new URLSearchParams({
-          startDate,
-          endDate,
-          status: 'ACTIVE'
-        });
+        // Buscar dados diretamente da tabela campaign_insights
+        let query = supabase
+          .from('campaign_insights')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate);
 
+        // Filtrar por campanhas específicas se fornecido
         if (filters.campaignIds?.length) {
-          params.append('campaignIds', filters.campaignIds.join(','));
+          query = query.in('campaign_id', filters.campaignIds);
         }
 
-        const response = await fetch(`/api/performance?${params}`);
-        
-        if (!response.ok) {
-          throw new Error(`Erro ao buscar dados: ${response.status}`);
+        const { data: insightsData, error: insightsError } = await query;
+
+        if (insightsError) {
+          throw new Error(`Erro ao buscar dados do Supabase: ${insightsError.message}`);
         }
 
-        const result = await response.json();
-        setRawData(result.data || []);
+        setRawData(insightsData || []);
 
       } catch (err) {
         console.error('Erro no useHeatmapData:', err);
