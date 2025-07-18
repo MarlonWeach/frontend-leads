@@ -8,7 +8,6 @@ import {
   PerformanceMetric 
 } from '../types/insights';
 import { processMetrics, calculateVariation } from '../utils/performanceAnalysis';
-import { usePerformanceData } from './usePerformanceData';
 import { supabase } from '../lib/supabaseClient';
 
 interface UsePerformanceInsightsProps {
@@ -37,6 +36,7 @@ function toISODate(date: Date): string {
 /**
  * Hook para análise de insights de performance
  * Compara métricas entre períodos e gera insights automáticos
+ * Usa dados da tabela adset_insights (mesma estratégia da API /api/performance)
  */
 export const usePerformanceInsights = ({
   dateRange,
@@ -67,9 +67,50 @@ export const usePerformanceInsights = ({
     endDate: toISODate(previousPeriod.end)
   }), [previousPeriod.start, previousPeriod.end]);
 
-  // Buscar dados de performance por campanha
-  const { data: currentData, loading: currentLoading, error: currentError } = usePerformanceData(currentFilters.startDate, currentFilters.endDate);
-  const { data: previousData, loading: previousLoading, error: previousError } = usePerformanceData(previousFilters.startDate, previousFilters.endDate);
+  // Buscar dados de performance usando adset_insights (mesma estratégia da API /api/performance)
+  const { data: currentData, isLoading: currentLoading, error: currentError } = useQuery({
+    queryKey: ['performance-insights', 'current', currentFilters],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('adset_insights')
+        .select(`
+          adset_id,
+          date,
+          leads,
+          spend,
+          impressions,
+          clicks
+        `)
+        .gte('date', currentFilters.startDate)
+        .lte('date', currentFilters.endDate);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentFilters.startDate && !!currentFilters.endDate
+  });
+
+  const { data: previousData, isLoading: previousLoading, error: previousError } = useQuery({
+    queryKey: ['performance-insights', 'previous', previousFilters],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('adset_insights')
+        .select(`
+          adset_id,
+          date,
+          leads,
+          spend,
+          impressions,
+          clicks
+        `)
+        .gte('date', previousFilters.startDate)
+        .lte('date', previousFilters.endDate);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!previousFilters.startDate && !!previousFilters.endDate
+  });
 
   const loading = currentLoading || previousLoading;
   const combinedError = currentError || previousError;
