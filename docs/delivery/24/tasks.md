@@ -4,16 +4,39 @@ This document lists all tasks associated with PBI 24.
 
 **Parent PBI**: [PBI 24: Sistema de Performance Insights e Comparações](./prd.md)
 
+## Progresso do PBI 24
+
+### ✅ Concluído (1/6)
+- **24-1**: Hook de Análise de Mudanças - ✅ **CONCLUÍDO**
+  - Sistema de insights funcionando com dados reais de 2025
+  - Problemas de TypeScript e build resolvidos
+  - Deploy funcionando no Vercel
+
+### 🔄 Em Andamento (0/6)
+- Nenhuma task em andamento no momento
+
+### ⏳ Pendente (5/6)
+- **24-2**: Componente de Insights - Próxima prioridade
+- **24-3**: API de Comparações
+- **24-4**: Heatmap de Performance  
+- **24-5**: Sistema de Previsões
+- **24-6**: E2E CoS Test
+
+### 📊 Resumo
+- **Progresso**: 16.7% (1 de 6 tasks concluídas)
+- **Status**: Base sólida estabelecida com hook funcionando
+- **Próximo**: Implementar componente visual para exibir insights
+
 ## Task Summary
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
-| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Done | ✅ Hook implementado e funcionando - insights aparecendo corretamente na UI |
-| 24-2 | [Criar Componente de Insights](./24-2.md) | Done | ✅ Componente InsightsPanel implementado e integrado na página de performance |
-| 24-3 | [Implementar API de Comparações](./24-3.md) | Done | ✅ API implementada e testada - endpoint /api/performance/comparisons funcionando |
-| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | ✅ Heatmap implementado com 6 métricas, 5 períodos e visualização responsiva |
-| 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Proposed | Sistema de previsões inteligentes para próximos 7 dias usando IA e dados históricos |
-| 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades do PBI |
+| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Done | ✅ Hook implementado e funcionando - problemas de dados e TypeScript resolvidos |
+| 24-2 | [Criar Componente de Insights](./24-2.md) | Proposed | Componente visual para exibir insights gerados pelo hook |
+| 24-3 | [Implementar API de Comparações](./24-3.md) | Proposed | API para fornecer dados de comparação entre períodos |
+| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Proposed | Visualização de tendências de performance ao longo do tempo |
+| 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Proposed | Previsões de performance para próximos 7 dias usando IA |
+| 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar funcionalidades completas |
 
 ## Ordem de Implementação Sugerida
 
