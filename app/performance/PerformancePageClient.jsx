@@ -115,18 +115,23 @@ export default function PerformancePageClient() {
   }, []);
 
   useEffect(() => {
-    // Ao montar, aplicar o preset "Hoje"
-    const range = datePresets[0].getRange();
-    setFilters(prev => ({
-      ...prev,
-      startDate: range.start,
-      endDate: range.end
-    }));
-  }, [datePresets]); // Adicionar datePresets como dependência
+    // Ao montar, aplicar o preset "Hoje" apenas uma vez
+    if (datePresets.length > 0) {
+      const range = datePresets[0].getRange(); // "Hoje"
+      console.log('🔍 [PerformancePageClient] Aplicando preset inicial "Hoje":', range);
+      setFilters(prev => ({
+        ...prev,
+        startDate: range.start,
+        endDate: range.end
+      }));
+      setSelectedPreset(0); // Garantir que o preset selecionado seja "Hoje"
+    }
+  }, []); // Executar apenas uma vez na montagem
 
   const applyDatePreset = (presetIndex) => {
     const preset = datePresets[presetIndex];
     const range = preset.getRange();
+    console.log(`🔍 [PerformancePageClient] Aplicando preset "${preset.label}":`, range);
     setFilters(prev => ({
       ...prev,
       startDate: range.start,

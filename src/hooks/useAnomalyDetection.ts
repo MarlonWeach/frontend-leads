@@ -299,7 +299,12 @@ export function useAnomalyDetection({
       }
     };
 
-    performDetection();
+    // Adicionar debounce para evitar rate limiting
+    const timeoutId = setTimeout(() => {
+      performDetection();
+    }, 3000); // 3 segundos de debounce
+
+    return () => clearTimeout(timeoutId);
   }, [dateRange.startDate, dateRange.endDate, memoizedCampaignIds, sensitivity]);
 
   // Funções de cache
