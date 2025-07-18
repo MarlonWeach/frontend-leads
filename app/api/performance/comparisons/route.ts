@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Forçar rota dinâmica para evitar erro de renderização estática
+export const dynamic = 'force-dynamic';
+
 // Criar cliente Supabase para o servidor
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
