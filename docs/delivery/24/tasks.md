@@ -11,7 +11,7 @@ This document lists all tasks associated with PBI 24.
 | 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Done | ✅ Hook implementado e funcionando - insights aparecendo corretamente na UI |
 | 24-2 | [Criar Componente de Insights](./24-2.md) | Done | ✅ Componente InsightsPanel implementado e integrado na página de performance |
 | 24-3 | [Implementar API de Comparações](./24-3.md) | Done | ✅ API implementada e testada - endpoint /api/performance/comparisons funcionando |
-| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Proposed | Visualização de tendências de performance ao longo do tempo |
+| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | ✅ Heatmap implementado com 6 métricas, 5 períodos e visualização responsiva |
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Proposed | Previsões de performance para próximos 7 dias usando IA |
 | 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades do PBI |
 

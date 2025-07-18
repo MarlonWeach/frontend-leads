@@ -11,6 +11,7 @@ import { AIPanel } from '@/components/ai/AIPanel';
 import { OpenAIBillingWidget } from '@/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
 import { InsightsPanel } from '@/components/insights/InsightsPanel';
+import { PerformanceHeatmap } from '@/components/insights/PerformanceHeatmap';
 
 // Função para abreviar números grandes (igual ao dashboard)
 function formatNumberShort(num) {
@@ -60,6 +61,22 @@ export default function PerformancePageClient() {
   const [_showDateMenu, setShowDateMenu] = useState(false);
   const [_showStatusMenu, setShowStatusMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [sortField, setSortField] = useState('leads');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  // Filtros do heatmap
+  const [heatmapFilters, setHeatmapFilters] = useState(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 29); // Últimos 30 dias
+    
+    return {
+      metric: 'leads',
+      period: 30,
+      startDate: start,
+      endDate: end
+    };
+  });
   const dateMenuRef = useRef(null);
   const statusMenuRef = useRef(null);
 
@@ -535,6 +552,17 @@ export default function PerformancePageClient() {
               />
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Heatmap de Performance */}
+      {!loading && campaigns.length > 0 && (
+        <div className="mb-6">
+          <PerformanceHeatmap
+            filters={heatmapFilters}
+            onFiltersChange={(newFilters) => setHeatmapFilters(prev => ({ ...prev, ...newFilters }))}
+            className="w-full"
+          />
         </div>
       )}
 
