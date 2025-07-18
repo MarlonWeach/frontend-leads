@@ -212,6 +212,7 @@ async function handleRequestWithDateFilter(
     const ctr = aggregatedInsights.impressions > 0 ? (aggregatedInsights.clicks / aggregatedInsights.impressions) * 100 : 0;
     const cpc = aggregatedInsights.clicks > 0 ? aggregatedInsights.spend / aggregatedInsights.clicks : 0;
     const cpm = aggregatedInsights.impressions > 0 ? (aggregatedInsights.spend / aggregatedInsights.impressions) * 1000 : 0;
+    const cpl = aggregatedInsights.leads > 0 ? aggregatedInsights.spend / aggregatedInsights.leads : 0;
     return {
       id: ad.ad_id,
       name: ad.name,
@@ -242,6 +243,7 @@ async function handleRequestWithDateFilter(
       ctr: ctr,
       cpc: cpc,
       cpm: cpm,
+      cpl: cpl,
       leads: aggregatedInsights.leads
     };
   }) || [];
