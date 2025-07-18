@@ -39,12 +39,17 @@ export default function PerformancePageClient() {
     }
   });
 
-  const [filters, setFilters] = useState({
-    status: 'ACTIVE',
-    startDate: '',
-    endDate: '',
-    page: 1,
-    limit: 20
+  // Inicializar filtros com data de hoje para evitar carregamento incorreto na primeira renderização
+  const [filters, setFilters] = useState(() => {
+    const today = new Date();
+    const todayStr = formatInTimeZone(today, 'America/Sao_Paulo', 'yyyy-MM-dd');
+    return {
+      status: 'ACTIVE',
+      startDate: todayStr,
+      endDate: todayStr,
+      page: 1,
+      limit: 20
+    };
   });
 
   const [sortConfig, setSortConfig] = useState({
@@ -115,17 +120,10 @@ export default function PerformancePageClient() {
   }, []);
 
   useEffect(() => {
-    // Ao montar, aplicar o preset "Hoje" apenas uma vez
-    if (datePresets.length > 0) {
-      const range = datePresets[0].getRange(); // "Hoje"
-      console.log('🔍 [PerformancePageClient] Aplicando preset inicial "Hoje":', range);
-      setFilters(prev => ({
-        ...prev,
-        startDate: range.start,
-        endDate: range.end
-      }));
-      setSelectedPreset(0); // Garantir que o preset selecionado seja "Hoje"
-    }
+    // Garantir que o preset selecionado seja "Hoje" na montagem
+    // (os filtros já foram inicializados com a data correta)
+    setSelectedPreset(0);
+    console.log('🔍 [PerformancePageClient] Preset inicial "Hoje" aplicado automaticamente na inicialização');
   }, []); // Executar apenas uma vez na montagem
 
   const applyDatePreset = (presetIndex) => {
