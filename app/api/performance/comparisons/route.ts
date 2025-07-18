@@ -17,6 +17,7 @@ const supabase = createClient(
     }
   }
 );
+
 import { 
   calculateComparisons, 
   calculatePreviousPeriod, 
@@ -24,9 +25,9 @@ import {
   assessDataQuality,
   generateCacheKey,
   PeriodCalculationData
-} from '@/utils/comparisonAnalysis';
-import { ComparisonResponse, CampaignData } from '@/types/comparisons';
-import { serverCache } from '@/utils/server-cache';
+} from '../../../../src/utils/comparisonAnalysis';
+import { ComparisonResponse, CampaignData } from '../../../../src/types/comparisons';
+import { serverCache } from '../../../../src/utils/server-cache';
 
 const CACHE_TTL = 5 * 60; // 5 minutos
 
