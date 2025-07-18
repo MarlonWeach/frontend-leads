@@ -95,15 +95,22 @@ export const useAdsData = (filters = {}) => {
   }, [fetchData]);
 
   // Métricas agregadas
+  const totalSpend = ads.reduce((acc, ad) => acc + (parseFloat(ad.spend) || 0), 0);
+  const totalImpressions = ads.reduce((acc, ad) => acc + (parseInt(ad.impressions) || 0), 0);
+  const totalClicks = ads.reduce((acc, ad) => acc + (parseInt(ad.clicks) || 0), 0);
+  const totalLeads = ads.reduce((acc, ad) => acc + (parseInt(ad.leads) || 0), 0);
+
   const metrics = {
     totalAds: ads.length,
-    totalSpend: ads.reduce((acc, ad) => acc + (parseFloat(ad.spend) || 0), 0),
-    totalImpressions: ads.reduce((acc, ad) => acc + (parseInt(ad.impressions) || 0), 0),
-    totalClicks: ads.reduce((acc, ad) => acc + (parseInt(ad.clicks) || 0), 0),
-    totalLeads: ads.reduce((acc, ad) => acc + (parseInt(ad.leads) || 0), 0),
-    avgCTR: ads.length > 0 ? (ads.reduce((acc, ad) => acc + (parseFloat(ad.ctr) || 0), 0) / ads.length) : 0,
-    avgCPC: ads.length > 0 ? (ads.reduce((acc, ad) => acc + (parseFloat(ad.cpc) || 0), 0) / ads.length) : 0,
-    avgCPM: ads.length > 0 ? (ads.reduce((acc, ad) => acc + (parseFloat(ad.cpm) || 0), 0) / ads.length) : 0
+    totalSpend,
+    totalImpressions,
+    totalClicks,
+    totalLeads,
+    // Cálculo correto das médias agregadas baseado nos totais
+    averageCTR: totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0,
+    averageCPC: totalClicks > 0 ? totalSpend / totalClicks : 0,
+    averageCPM: totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0,
+    averageCPL: totalLeads > 0 ? totalSpend / totalLeads : 0
   };
 
   return { ads, loading, error, metrics, refreshAds, isFetching };

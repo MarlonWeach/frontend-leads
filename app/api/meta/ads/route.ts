@@ -131,6 +131,7 @@ async function handleRequestWithDateFilter(
         averageCTR: 0,
         averageCPC: 0,
         averageCPM: 0,
+        averageCPL: 0,
         count: 0,
         responseTime: Date.now() - startTime,
         filters: { campaignId, adsetId, status, startDate, endDate, limit },
@@ -257,6 +258,7 @@ async function handleRequestWithDateFilter(
   const averageCTR = totalMetrics.totalImpressions > 0 ? (totalMetrics.totalClicks / totalMetrics.totalImpressions) * 100 : 0;
   const averageCPC = totalMetrics.totalClicks > 0 ? totalMetrics.totalSpend / totalMetrics.totalClicks : 0;
   const averageCPM = totalMetrics.totalImpressions > 0 ? (totalMetrics.totalSpend / totalMetrics.totalImpressions) * 1000 : 0;
+  const averageCPL = totalMetrics.totalLeads > 0 ? totalMetrics.totalSpend / totalMetrics.totalLeads : 0;
 
   const responseTime = Date.now() - startTime;
   logger.info({ 
@@ -275,6 +277,7 @@ async function handleRequestWithDateFilter(
       averageCTR,
       averageCPC,
       averageCPM,
+      averageCPL,
       count: adsWithInsights.length,
       responseTime,
       filters: { campaignId, adsetId, status, startDate, endDate, limit },
