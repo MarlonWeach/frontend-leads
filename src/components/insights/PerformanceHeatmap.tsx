@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { format, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, TrendingUp, TrendingDown, Minus, Eye } from 'lucide-react';
@@ -29,6 +29,22 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
 }) => {
   const { data, loading, error, getColor, metric } = useHeatmapData(filters);
   const [hoveredDay, setHoveredDay] = useState<HeatmapData | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null); // Para controlar preview aberto
+
+  // Fechar preview ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-heatmap-cell]') && !target.closest('[data-heatmap-preview]')) {
+        setSelectedDay(null);
+      }
+    };
+
+    if (selectedDay) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [selectedDay]);
 
   // Calcular layout baseado no período
   const layoutConfig = useMemo(() => {
@@ -62,73 +78,141 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
     const dayOfMonth = format(date, 'd');
     const backgroundColor = getColor(day.value);
     const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+    const isSelected = selectedDay === day.date;
     
-    return (
-      <Tooltip
-        key={`${day.date}-${index}`}
-        content={
+    // Função para toggle do preview
+    const handleDayClick = () => {
+      setSelectedDay(prev => prev === day.date ? null : day.date);
+    };
+
+    // Renderizar preview se o dia estiver selecionado
+    const renderPreview = () => {
+      if (!isSelected) return null;
+      
+      return (
+        <div 
+          className="absolute z-50 bg-gray-900 border border-gray-600 rounded-lg p-4 shadow-xl min-w-64 top-full left-0 mt-2"
+          data-heatmap-preview
+          style={{
+            // Ajustar posição para não sair da tela
+            left: index % 7 > 4 ? 'auto' : '0',
+            right: index % 7 > 4 ? '0' : 'auto'
+          }}
+        >
           <div className="space-y-2">
-            <div className="font-medium text-white">
+            <div className="font-medium text-white border-b border-gray-600 pb-2">
               {getTooltipData(day).weekday}, {getTooltipData(day).date}
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-gray-300">{metric.label}:</span>
-                <div className="font-medium text-white">{day.formattedValue}</div>
+                <div className="font-semibold text-white">{day.formattedValue}</div>
               </div>
               {day.rawData && (
                 <>
                   <div>
                     <span className="text-gray-300">Campanhas:</span>
-                    <div className="font-medium text-white">{day.campaigns}</div>
+                    <div className="font-semibold text-white">{day.campaigns}</div>
                   </div>
                   <div>
                     <span className="text-gray-300">Leads:</span>
-                    <div className="font-medium text-white">{day.rawData.leads}</div>
+                    <div className="font-semibold text-white">{day.rawData.leads}</div>
                   </div>
                   <div>
                     <span className="text-gray-300">Gastos:</span>
-                    <div className="font-medium text-white">R$ {day.rawData.spend.toFixed(2)}</div>
+                    <div className="font-semibold text-white">R$ {day.rawData.spend.toFixed(2)}</div>
                   </div>
                   <div>
                     <span className="text-gray-300">CTR:</span>
-                    <div className="font-medium text-white">{day.rawData.ctr.toFixed(2)}%</div>
+                    <div className="font-semibold text-white">{day.rawData.ctr.toFixed(2)}%</div>
                   </div>
                   <div>
                     <span className="text-gray-300">CPL:</span>
-                    <div className="font-medium text-white">R$ {day.rawData.cpl.toFixed(2)}</div>
+                    <div className="font-semibold text-white">R$ {day.rawData.cpl.toFixed(2)}</div>
                   </div>
                 </>
               )}
             </div>
+            <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-600">
+              Clique novamente para fechar
+            </div>
           </div>
-        }
-      >
-        <div
-          className={`
-            ${layoutConfig.cellSize} 
-            rounded-md 
-            border border-gray-200/20 
-            cursor-pointer 
-            transition-all duration-200 
-            hover:scale-110 hover:z-10 
-            flex items-center justify-center
-            ${layoutConfig.fontSize} 
-            font-medium
-            ${isToday ? 'ring-2 ring-blue-400' : ''}
-            ${day.value === 0 ? 'text-gray-400' : 'text-gray-700'}
-          `}
-          style={{ backgroundColor }}
-          onMouseEnter={() => setHoveredDay(day)}
-          onMouseLeave={() => setHoveredDay(null)}
-          onClick={() => {
-            // Aqui poderia adicionar drill-down para o dia específico
-            console.log('Clicked day:', day);
-          }}
-        >
-          {filters.period <= 30 ? dayOfMonth : ''}
         </div>
-      </Tooltip>
+      );
+    };
+    
+    return (
+      <div key={`${day.date}-${index}`} className="relative">
+        <Tooltip
+          content={
+            <div className="space-y-2">
+              <div className="font-medium text-white">
+                {getTooltipData(day).weekday}, {getTooltipData(day).date}
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-300">{metric.label}:</span>
+                  <div className="font-medium text-white">{day.formattedValue}</div>
+                </div>
+                {day.rawData && (
+                  <>
+                    <div>
+                      <span className="text-gray-300">Campanhas:</span>
+                      <div className="font-medium text-white">{day.campaigns}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-300">Leads:</span>
+                      <div className="font-medium text-white">{day.rawData.leads}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-300">Gastos:</span>
+                      <div className="font-medium text-white">R$ {day.rawData.spend.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-300">CTR:</span>
+                      <div className="font-medium text-white">{day.rawData.ctr.toFixed(2)}%</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-300">CPL:</span>
+                      <div className="font-medium text-white">R$ {day.rawData.cpl.toFixed(2)}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-600">
+                Clique para fixar preview
+              </div>
+            </div>
+          }
+        >
+          <div
+            className={`
+              ${layoutConfig.cellSize} 
+              rounded-md 
+              border border-gray-200/20 
+              cursor-pointer 
+              transition-all duration-200 
+              hover:scale-110 hover:z-10 
+              flex items-center justify-center
+              ${layoutConfig.fontSize} 
+              font-bold
+              ${isToday ? 'ring-2 ring-blue-400' : ''}
+              ${isSelected ? 'ring-2 ring-yellow-400 scale-110' : ''}
+              ${day.value === 0 ? 'text-gray-400' : 'text-gray-800'}
+            `}
+            style={{ backgroundColor }}
+            onMouseEnter={() => setHoveredDay(day)}
+            onMouseLeave={() => setHoveredDay(null)}
+            onClick={handleDayClick}
+            data-heatmap-cell
+          >
+            {filters.period <= 30 ? dayOfMonth : ''}
+          </div>
+        </Tooltip>
+        
+        {/* Preview permanente quando selecionado */}
+        {renderPreview()}
+      </div>
     );
   };
 
@@ -311,7 +395,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
       {renderStats()}
 
       {/* Heatmap */}
-      <div className="space-y-2">
+      <div className="space-y-2 relative">
         {/* Labels dos dias da semana */}
         {filters.period <= 30 && (
           <div className={`grid grid-cols-7 ${layoutConfig.cellSpacing} mb-2`}>
@@ -326,8 +410,8 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
           </div>
         )}
 
-        {/* Grid do heatmap */}
-        <div className={`grid grid-cols-7 ${layoutConfig.cellSpacing} auto-rows-min`}>
+        {/* Grid do heatmap com espaçamento extra para previews */}
+        <div className={`grid grid-cols-7 ${layoutConfig.cellSpacing} auto-rows-min pb-20`}>
           {data.data.map((day, index) => renderHeatmapCell(day, index))}
         </div>
       </div>

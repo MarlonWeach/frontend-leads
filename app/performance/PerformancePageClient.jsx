@@ -71,7 +71,7 @@ export default function PerformancePageClient() {
     start.setDate(end.getDate() - 29); // Últimos 30 dias
     
     return {
-      metric: 'leads',
+      metric: 'cpl', // CPL como padrão
       period: 30,
       startDate: start,
       endDate: end
