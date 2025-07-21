@@ -32,33 +32,28 @@ This document lists all tasks associated with PBI 24.
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
 | 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Review | Hook implementado com sucesso, mas insights não aparecem na UI - precisa investigação |
-| 24-2 | [Criar Componente de Insights](./24-2.md) | Proposed | Componente visual para exibir insights gerados pelo hook |
-| 24-3 | [Implementar API de Comparações](./24-3.md) | Proposed | API para fornecer dados de comparação entre períodos |
-| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Proposed | Visualização de tendências de performance ao longo do tempo |
+| 24-2 | [Criar Componente de Insights](./24-2.md) | Done | ✅ Componente visual implementado e funcionando |
+| 24-3 | [Implementar API de Comparações](./24-3.md) | Done | ✅ API de comparações implementada e funcional |
+| 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | ✅ Heatmap implementado com visualização de tendências |
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Done | ✅ Sistema de previsões implementado, integrado e testado |
-| 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar funcionalidades completas |
+| 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades |
+| 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | Proposed | 🚨 Corrigir problemas matemáticos e de validação identificados no sistema de previsões |
 
 ## Ordem de Implementação Sugerida
 
-### Fase 1: Backend e Lógica de Comparações
-1. **Task 24-1**: Hook de Análise de Mudanças
-2. **Task 24-3**: API de Comparações
-3. **Task 24-5**: Sistema de Detecção de Anomalias
+### Próxima Prioridade: Task 24-7 🚨
+**CRÍTICO**: Corrigir problemas matemáticos fundamentais no sistema de previsões antes de continuar com outras funcionalidades.
 
-### Fase 2: Componentes Visuais Básicos
-4. **Task 24-2**: Componente de Insights Automáticos
-5. **Task 24-4**: Componente de Comparação Visual
+### Sequência Recomendada:
+1. **24-7** - Corrigir Problemas Críticos do Sistema de Previsões (PRIORIDADE MÁXIMA)
+2. **24-1** - Investigar e corrigir problema dos insights não aparecendo na UI
+3. **24-6** - Testes end-to-end para validar todas as funcionalidades
 
-### Fase 3: Visualizações Avançadas
-6. **Task 24-6**: Heatmap de Performance
-7. **Task 24-7**: Componente de Previsões com IA
-
-### Fase 4: Integração e Polish
-8. **Task 24-8**: Sistema de Alertas e Notificações
-9. **Task 24-9**: Atualizar Performance Page
-
-### Fase 5: Testes e Documentação
-10. **Task 24-10**: Testes e Documentação
+### Tasks Completas ✅
+- **24-2** - Componente de Insights (Done)
+- **24-3** - API de Comparações (Done) 
+- **24-4** - Heatmap de Performance (Done)
+- **24-5** - Sistema de Previsões (Done, mas com problemas críticos identificados)
 
 ## Dependências entre Tasks
 

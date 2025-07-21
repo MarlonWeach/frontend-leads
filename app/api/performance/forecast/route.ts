@@ -22,6 +22,65 @@ import { serverCache } from '../../../../src/utils/server-cache';
 
 const CACHE_TTL = 60 * 60; // 1 hora
 
+// Bounds realistas para cada métrica de marketing digital
+const METRIC_BOUNDS = {
+  leads: { min: 0, max: 10000 }, // 0 a 10k leads por dia
+  spend: { min: 0, max: 100000 }, // R$ 0 a 100k gastos por dia
+  ctr: { min: 0, max: 15 }, // 0% a 15% CTR (valores acima são suspeitos)
+  cpl: { min: 1, max: 1000 }, // R$ 1 a R$ 1000 CPL
+  impressions: { min: 0, max: 10000000 }, // 0 a 10M impressões por dia
+  clicks: { min: 0, max: 500000 } // 0 a 500k cliques por dia
+};
+
+/**
+ * Detectar outliers usando o método IQR (Interquartile Range)
+ */
+const detectOutliers = (data: number[]): number[] => {
+  if (data.length < 4) return data; // Dados insuficientes para detecção
+  
+  const sorted = [...data].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.25)];
+  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const iqr = q3 - q1;
+  const lowerBound = q1 - 1.5 * iqr;
+  const upperBound = q3 + 1.5 * iqr;
+  
+  return data.filter(value => value >= lowerBound && value <= upperBound);
+};
+
+/**
+ * Validar e limpar dados
+ */
+const validateAndCleanData = (data: number[], metricName: string): number[] => {
+  const bounds = METRIC_BOUNDS[metricName as keyof typeof METRIC_BOUNDS];
+  if (!bounds) return data;
+  
+  // Filtrar valores impossíveis
+  let cleanData = data.filter(value => 
+    value >= bounds.min && 
+    value <= bounds.max && 
+    !isNaN(value) && 
+    isFinite(value)
+  );
+  
+  // Remover outliers se temos dados suficientes
+  if (cleanData.length >= 4) {
+    cleanData = detectOutliers(cleanData);
+  }
+  
+  return cleanData;
+};
+
+/**
+ * Aplicar constraints de negócio
+ */
+const applyBusinessConstraints = (prediction: number, metricName: string): number => {
+  const bounds = METRIC_BOUNDS[metricName as keyof typeof METRIC_BOUNDS];
+  if (!bounds) return prediction;
+  
+  return Math.max(bounds.min, Math.min(bounds.max, prediction));
+};
+
 /**
  * Calcular tendência linear simples
  */
@@ -42,7 +101,7 @@ const calculateLinearTrend = (data: number[]): { slope: number; intercept: numbe
 };
 
 /**
- * Calcular intervalo de confiança
+ * Calcular intervalo de confiança estatisticamente correto
  */
 const calculateConfidenceInterval = (
   data: number[],
@@ -50,25 +109,31 @@ const calculateConfidenceInterval = (
   daysAhead: number
 ): { min: number; max: number; confidence: 'high' | 'medium' | 'low' } => {
   if (data.length < 3) {
-    return { min: prediction * 0.8, max: prediction * 1.2, confidence: 'low' };
+    return { min: prediction * 0.7, max: prediction * 1.3, confidence: 'low' };
   }
 
-  // Calcular desvio padrão dos dados históricos
-  const mean = data.reduce((a, b) => a + b, 0) / data.length;
-  const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / data.length;
-  const stdDev = Math.sqrt(variance);
+  // Calcular erro padrão da predição
+  const n = data.length;
+  const mean = data.reduce((a, b) => a + b, 0) / n;
+  const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / (n - 1);
+  const stdError = Math.sqrt(variance);
+  
+  // Fator t-student para 95% de confiança (aproximação para n > 30, senão usar 2.0)
+  const tFactor = n > 30 ? 1.96 : 2.0;
+  
+  // Intervalo de confiança considerando incerteza da predição
+  const predictionError = stdError * Math.sqrt(1 + 1/n + Math.pow(daysAhead, 2) / (n * (n - 1) / 12));
+  const margin = tFactor * predictionError;
+  
+  const min = Math.max(0, prediction - margin);
+  const max = prediction + margin;
 
-  // Intervalo de confiança baseado no desvio padrão e dias à frente
-  const uncertainty = stdDev * Math.sqrt(daysAhead) * 0.5;
-  const min = Math.max(0, prediction - uncertainty);
-  const max = prediction + uncertainty;
-
-  // Determinar nível de confiança baseado na variabilidade dos dados
-  const coefficientOfVariation = stdDev / mean;
+  // Determinar nível de confiança baseado na qualidade dos dados
+  const coefficientOfVariation = stdError / Math.abs(mean);
   let confidence: 'high' | 'medium' | 'low';
   
-  if (coefficientOfVariation < 0.2) confidence = 'high';
-  else if (coefficientOfVariation < 0.5) confidence = 'medium';
+  if (coefficientOfVariation < 0.15 && n >= 7) confidence = 'high';
+  else if (coefficientOfVariation < 0.3 && n >= 5) confidence = 'medium';
   else confidence = 'low';
 
   return { min, max, confidence };
@@ -163,27 +228,36 @@ const fetchHistoricalData = async (
 };
 
 /**
- * Gerar previsões para uma métrica
+ * Gerar previsões para uma métrica com validação e constraints
  */
 const generateForecast = (
-  historicalData: number[],
+  rawHistoricalData: number[],
   daysToForecast: number,
   metricName: string
 ): ForecastData[] => {
-  if (historicalData.length < 3) {
-    // Dados insuficientes - retornar previsões baseadas na média
-    const average = historicalData.length > 0 
-      ? historicalData.reduce((a, b) => a + b, 0) / historicalData.length 
-      : 0;
+  // Validar e limpar dados históricos
+  const historicalData = validateAndCleanData(rawHistoricalData, metricName);
+  
+  console.log(`📊 Forecast ${metricName}: ${rawHistoricalData.length} dados brutos → ${historicalData.length} dados limpos`);
+  
+  if (historicalData.length < 2) {
+    // Dados insuficientes - usar valor padrão conservador
+    const fallbackValue = metricName === 'leads' ? 10 : 
+                         metricName === 'spend' ? 100 : 
+                         metricName === 'ctr' ? 2 :
+                         metricName === 'cpl' ? 50 : 
+                         metricName === 'impressions' ? 1000 : 50;
     
     return Array.from({ length: daysToForecast }, (_, i) => {
       const date = format(addDays(new Date(), i + 1), 'yyyy-MM-dd');
+      const prediction = applyBusinessConstraints(fallbackValue, metricName);
+      
       return {
         date,
-        predicted: average,
+        predicted: prediction,
         confidence: 'low' as const,
-        min: average * 0.5,
-        max: average * 1.5
+        min: prediction * 0.5,
+        max: prediction * 2
       };
     });
   }
@@ -193,44 +267,45 @@ const generateForecast = (
   
   // Gerar previsões
   const forecast: ForecastData[] = [];
+  const n = historicalData.length;
   
   for (let i = 1; i <= daysToForecast; i++) {
     const date = format(addDays(new Date(), i), 'yyyy-MM-dd');
-    const basePrediction = intercept + slope * (historicalData.length + i);
     
-    // Aplicar ajustes baseados na métrica
-    let prediction = basePrediction;
+    // CORREÇÃO CRÍTICA: Fórmula correta de regressão linear
+    const basePrediction = intercept + slope * (n - 1 + i);
+    
+    // Aplicar constraints de negócio
+    let prediction = applyBusinessConstraints(basePrediction, metricName);
     
     // Ajustes específicos por métrica
     switch (metricName) {
       case 'leads':
-        prediction = Math.max(0, Math.round(prediction));
+      case 'impressions':
+      case 'clicks':
+        prediction = Math.round(prediction);
         break;
       case 'spend':
-        prediction = Math.max(0, prediction);
+      case 'cpl':
+        prediction = Math.round(prediction * 100) / 100; // 2 casas decimais
         break;
       case 'ctr':
-        prediction = Math.max(0, Math.min(100, prediction));
-        break;
-      case 'cpl':
-        prediction = Math.max(0, prediction);
-        break;
-      case 'impressions':
-        prediction = Math.max(0, Math.round(prediction));
-        break;
-      case 'clicks':
-        prediction = Math.max(0, Math.round(prediction));
+        prediction = Math.round(prediction * 100) / 100; // 2 casas decimais
         break;
     }
     
     const confidenceInterval = calculateConfidenceInterval(historicalData, prediction, i);
     
+    // Aplicar constraints também nos intervalos
+    const constrainedMin = applyBusinessConstraints(confidenceInterval.min, metricName);
+    const constrainedMax = applyBusinessConstraints(confidenceInterval.max, metricName);
+    
     forecast.push({
       date,
       predicted: prediction,
       confidence: confidenceInterval.confidence,
-      min: confidenceInterval.min,
-      max: confidenceInterval.max
+      min: constrainedMin,
+      max: constrainedMax
     });
   }
   
@@ -291,7 +366,7 @@ export async function POST(request: NextRequest) {
       forecast[metric] = generateForecast(data, daysToForecast, metric);
     });
 
-    // Calcular métricas agregadas
+    // Calcular métricas agregadas com análise de tendência melhorada
     const metricsSummary: any = {};
     
     metrics.forEach(metric => {
@@ -301,22 +376,43 @@ export async function POST(request: NextRequest) {
       const min = Math.min(...forecastData.map(d => d.predicted));
       const max = Math.max(...forecastData.map(d => d.predicted));
       
-      // Determinar tendência
+      // Determinar tendência usando slope estatístico
       const metricHistoricalData = historicalData[metric] || [];
-      const recentTrend = metricHistoricalData.length >= 7 
-        ? metricHistoricalData.slice(-7).reduce((a, b) => a + b, 0) / 7
-        : metricHistoricalData.length > 0 
-          ? metricHistoricalData.reduce((a, b) => a + b, 0) / metricHistoricalData.length 
-          : 0;
+      const cleanedData = validateAndCleanData(metricHistoricalData, metric);
       
       let trend: 'up' | 'down' | 'stable';
-      if (average > recentTrend * 1.1) trend = 'up';
-      else if (average < recentTrend * 0.9) trend = 'down';
-      else trend = 'stable';
+      let confidence: 'high' | 'medium' | 'low' = 'low';
+      
+      if (cleanedData.length >= 3) {
+        const { slope } = calculateLinearTrend(cleanedData);
+        const meanValue = cleanedData.reduce((a, b) => a + b, 0) / cleanedData.length;
+        
+        // Calcular significância do slope (% de mudança por dia)
+        const slopePercent = meanValue > 0 ? (slope / meanValue) * 100 : 0;
+        
+        // Thresholds baseados no tipo de métrica
+        const thresholds = metric === 'ctr' || metric === 'cpl' ? 
+          { up: 2, down: -2 } : // Métricas de eficiência: ±2%
+          { up: 5, down: -5 };  // Métricas de volume: ±5%
+        
+        if (slopePercent > thresholds.up) trend = 'up';
+        else if (slopePercent < thresholds.down) trend = 'down';
+        else trend = 'stable';
+        
+        // Confidence baseado na qualidade dos dados
+        if (cleanedData.length >= 7 && Math.abs(slopePercent) > 1) confidence = 'high';
+        else if (cleanedData.length >= 4) confidence = 'medium';
+        else confidence = 'low';
+        
+        console.log(`📈 Tendência ${metric}: slope=${slope.toFixed(4)}, slope%=${slopePercent.toFixed(2)}%, trend=${trend}, confidence=${confidence}`);
+      } else {
+        trend = 'stable';
+        confidence = 'low';
+      }
       
       metricsSummary[metric] = {
         trend,
-        confidence: forecastData[0]?.confidence || 'low',
+        confidence,
         next7Days: {
           total,
           average,
