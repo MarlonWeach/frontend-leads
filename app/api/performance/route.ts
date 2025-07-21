@@ -35,12 +35,17 @@ export async function GET(request: NextRequest) {
 
     // Se não há filtro de data, aplicar filtro padrão dos últimos 7 dias
     if (!startDate || !endDate) {
+      // CORREÇÃO CRÍTICA: Usar timezone São Paulo para evitar offset de datas
       const today = new Date();
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(today.getDate() - 6); // 7 dias incluindo hoje
       
-      startDate = sevenDaysAgo.toISOString().split('T')[0];
-      endDate = today.toISOString().split('T')[0];
+      // Converter para timezone São Paulo para manter consistência
+      const { formatInTimeZone } = require('date-fns-tz');
+      const SAO_PAULO_TZ = 'America/Sao_Paulo';
+      
+      startDate = formatInTimeZone(sevenDaysAgo, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      endDate = formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd');
     }
 
     console.log('Performance API: Iniciando busca', { page, limit, offset, status, startDate, endDate });

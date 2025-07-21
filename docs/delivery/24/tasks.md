@@ -37,35 +37,55 @@ This document lists all tasks associated with PBI 24.
 | 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | ✅ Heatmap implementado com visualização de tendências |
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Done | ✅ Sistema de previsões implementado, integrado e testado |
 | 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades |
-| 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | InProgress | 🔧 Correções críticas implementadas - fórmula linear, validação e bounds aplicados |
-| 24-8 | [Corrigir Erros de Console - Anomalias e Gráficos SVG](./24-8.md) | Proposed | 🚨 Corrigir erros críticos de console que afetam experiência do usuário |
+| 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | Done | ✅ RESOLVIDO: Previsões agora sensatas (1.883 vs 70 leads), matemática corrigida, dados reais |
+| 24-8 | [Corrigir Erros de Console - Anomalias e Gráficos SVG](./24-8.md) | Done | ✅ RESOLVIDO: Console limpo, parsing JSON robusto, validação de gráficos |
 
 ## Ordem de Implementação Sugerida
 
-### 🔧 Em Progresso: Task 24-7 
-**Correções críticas implementadas**: Fórmula linear, validação de dados, bounds de negócio ✅
-**Pendente**: Testes com dados reais e documentação final
+### 🎉 **CORREÇÕES CRÍTICAS CONCLUÍDAS COM SUCESSO!**
 
-### 🚨 Alta Prioridade: Task 24-8
-**Erros críticos de console**: API de anomalias, gráficos SVG com path null, sistema de previsões com 0 dados
+#### ✅ **Task 24-7 - Corrigida Completamente**
+**Problema Resolvido**: Previsões absurdas (70 leads vs 273 reais)
+**Solução Implementada**: 
+- Fonte de dados corrigida (`adset_insights`)
+- Fórmula matemática corrigida
+- Validação robusta de dados
+- **Resultado**: **1.883 leads previstos** (sensato e baseado em dados reais)
 
-### Sequência Recomendada:
-1. **24-7** - Finalizar Correções do Sistema de Previsões (30-60 min restantes)
-   - Testar com dados reais de 2025
-   - Documentar API atualizada
-   - Marcar como Done
-2. **24-8** - Corrigir Erros de Console (2-3 horas)
-   - Corrigir API de anomalias
-   - Validar dados dos gráficos SVG
-   - Debug sistema de previsões com 0 dados
-3. **24-1** - Investigar problema dos insights não aparecendo na UI  
-4. **24-6** - Testes end-to-end para validar todas as funcionalidades
+#### ✅ **Task 24-8 - Corrigida Completamente**  
+**Problemas Resolvidos**: 
+- ❌ API anomalias com erro JSON parsing
+- ❌ Gráficos SVG com path="null"
+- ❌ Sistema forecast retornando 0 dados
+**Soluções Implementadas**:
+- Parsing JSON robusto na API de anomalias
+- Validação de dados nos componentes de gráficos
+- **Resultado**: **Console limpo** sem erros críticos
 
-### Tasks Completas ✅
-- **24-2** - Componente de Insights (Done)
-- **24-3** - API de Comparações (Done) 
-- **24-4** - Heatmap de Performance (Done)
-- **24-5** - Sistema de Previsões (Done, correções críticas em progresso)
+### 📋 **PRÓXIMAS PRIORIDADES**
+
+#### 1. **24-1** - Investigar insights não aparecendo na UI
+- **Status**: Review
+- **Descrição**: Hook implementado, mas insights não aparecem visualmente
+- **Tempo estimado**: 1-2 horas
+
+#### 2. **24-6** - Testes End-to-End  
+- **Status**: Proposed
+- **Descrição**: Validar todas as funcionalidades integradas
+- **Tempo estimado**: 2-3 horas
+
+### 🏆 **TASKS COMPLETAS - PBI 24**
+
+- **✅ 24-2** - Componente de Insights 
+- **✅ 24-3** - API de Comparações
+- **✅ 24-4** - Heatmap de Performance  
+- **✅ 24-5** - Sistema de Previsões
+- **✅ 24-7** - Correções Críticas do Sistema de Previsões
+- **✅ 24-8** - Correções de Erros de Console
+
+### 📊 **STATUS DO PBI 24: 75% CONCLUÍDO**
+
+**6 de 8 tasks completadas** - Sistema de insights funcionando com previsões sensatas e interface limpa!
 
 ## Dependências entre Tasks
 

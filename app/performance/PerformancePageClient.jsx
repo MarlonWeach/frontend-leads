@@ -86,34 +86,44 @@ export default function PerformancePageClient() {
   
   const datePresets = useMemo(() => [
     { label: 'Hoje', getRange: () => {
-      const today = new Date();
-      const todayStr = formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: todayStr, end: todayStr };
+      // Usar data atual no timezone São Paulo para evitar offset
+      const now = new Date();
+      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      return { start: todaySP, end: todaySP };
     }},
     { label: 'Ontem', getRange: () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = formatInTimeZone(yesterday, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: yesterdayStr, end: yesterdayStr };
+      // CORREÇÃO CRÍTICA: Calcular ontem corretamente no timezone São Paulo
+      const now = new Date();
+      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
+      todaySPDate.setDate(todaySPDate.getDate() - 1);
+      const yesterdaySP = formatInTimeZone(todaySPDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      return { start: yesterdaySP, end: yesterdaySP };
     }},
     { label: 'Últimos 3 dias', getRange: () => {
-      const today = new Date();
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(today.getDate() - 2);
+      const now = new Date();
+      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
+      const threeDaysAgoDate = new Date(todaySPDate);
+      threeDaysAgoDate.setDate(todaySPDate.getDate() - 2);
+      const threeDaysAgoSP = formatInTimeZone(threeDaysAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
       
       return { 
-        start: formatInTimeZone(threeDaysAgo, SAO_PAULO_TZ, 'yyyy-MM-dd'), 
-        end: formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd') 
+        start: threeDaysAgoSP, 
+        end: todaySP 
       };
     }},
     { label: 'Últimos 7 dias', getRange: () => {
-      const today = new Date();
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(today.getDate() - 6);
+      const now = new Date();
+      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
+      const sevenDaysAgoDate = new Date(todaySPDate);
+      sevenDaysAgoDate.setDate(todaySPDate.getDate() - 6);
+      const sevenDaysAgoSP = formatInTimeZone(sevenDaysAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
       
       return { 
-        start: formatInTimeZone(sevenDaysAgo, SAO_PAULO_TZ, 'yyyy-MM-dd'), 
-        end: formatInTimeZone(today, SAO_PAULO_TZ, 'yyyy-MM-dd') 
+        start: sevenDaysAgoSP, 
+        end: todaySP 
       };
     }},
     { label: 'Personalizado', getRange: () => {
