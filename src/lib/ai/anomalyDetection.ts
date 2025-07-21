@@ -509,7 +509,9 @@ Retorne APENAS um JSON válido no formato:
       "recommendations": ["Recomendação 1", "Recomendação 2"]
     }
   ]
-}`;
+}
+
+IMPORTANTE: Responda APENAS o JSON, sem texto adicional antes ou depois.`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -518,7 +520,32 @@ Retorne APENAS um JSON válido no formato:
       max_tokens: 1500
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{"anomalies":[]}');
+    const responseContent = response.choices[0].message.content || '{"anomalies":[]}';
+    
+    // CORREÇÃO CRÍTICA: Extrair JSON válido mesmo se houver texto adicional
+    let jsonContent = responseContent.trim();
+    
+    // Tentar encontrar o JSON na resposta
+    const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonContent = jsonMatch[0];
+    }
+    
+    // Remover possível texto antes do JSON
+    const jsonStart = jsonContent.indexOf('{');
+    if (jsonStart > 0) {
+      jsonContent = jsonContent.substring(jsonStart);
+    }
+    
+    // Remover possível texto depois do JSON
+    const jsonEnd = jsonContent.lastIndexOf('}');
+    if (jsonEnd !== -1) {
+      jsonContent = jsonContent.substring(0, jsonEnd + 1);
+    }
+    
+    console.log('🔍 Tentando parse do JSON extraído:', jsonContent.substring(0, 200) + '...');
+    
+    const result = JSON.parse(jsonContent);
     
     result.anomalies?.forEach((anomaly: any, index: number) => {
       anomalies.push({
@@ -537,6 +564,12 @@ Retorne APENAS um JSON válido no formato:
 
   } catch (error) {
     console.error('Erro na análise de IA:', error);
+    
+    // Se for erro de parsing JSON, retornar array vazio ao invés de quebrar
+    if (error instanceof SyntaxError) {
+      console.warn('🔍 Erro de parsing JSON na resposta da IA, retornando anomalias vazias');
+      return [];
+    }
   }
 
   return anomalies;

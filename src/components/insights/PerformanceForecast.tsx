@@ -154,32 +154,75 @@ const ForecastChart: React.FC<{
   const metricConfig = FORECAST_METRICS[metric];
   
   const chartData = useMemo(() => {
-    const historicalLine = historical.map(point => ({
+    // VALIDAÇÃO CRÍTICA: Verificar se os dados são válidos
+    const validHistorical = Array.isArray(historical) ? historical.filter(point => 
+      point && 
+      point.date && 
+      typeof point.predicted === 'number' && 
+      !isNaN(point.predicted) && 
+      isFinite(point.predicted)
+    ) : [];
+    
+    const validForecast = Array.isArray(forecast) ? forecast.filter(point => 
+      point && 
+      point.date && 
+      typeof point.predicted === 'number' && 
+      !isNaN(point.predicted) && 
+      isFinite(point.predicted)
+    ) : [];
+
+    console.log(`📊 ForecastChart ${metric}: ${validHistorical.length} pontos históricos, ${validForecast.length} pontos de previsão`);
+
+    // Se não há dados válidos, retornar estrutura vazia
+    if (validHistorical.length === 0 && validForecast.length === 0) {
+      return [];
+    }
+
+    const historicalLine = validHistorical.map(point => ({
       x: point.date,
       y: point.predicted,
       type: 'historical'
     }));
 
-    const forecastLine = forecast.map(point => ({
+    const forecastLine = validForecast.map(point => ({
       x: point.date,
       y: point.predicted,
       type: 'forecast'
     }));
 
-    return [
-      {
+    const lines = [];
+    
+    if (historicalLine.length > 0) {
+      lines.push({
         id: 'Histórico',
         color: metricConfig.color,
         data: historicalLine
-      },
-      {
+      });
+    }
+
+    if (forecastLine.length > 0) {
+      lines.push({
         id: 'Previsão',
         color: metricConfig.color,
         data: forecastLine,
         lineType: 'dashed'
-      }
-    ];
-  }, [historical, forecast, metricConfig]);
+      });
+    }
+
+    return lines;
+  }, [historical, forecast, metricConfig, metric]);
+
+  // Se não há dados para exibir, mostrar placeholder
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="h-64 w-full flex items-center justify-center bg-black/20 rounded-lg">
+        <div className="text-center text-gray-400">
+          <div className="text-lg mb-2">📊</div>
+          <div className="text-sm">Sem dados disponíveis para {metricConfig.label}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-64 w-full">
@@ -202,7 +245,13 @@ const ForecastChart: React.FC<{
           legend: 'Data',
           legendOffset: 40,
           legendPosition: 'middle',
-          format: (value) => format(new Date(value), 'dd/MM')
+          format: (value) => {
+            try {
+              return format(new Date(value), 'dd/MM');
+            } catch {
+              return String(value);
+            }
+          }
         }}
         axisLeft={{
           tickSize: 5,
@@ -211,7 +260,13 @@ const ForecastChart: React.FC<{
           legend: metricConfig.label,
           legendOffset: -50,
           legendPosition: 'middle',
-          format: (value) => metricConfig.format(Number(value))
+          format: (value) => {
+            try {
+              return metricConfig.format(Number(value));
+            } catch {
+              return String(value);
+            }
+          }
         }}
         pointSize={4}
         pointColor={{ theme: 'background' }}
@@ -300,10 +355,22 @@ const ForecastChart: React.FC<{
         tooltip={({ point }) => (
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-3">
             <div className="font-medium text-white">
-              {format(new Date(point.data.x), 'dd/MM/yyyy')}
+              {(() => {
+                try {
+                  return format(new Date(point.data.x), 'dd/MM/yyyy');
+                } catch {
+                  return String(point.data.x);
+                }
+              })()}
             </div>
             <div className="text-sm text-gray-300">
-              {point.seriesId}: {metricConfig.format(Number(point.data.y))}
+              {point.seriesId}: {(() => {
+                try {
+                  return metricConfig.format(Number(point.data.y));
+                } catch {
+                  return String(point.data.y);
+                }
+              })()}
             </div>
           </div>
         )}

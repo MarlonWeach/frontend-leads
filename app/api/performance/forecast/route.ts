@@ -147,8 +147,10 @@ const fetchHistoricalData = async (
   endDate: string,
   metrics: string[]
 ): Promise<{ [key: string]: number[] }> => {
+  // CORREÇÃO CRÍTICA: Usar adset_insights ao invés de campaign_insights
+  // Esta é a mesma tabela que a API /api/performance usa
   const { data, error } = await supabase
-    .from('campaign_insights')
+    .from('adset_insights')
     .select('date, leads, spend, impressions, clicks')
     .gte('date', startDate)
     .lte('date', endDate)
@@ -157,6 +159,8 @@ const fetchHistoricalData = async (
   if (error) {
     throw new Error(`Erro ao buscar dados históricos: ${error.message}`);
   }
+
+  console.log(`📊 Dados históricos encontrados: ${data?.length || 0} registros da tabela adset_insights`);
 
   // Agrupar dados por data
   const dailyData: { [date: string]: any } = {};
@@ -177,6 +181,8 @@ const fetchHistoricalData = async (
     dailyData[date].impressions += Number(row.impressions) || 0;
     dailyData[date].clicks += Number(row.clicks) || 0;
   });
+
+  console.log(`📊 Dados agregados por data: ${Object.keys(dailyData).length} dias únicos`);
 
   // Calcular métricas derivadas e preparar arrays
   const result: { [key: string]: number[] } = {};
@@ -222,6 +228,13 @@ const fetchHistoricalData = async (
       const cpl = dayData.leads > 0 ? dayData.spend / dayData.leads : 0;
       result.cpl.push(cpl);
     }
+  });
+
+  // Log dos dados finais para debug
+  console.log(`📊 Resultado final por métrica:`);
+  metrics.forEach(metric => {
+    const values = result[metric] || [];
+    console.log(`  ${metric}: ${values.length} valores, total: ${values.reduce((a, b) => a + b, 0)}`);
   });
 
   return result;
