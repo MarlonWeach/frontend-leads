@@ -37,23 +37,27 @@ This document lists all tasks associated with PBI 24.
 | 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | ✅ Heatmap implementado com visualização de tendências |
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Done | ✅ Sistema de previsões implementado, integrado e testado |
 | 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades |
-| 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | Proposed | 🚨 Corrigir problemas matemáticos e de validação identificados no sistema de previsões |
+| 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | InProgress | 🔧 Correções críticas implementadas - fórmula linear, validação e bounds aplicados |
 
 ## Ordem de Implementação Sugerida
 
-### Próxima Prioridade: Task 24-7 🚨
-**CRÍTICO**: Corrigir problemas matemáticos fundamentais no sistema de previsões antes de continuar com outras funcionalidades.
+### 🔧 Em Progresso: Task 24-7 
+**Correções críticas implementadas**: Fórmula linear, validação de dados, bounds de negócio ✅
+**Pendente**: Testes com dados reais e documentação final
 
 ### Sequência Recomendada:
-1. **24-7** - Corrigir Problemas Críticos do Sistema de Previsões (PRIORIDADE MÁXIMA)
-2. **24-1** - Investigar e corrigir problema dos insights não aparecendo na UI
+1. **24-7** - Finalizar Correções do Sistema de Previsões (30-60 min restantes)
+   - Testar com dados reais de 2025
+   - Documentar API atualizada
+   - Marcar como Done
+2. **24-1** - Investigar e corrigir problema dos insights não aparecendo na UI  
 3. **24-6** - Testes end-to-end para validar todas as funcionalidades
 
 ### Tasks Completas ✅
 - **24-2** - Componente de Insights (Done)
 - **24-3** - API de Comparações (Done) 
 - **24-4** - Heatmap de Performance (Done)
-- **24-5** - Sistema de Previsões (Done, mas com problemas críticos identificados)
+- **24-5** - Sistema de Previsões (Done, correções críticas em progresso)
 
 ## Dependências entre Tasks
 
