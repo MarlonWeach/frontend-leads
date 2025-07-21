@@ -38,6 +38,7 @@ This document lists all tasks associated with PBI 24.
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Done | ✅ Sistema de previsões implementado, integrado e testado |
 | 24-6 | [E2E CoS Test](./24-6.md) | Proposed | Testes end-to-end para validar todas as funcionalidades |
 | 24-7 | [Corrigir Problemas Críticos do Sistema de Previsões](./24-7.md) | InProgress | 🔧 Correções críticas implementadas - fórmula linear, validação e bounds aplicados |
+| 24-8 | [Corrigir Erros de Console - Anomalias e Gráficos SVG](./24-8.md) | Proposed | 🚨 Corrigir erros críticos de console que afetam experiência do usuário |
 
 ## Ordem de Implementação Sugerida
 
@@ -45,13 +46,20 @@ This document lists all tasks associated with PBI 24.
 **Correções críticas implementadas**: Fórmula linear, validação de dados, bounds de negócio ✅
 **Pendente**: Testes com dados reais e documentação final
 
+### 🚨 Alta Prioridade: Task 24-8
+**Erros críticos de console**: API de anomalias, gráficos SVG com path null, sistema de previsões com 0 dados
+
 ### Sequência Recomendada:
 1. **24-7** - Finalizar Correções do Sistema de Previsões (30-60 min restantes)
    - Testar com dados reais de 2025
    - Documentar API atualizada
    - Marcar como Done
-2. **24-1** - Investigar e corrigir problema dos insights não aparecendo na UI  
-3. **24-6** - Testes end-to-end para validar todas as funcionalidades
+2. **24-8** - Corrigir Erros de Console (2-3 horas)
+   - Corrigir API de anomalias
+   - Validar dados dos gráficos SVG
+   - Debug sistema de previsões com 0 dados
+3. **24-1** - Investigar problema dos insights não aparecendo na UI  
+4. **24-6** - Testes end-to-end para validar todas as funcionalidades
 
 ### Tasks Completas ✅
 - **24-2** - Componente de Insights (Done)
