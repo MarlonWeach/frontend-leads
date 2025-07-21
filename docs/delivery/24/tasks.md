@@ -6,11 +6,12 @@ This document lists all tasks associated with PBI 24.
 
 ## Progresso do PBI 24
 
-### ✅ Concluído (4/6)
+### ✅ Concluído (5/6)
 - **24-1**: Hook de Análise de Mudanças - ✅ **CONCLUÍDO**
   - Sistema de insights funcionando com dados reais de 2025
   - Problemas de TypeScript e build resolvidos
   - Deploy funcionando no Vercel
+- **24-2**: Componente de Insights - ✅ **CONCLUÍDO**
 - **24-3**: API de Comparações - ✅ **CONCLUÍDO**
 - **24-4**: Heatmap de Performance - ✅ **CONCLUÍDO**
 - **24-5**: Sistema de Previsões - ✅ **CONCLUÍDO**
@@ -18,21 +19,20 @@ This document lists all tasks associated with PBI 24.
 ### 🔄 Em Andamento (0/6)
 - Nenhuma task em andamento no momento
 
-### ⏳ Pendente (2/6)
-- **24-2**: Componente de Insights - Próxima prioridade
+### ⏳ Pendente (1/6)
 - **24-6**: E2E CoS Test
 
 ### 📊 Resumo
-- **Progresso**: 66.7% (4 de 6 tasks concluídas)
+- **Progresso**: 83.3% (5 de 6 tasks concluídas)
 - **Status**: Base sólida estabelecida com insights, comparações, heatmap e previsões funcionando
-- **Próximo**: Implementar componente visual para exibir insights
+- **Próximo**: Executar testes end-to-end dos critérios de satisfação
 
 ## Task Summary
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
 | 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Review | Hook implementado com sucesso, mas insights não aparecem na UI - precisa investigação |
-| 24-2 | [Criar Componente de Insights](./24-2.md) | Proposed | Componente visual para exibir insights gerados pelo hook |
+| 24-2 | [Criar Componente de Insights](./24-2.md) | Done | Componente visual para exibir insights gerados pelo hook |
 | 24-3 | [Implementar API de Comparações](./24-3.md) | Done | API para fornecer dados de comparação entre períodos |
 | 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | Visualização de tendências de performance ao longo do tempo |
 | 24-5 | [Implementar Sistema de Previsões](./24-5.md) | Done | Previsões de performance para próximos 7 dias usando IA |
