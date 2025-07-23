@@ -62,13 +62,15 @@ export const usePerformanceForecast = (options: UseForecastOptions): UsePerforma
 
       if (!res.ok) {
         const errorData = await res.json();
+        console.error('❌ ERRO NA RESPOSTA:', errorData);
         throw new Error(errorData.error || 'Erro ao buscar previsões');
       }
 
-      return res.json();
+      const jsonData = await res.json();
+      return jsonData;
     },
     enabled: enabled && !!dateRange.start && !!dateRange.end,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 60 * 1000, // 1 minuto
     retry: 2,
     retryDelay: 1000,
   });

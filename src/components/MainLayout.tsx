@@ -34,9 +34,15 @@ const navigation = [
     description: 'Métricas e gráficos'
   },
   {
+    name: 'Metas',
+    href: '/dashboard/metas',
+    icon: Target,
+    description: 'Acompanhamento de metas'
+  },
+  {
     name: 'Campanhas',
     href: '/campaigns',
-    icon: Target,
+    icon: BarChart3,
     description: 'Gerenciar campanhas'
   },
   {

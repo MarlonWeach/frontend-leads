@@ -46,26 +46,32 @@ export const usePerformanceInsights = ({
   const [comparison, setComparison] = useState<PeriodComparison | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentFilters = useMemo(() => ({
-    startDate: toISODate(dateRange.start),
-    endDate: toISODate(dateRange.end)
+  // NOVA LÓGICA: Usar o dateRange selecionado pelo usuário
+  // Calcula o período anterior com base no range selecionado
+  const current = useMemo(() => ({
+    start: dateRange.start,
+    end: dateRange.end
   }), [dateRange.start, dateRange.end]);
 
-  const previousPeriod = useMemo(() => {
+  const previous = useMemo(() => {
     const duration = dateRange.end.getTime() - dateRange.start.getTime();
-    const previousEnd = new Date(dateRange.start);
-    const previousStart = new Date(previousEnd.getTime() - duration);
-    
+    const prevEnd = new Date(dateRange.start.getTime() - 1); // Dia anterior ao início
+    const prevStart = new Date(prevEnd.getTime() - duration);
     return {
-      start: previousStart,
-      end: previousEnd
+      start: prevStart,
+      end: prevEnd
     };
   }, [dateRange.start, dateRange.end]);
 
+  const currentFilters = useMemo(() => ({
+    startDate: toISODate(current.start),
+    endDate: toISODate(current.end)
+  }), [current.start, current.end]);
+
   const previousFilters = useMemo(() => ({
-    startDate: toISODate(previousPeriod.start),
-    endDate: toISODate(previousPeriod.end)
-  }), [previousPeriod.start, previousPeriod.end]);
+    startDate: toISODate(previous.start),
+    endDate: toISODate(previous.end)
+  }), [previous.start, previous.end]);
 
   // Buscar dados de performance usando adset_insights (mesma estratégia da API /api/performance)
   const { data: currentData, isLoading: currentLoading, error: currentError } = useQuery({
@@ -170,6 +176,11 @@ export const usePerformanceInsights = ({
         // Calcular variações
         const performanceMetrics = calculatePerformanceMetrics(currentMetrics, previousMetrics);
         
+        // DEBUG TEMPORÁRIO: Logar métricas e variações
+        console.log('🔎 DEBUG INSIGHTS - currentMetrics:', currentMetrics);
+        console.log('🔎 DEBUG INSIGHTS - previousMetrics:', previousMetrics);
+        console.log('🔎 DEBUG INSIGHTS - performanceMetrics:', performanceMetrics);
+        
         // Gerar insights
         const generatedInsights = processMetrics(performanceMetrics, {
           threshold: 10,
@@ -183,7 +194,7 @@ export const usePerformanceInsights = ({
         setError('Erro ao calcular insights');
       }
     }
-  }, [currentData, previousData, loading, dateRange.start, dateRange.end, previousPeriod.start, previousPeriod.end]);
+  }, [currentData, previousData, loading, current.start, current.end, previous.start, previous.end]);
 
   useEffect(() => {
     if (combinedError) {

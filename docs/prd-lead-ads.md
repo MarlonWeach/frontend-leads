@@ -276,18 +276,47 @@ Dashboard interativo com inteligência artificial que não apenas visualiza dado
 - ✅ Sugestões de otimização baseadas em IA
 - ✅ Documentação completa de boas práticas
 
-### Fase 4: Features Avançadas com IA
+### Fase 4: Features Avançadas com IA (Em Progresso)
 - ⏳ Otimização automática de campanhas
 - ⏳ Geração de copies com IA
 - ⏳ Predição de performance
 - ⏳ Sistema avançado de scoring de leads
 - ⏳ Relatórios inteligentes automatizados
 
-### Fase 5: Otimizações e Escala
+### Fase 5: Otimizações e Escala (Futuro)
 - ⏳ Cache inteligente com IA
 - ⏳ API própria com endpoints de IA
 - ⏳ Marketplace de prompts otimizados
 - ⏳ App mobile com assistente integrado
+
+### Novos PBIs sugeridos
+
+#### PBI: Otimização Automática de Campanhas
+Como gestor de marketing, quero que o sistema otimize automaticamente a distribuição de orçamento e segmentação das campanhas, aplicando sugestões de IA de forma semi-automática, para maximizar resultados sem intervenção manual constante.
+
+#### PBI: Geração Automática de Copies com IA
+Como analista de performance, quero que o sistema gere títulos, descrições e CTAs otimizados para anúncios, baseando-se em dados históricos e melhores práticas, para acelerar a criação de campanhas de alta performance.
+
+#### PBI: Predição de Performance
+Como gestor, quero receber previsões de leads, CPL e conversão para os próximos 7/30 dias, com base em dados históricos e modelos de IA, para planejar melhor as ações de marketing.
+
+#### PBI: Sistema Avançado de Scoring de Leads
+Como equipe de vendas, quero que o sistema atribua automaticamente um score de qualidade para cada lead gerado, priorizando contatos mais quentes e aumentando a eficiência do time comercial.
+
+#### PBI: Relatórios Inteligentes Automatizados
+Como gestor, quero receber relatórios automáticos por email com insights, anomalias e recomendações, para acompanhar a performance sem precisar acessar o dashboard diariamente.
+
+#### PBI: Cache Inteligente com IA
+Como desenvolvedor, quero que o sistema utilize IA para decidir o que deve ser cacheado e por quanto tempo, otimizando custos e performance sem intervenção manual.
+
+#### PBI: API Própria para IA
+Como integrador, quero acessar os recursos de IA do sistema via API própria, facilitando integrações com outros sistemas e automações.
+
+#### PBI: Marketplace de Prompts Otimizados
+Como usuário avançado, quero acessar e compartilhar prompts otimizados para IA, acelerando a criação de análises e automações personalizadas.
+
+#### PBI: App Mobile com Assistente Integrado
+Como gestor em campo, quero acessar o dashboard e o assistente de IA via app mobile, recebendo alertas e insights em tempo real onde estiver.
 
 ## 8. Riscos e Mitigações
 
@@ -338,7 +367,6 @@ Dashboard interativo com inteligência artificial que não apenas visualiza dado
 - Sistema avançado de scoring de leads
 
 ### Sprint 11-12 (Futuro)
-- Multi-tenant (múltiplos clientes)
 - Relatórios inteligentes automatizados
 - Cache inteligente com IA
 - API própria com endpoints de IA

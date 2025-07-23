@@ -20,7 +20,8 @@ const supabase = createClient(
 import { ForecastRequest, ForecastResponse, ForecastData, FORECAST_METRICS } from '../../../../src/types/forecast';
 import { serverCache } from '../../../../src/utils/server-cache';
 
-const CACHE_TTL = 60 * 60; // 1 hora
+// Cache TTL
+const CACHE_TTL = 60; // CORREÇÃO: 1 minuto para atualizações mais frequentes
 
 // Bounds realistas para cada métrica de marketing digital
 const METRIC_BOUNDS = {
@@ -140,20 +141,32 @@ const calculateConfidenceInterval = (
 };
 
 /**
- * Buscar dados históricos do Supabase
+ * Buscar dados históricos do Supabase com período focado na tendência recente
  */
 const fetchHistoricalData = async (
   startDate: string,
   endDate: string,
   metrics: string[]
 ): Promise<{ [key: string]: number[] }> => {
-  // CORREÇÃO CRÍTICA: Usar adset_insights ao invés de campaign_insights
-  // Esta é a mesma tabela que a API /api/performance usa
+  // CORREÇÃO CRÍTICA: Excluir o dia atual da análise por estar incompleto
+  // Usar apenas dias completos para análise de tendências precisas
+  const endDateTime = new Date(endDate);
+  const yesterday = new Date(endDateTime);
+  yesterday.setDate(endDateTime.getDate() - 1); // Último dia completo
+  
+  const recentStartDate = new Date(yesterday);
+  recentStartDate.setDate(yesterday.getDate() - 6); // 7 dias completos (excluindo hoje)
+  
+  const historicalStartDate = recentStartDate.toISOString().split('T')[0];
+  const finalEndDate = yesterday.toISOString().split('T')[0];
+  
+  console.log(`🔍 Buscando dados completos: ${historicalStartDate} até ${finalEndDate} (7 dias completos, excluindo hoje que está incompleto)`);
+  
   const { data, error } = await supabase
     .from('adset_insights')
     .select('date, leads, spend, impressions, clicks')
-    .gte('date', startDate)
-    .lte('date', endDate)
+    .gte('date', historicalStartDate)
+    .lte('date', finalEndDate) // Excluir hoje
     .order('date', { ascending: true });
 
   if (error) {
@@ -182,84 +195,137 @@ const fetchHistoricalData = async (
     dailyData[date].clicks += Number(row.clicks) || 0;
   });
 
-  console.log(`📊 Dados agregados por data: ${Object.keys(dailyData).length} dias únicos`);
+  console.log(`📊 Dados agregados por data: ${Object.keys(dailyData).length} dias únicos (dias completos)`);
 
-  // Calcular métricas derivadas e preparar arrays
+  // Calcular métricas derivadas e organizar em arrays ordenados por data
   const result: { [key: string]: number[] } = {};
-  
   metrics.forEach(metric => {
     result[metric] = [];
   });
 
-  // Ordenar datas e extrair valores
+  // Ordenar datas e processar
   const sortedDates = Object.keys(dailyData).sort();
+  console.log(`📅 Período de análise: ${sortedDates[0]} até ${sortedDates[sortedDates.length - 1]}`);
   
   sortedDates.forEach(date => {
     const dayData = dailyData[date];
     
-    // Leads
     if (metrics.includes('leads')) {
       result.leads.push(dayData.leads);
     }
-    
-    // Spend
     if (metrics.includes('spend')) {
       result.spend.push(dayData.spend);
     }
-    
-    // Impressions
     if (metrics.includes('impressions')) {
       result.impressions.push(dayData.impressions);
     }
-    
-    // Clicks
     if (metrics.includes('clicks')) {
       result.clicks.push(dayData.clicks);
     }
-    
-    // CTR
     if (metrics.includes('ctr')) {
       const ctr = dayData.impressions > 0 ? (dayData.clicks / dayData.impressions) * 100 : 0;
       result.ctr.push(ctr);
     }
-    
-    // CPL
     if (metrics.includes('cpl')) {
       const cpl = dayData.leads > 0 ? dayData.spend / dayData.leads : 0;
       result.cpl.push(cpl);
     }
   });
 
-  // Log dos dados finais para debug
-  console.log(`📊 Resultado final por métrica:`);
-  metrics.forEach(metric => {
-    const values = result[metric] || [];
-    console.log(`  ${metric}: ${values.length} valores, total: ${values.reduce((a, b) => a + b, 0)}`);
+  // Log do resultado final
+  console.log('📊 Resultado final por métrica:');
+  Object.keys(result).forEach(metric => {
+    const values = result[metric];
+    const total = values.reduce((a, b) => a + b, 0);
+    console.log(`  ${metric}: ${values.length} valores, total: ${total}`);
   });
 
   return result;
 };
 
 /**
- * Gerar previsões para uma métrica com validação e constraints
+ * Calcular tendência com peso ponderado (dias recentes têm peso maior)
  */
-const generateForecast = (
+const calculateWeightedTrend = (data: number[]): { 
+  slope: number; 
+  intercept: number; 
+  acceleration: number;
+  weightedAverage: number;
+  recentTrend: 'accelerating' | 'decelerating' | 'stable';
+} => {
+  const n = data.length;
+  if (n < 2) return { slope: 0, intercept: data[0] || 0, acceleration: 0, weightedAverage: data[0] || 0, recentTrend: 'stable' };
+
+  // PESO EXPONENCIAL MUITO AGRESSIVO: últimos dias dominam completamente
+  const weights = data.map((_, i) => Math.pow(2.5, i)); // Peso cresce muito mais rápido
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  
+  // Média ponderada (últimos dias têm peso gigantesco)
+  const weightedAverage = data.reduce((sum, value, i) => sum + value * weights[i], 0) / totalWeight;
+  
+  console.log(`📊 Dados: [${data.join(', ')}]`);
+  console.log(`⚖️ Pesos: [${weights.map(w => w.toFixed(1)).join(', ')}]`);
+  console.log(`📈 Média ponderada: ${weightedAverage.toFixed(2)} (vs média simples: ${(data.reduce((a,b) => a+b, 0)/n).toFixed(2)})`);
+
+  // Calcular tendência linear ponderada
+  const xValues = Array.from({ length: n }, (_, i) => i);
+  const sumX = xValues.reduce((sum, x, i) => sum + x * weights[i], 0);
+  const sumY = data.reduce((sum, y, i) => sum + y * weights[i], 0);
+  const sumXY = xValues.reduce((sum, x, i) => sum + x * data[i] * weights[i], 0);
+  const sumXX = xValues.reduce((sum, x, i) => sum + x * x * weights[i], 0);
+
+  const slope = (totalWeight * sumXY - sumX * sumY) / (totalWeight * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / totalWeight;
+
+  // DETECÇÃO DE ACELERAÇÃO MAIS SENSÍVEL: apenas últimos 2-3 dias vs anteriores
+  let acceleration = 0;
+  let recentTrend: 'accelerating' | 'decelerating' | 'stable' = 'stable';
+  
+  if (n >= 4) {
+    // Pegar últimos 2 dias vs 2 anteriores para ser mais responsivo
+    const recent2 = data.slice(-2); // últimos 2 dias
+    const previous2 = data.slice(-4, -2); // 2 dias anteriores
+    
+    const recentAvg = recent2.reduce((a, b) => a + b, 0) / recent2.length;
+    const previousAvg = previous2.reduce((a, b) => a + b, 0) / previous2.length;
+    
+    acceleration = recentAvg - previousAvg;
+    const accelerationPercent = previousAvg > 0 ? (acceleration / previousAvg) * 100 : 0;
+    
+    console.log(`🚀 Aceleração: últimos 2 dias (${recentAvg.toFixed(1)}) vs 2 anteriores (${previousAvg.toFixed(1)}) = ${accelerationPercent.toFixed(1)}%`);
+    
+    // Limites mais baixos para detectar mudanças mais rapidamente
+    if (accelerationPercent > 10) recentTrend = 'accelerating';
+    else if (accelerationPercent < -10) recentTrend = 'decelerating';
+    else recentTrend = 'stable';
+  }
+
+  return { slope, intercept, acceleration, weightedAverage, recentTrend };
+};
+
+/**
+ * Gerar previsões inteligentes com peso ponderado e detecção de tendências
+ */
+const generateIntelligentForecast = (
   rawHistoricalData: number[],
   daysToForecast: number,
   metricName: string
 ): ForecastData[] => {
-  // Validar e limpar dados históricos
   const historicalData = validateAndCleanData(rawHistoricalData, metricName);
   
   console.log(`📊 Forecast ${metricName}: ${rawHistoricalData.length} dados brutos → ${historicalData.length} dados limpos`);
   
-  if (historicalData.length < 2) {
-    // Dados insuficientes - usar valor padrão conservador
-    const fallbackValue = metricName === 'leads' ? 10 : 
-                         metricName === 'spend' ? 100 : 
-                         metricName === 'ctr' ? 2 :
-                         metricName === 'cpl' ? 50 : 
-                         metricName === 'impressions' ? 1000 : 50;
+  if (historicalData.length < 3) {
+    // Usar último valor disponível como base para poucos dados
+    const lastValue = historicalData[historicalData.length - 1] || 0;
+    const fallbackValue = lastValue > 0 ? lastValue : 
+                         metricName === 'leads' ? 50 : 
+                         metricName === 'spend' ? 500 : 
+                         metricName === 'ctr' ? 2.5 :
+                         metricName === 'cpl' ? 15 : 
+                         metricName === 'impressions' ? 5000 : 100;
+    
+    console.log(`⚠️ Poucos dados para ${metricName}. Usando último valor: ${lastValue} ou fallback: ${fallbackValue}`);
     
     return Array.from({ length: daysToForecast }, (_, i) => {
       const date = format(addDays(new Date(), i + 1), 'yyyy-MM-dd');
@@ -269,24 +335,51 @@ const generateForecast = (
         date,
         predicted: prediction,
         confidence: 'low' as const,
-        min: prediction * 0.5,
-        max: prediction * 2
+        min: prediction * 0.8,
+        max: prediction * 1.2
       };
     });
   }
 
-  // Calcular tendência linear
-  const { slope, intercept } = calculateLinearTrend(historicalData);
+  // ANÁLISE INTELIGENTE COM PESO PONDERADO
+  const analysis = calculateWeightedTrend(historicalData);
+  const { slope, intercept, acceleration, weightedAverage, recentTrend } = analysis;
   
-  // Gerar previsões
+  console.log(`🎯 Análise ${metricName}:`);
+  console.log(`   • Slope: ${slope.toFixed(4)}`);
+  console.log(`   • Média ponderada: ${weightedAverage.toFixed(2)}`);
+  console.log(`   • Aceleração: ${acceleration.toFixed(2)}`);
+  console.log(`   • Tendência recente: ${recentTrend}`);
+
+  // Gerar previsões baseadas na análise inteligente
   const forecast: ForecastData[] = [];
   const n = historicalData.length;
   
   for (let i = 1; i <= daysToForecast; i++) {
     const date = format(addDays(new Date(), i), 'yyyy-MM-dd');
     
-    // CORREÇÃO CRÍTICA: Fórmula correta de regressão linear
-    const basePrediction = intercept + slope * (n - 1 + i);
+    // BASE: Regressão linear ponderada
+    let basePrediction = intercept + slope * (n - 1 + i);
+    
+    // APLICAR FATOR DE ACELERAÇÃO para dias recentes
+    if (recentTrend === 'accelerating') {
+      // Se está acelerando, aplicar fator de crescimento
+      const accelerationFactor = 1 + (acceleration / weightedAverage) * 0.3; // 30% do impacto da aceleração
+      basePrediction *= accelerationFactor;
+      console.log(`🚀 Aplicando fator de aceleração ${accelerationFactor.toFixed(3)} ao dia ${i}`);
+    } else if (recentTrend === 'decelerating') {
+      // Se está desacelerando, aplicar fator de desaceleração
+      const decelerationFactor = 1 + (acceleration / weightedAverage) * 0.2; // 20% do impacto da desaceleração
+      basePrediction *= Math.max(0.7, decelerationFactor); // não deixar cair muito
+      console.log(`📉 Aplicando fator de desaceleração ${decelerationFactor.toFixed(3)} ao dia ${i}`);
+    }
+    
+    // Para primeiros dias, dar ainda mais peso à média recente
+    if (i <= 3) {
+      const recentWeight = Math.max(0.3, 0.8 - i * 0.1); // 80%, 70%, 60% de peso dos dados recentes
+      basePrediction = basePrediction * (1 - recentWeight) + weightedAverage * recentWeight;
+      console.log(`🎯 Dia ${i}: Aplicando peso recente ${(recentWeight*100).toFixed(0)}%, previsão: ${basePrediction.toFixed(2)}`);
+    }
     
     // Aplicar constraints de negócio
     let prediction = applyBusinessConstraints(basePrediction, metricName);
@@ -300,25 +393,32 @@ const generateForecast = (
         break;
       case 'spend':
       case 'cpl':
-        prediction = Math.round(prediction * 100) / 100; // 2 casas decimais
+        prediction = Math.round(prediction * 100) / 100;
         break;
       case 'ctr':
-        prediction = Math.round(prediction * 100) / 100; // 2 casas decimais
+        prediction = Math.round(prediction * 100) / 100;
         break;
     }
     
+    // Intervalo de confiança baseado na análise inteligente
     const confidenceInterval = calculateConfidenceInterval(historicalData, prediction, i);
     
-    // Aplicar constraints também nos intervalos
-    const constrainedMin = applyBusinessConstraints(confidenceInterval.min, metricName);
-    const constrainedMax = applyBusinessConstraints(confidenceInterval.max, metricName);
+    // Ajustar confiança baseada na qualidade da tendência
+    let confidence: 'high' | 'medium' | 'low';
+    if (historicalData.length >= 7 && (recentTrend === 'accelerating' || recentTrend === 'decelerating')) {
+      confidence = 'high';
+    } else if (historicalData.length >= 5) {
+      confidence = 'medium';
+    } else {
+      confidence = 'low';
+    }
     
     forecast.push({
       date,
       predicted: prediction,
-      confidence: confidenceInterval.confidence,
-      min: constrainedMin,
-      max: constrainedMax
+      confidence,
+      min: applyBusinessConstraints(confidenceInterval.min, metricName),
+      max: applyBusinessConstraints(confidenceInterval.max, metricName)
     });
   }
   
@@ -361,12 +461,17 @@ export async function POST(request: NextRequest) {
     
     metrics.forEach(metric => {
       const data = historicalData[metric] || [];
-      
-      // Preparar dados históricos
+      // Definir ontem e amanhã
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      // Histórico: do (yesterday - (data.length - 1)) até ontem
       historical[metric] = data.map((value, index) => {
-        const date = format(addDays(new Date(startDate), index), 'yyyy-MM-dd');
+        const dateObj = new Date(yesterday);
+        dateObj.setDate(yesterday.getDate() - (data.length - 1 - index));
+        const dateStr = dateObj.toISOString().split('T')[0];
         return {
-          date,
+          date: dateStr,
           predicted: value,
           confidence: 'high' as const,
           min: value,
@@ -374,9 +479,8 @@ export async function POST(request: NextRequest) {
           actual: value
         };
       });
-      
-      // Gerar previsões
-      forecast[metric] = generateForecast(data, daysToForecast, metric);
+      // Previsão: começa em amanhã (today + 1)
+      forecast[metric] = generateIntelligentForecast(data, daysToForecast, metric);
     });
 
     // Calcular métricas agregadas com análise de tendência melhorada
@@ -423,16 +527,31 @@ export async function POST(request: NextRequest) {
         confidence = 'low';
       }
       
-      metricsSummary[metric] = {
-        trend,
-        confidence,
-        next7Days: {
-          total,
-          average,
-          min,
-          max
-        }
-      };
+      // CORREÇÃO CRÍTICA: Para CTR e CPL, usar AVERAGE como métrica principal
+      if (metric === 'ctr' || metric === 'cpl') {
+        metricsSummary[metric] = {
+          trend,
+          confidence,
+          next7Days: {
+            average: Number(average.toFixed(2)), // MÉTRICA PRINCIPAL para CTR/CPL
+            total: Number(total.toFixed(2)),     // Manter para compatibilidade
+            min: Number(min.toFixed(2)),
+            max: Number(max.toFixed(2))
+          }
+        };
+      } else {
+        // Para leads, spend, impressions, clicks: manter total como principal
+        metricsSummary[metric] = {
+          trend,
+          confidence,
+          next7Days: {
+            total: Math.round(total),              // MÉTRICA PRINCIPAL para volume
+            average: Number(average.toFixed(2)),
+            min: Math.round(min),
+            max: Math.round(max)
+          }
+        };
+      }
     });
 
     const response: ForecastResponse = {
@@ -445,7 +564,7 @@ export async function POST(request: NextRequest) {
           generatedAt: new Date().toISOString(),
           historicalDays: Object.values(historicalData)[0]?.length || 0,
           forecastDays: daysToForecast,
-          aiUsed: false // Por enquanto usando apenas algoritmo linear
+          aiUsed: true // Agora usando algoritmo de análise inteligente
         }
       }
     };

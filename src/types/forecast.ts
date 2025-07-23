@@ -13,6 +13,7 @@ export interface ForecastMetric {
   unit: string;
   format: (value: number) => string;
   color: string;
+  forecastColor: string; // Nova propriedade para cor da linha de previsão
 }
 
 export interface ForecastRequest {
@@ -83,41 +84,47 @@ export const FORECAST_METRICS: Record<string, ForecastMetric> = {
     label: 'Leads',
     unit: 'leads',
     format: (value: number) => Math.round(value).toString(),
-    color: '#3b82f6'
+    color: '#3b82f6',
+    forecastColor: '#00E0FF'
   },
   spend: {
     name: 'spend',
     label: 'Gastos',
     unit: 'R$',
     format: (value: number) => `R$ ${value.toFixed(2)}`,
-    color: '#10b981'
+    color: '#10b981',
+    forecastColor: '#00E0FF'
   },
   ctr: {
     name: 'ctr',
     label: 'CTR',
     unit: '%',
     format: (value: number) => `${value.toFixed(2)}%`,
-    color: '#f59e0b'
+    color: '#f59e0b',
+    forecastColor: '#00E0FF'
   },
   cpl: {
     name: 'cpl',
     label: 'CPL',
     unit: 'R$',
     format: (value: number) => `R$ ${value.toFixed(2)}`,
-    color: '#ef4444'
+    color: '#ef4444',
+    forecastColor: '#00E0FF'
   },
   impressions: {
     name: 'impressions',
     label: 'Impressões',
     unit: 'impressions',
     format: (value: number) => value.toLocaleString(),
-    color: '#8b5cf6'
+    color: '#8b5cf6',
+    forecastColor: '#00E0FF'
   },
   clicks: {
     name: 'clicks',
     label: 'Cliques',
     unit: 'clicks',
     format: (value: number) => Math.round(value).toString(),
-    color: '#06b6d4'
+    color: '#06b6d4',
+    forecastColor: '#00E0FF'
   }
 }; 

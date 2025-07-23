@@ -112,18 +112,37 @@ const ForecastCard: React.FC<ForecastCardProps> = ({ metric, data }) => {
 
       <div className="space-y-2">
         <div>
-          <div className="text-xs text-gray-400">Próximos 7 dias (total)</div>
-          <div className="text-lg font-bold text-white">
-            {metricConfig.format(data.next7Days.total)}
-          </div>
+          {/* Para CTR e CPL, usar average como métrica principal e mostrar "média" no label */}
+          {(metric === 'ctr' || metric === 'cpl') ? (
+            <>
+              <div className="text-xs text-gray-400">Próximos 7 dias (média)</div>
+              <div className="text-lg font-bold text-white">
+                {metricConfig.format(data.next7Days.average)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-xs text-gray-400">Próximos 7 dias (total)</div>
+              <div className="text-lg font-bold text-white">
+                {metricConfig.format(data.next7Days.total)}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
-            <div className="text-gray-400">Média/dia</div>
-            <div className="font-medium text-white">
-              {metricConfig.format(data.next7Days.average)}
-            </div>
+            {/* Para CTR e CPL, não mostrar o total calculado (sem serventia) */}
+            {(metric === 'ctr' || metric === 'cpl') ? (
+              <div></div> /* Espaço vazio para manter o grid */
+            ) : (
+              <>
+                <div className="text-gray-400">Média/dia</div>
+                <div className="font-medium text-white">
+                  {metricConfig.format(data.next7Days.average)}
+                </div>
+              </>
+            )}
           </div>
           <div>
             <div className="text-gray-400">Variação</div>
@@ -153,64 +172,86 @@ const ForecastChart: React.FC<{
 }> = ({ historical, forecast, metric }) => {
   const metricConfig = FORECAST_METRICS[metric];
   
-  const chartData = useMemo(() => {
-    // VALIDAÇÃO CRÍTICA: Verificar se os dados são válidos
-    const validHistorical = Array.isArray(historical) ? historical.filter(point => 
-      point && 
-      point.date && 
-      typeof point.predicted === 'number' && 
-      !isNaN(point.predicted) && 
-      isFinite(point.predicted)
-    ) : [];
-    
-    const validForecast = Array.isArray(forecast) ? forecast.filter(point => 
-      point && 
-      point.date && 
-      typeof point.predicted === 'number' && 
-      !isNaN(point.predicted) && 
-      isFinite(point.predicted)
-    ) : [];
-
-    console.log(`📊 ForecastChart ${metric}: ${validHistorical.length} pontos históricos, ${validForecast.length} pontos de previsão`);
-
-    // Se não há dados válidos, retornar estrutura vazia
-    if (validHistorical.length === 0 && validForecast.length === 0) {
-      return [];
+  // Utilitário para gerar range de datas (inclusive)
+  function getDateRange(start: string | Date, end: string | Date): Date[] {
+    const result: Date[] = [];
+    let current = new Date(start);
+    const last = new Date(end);
+    while (current <= last) {
+      result.push(new Date(current));
+      current.setDate(current.getDate() + 1);
     }
+    return result;
+  }
 
-    const historicalLine = validHistorical.map(point => ({
-      x: point.date,
-      y: point.predicted,
-      type: 'historical'
-    }));
+  // Mapear pontos históricos e previsão por data
+  const histMap = new Map(historical.map(p => [p.date, p.predicted]));
+  const forecastMap = new Map(forecast.map(p => [p.date, p.predicted]));
 
-    const forecastLine = validForecast.map(point => ({
-      x: point.date,
-      y: point.predicted,
-      type: 'forecast'
-    }));
+  // Determinar datas de histórico e previsão
+  const histDates = historical.map(p => p.date);
+  const forecastDates = forecast.map(p => p.date);
+  const minDate = histDates.length ? histDates.reduce((a, b) => a < b ? a : b) : null;
+  const maxDate = forecastDates.length ? forecastDates.reduce((a, b) => a > b ? a : b) : null;
 
-    const lines = [];
-    
-    if (historicalLine.length > 0) {
-      lines.push({
-        id: 'Histórico',
-        color: metricConfig.color,
-        data: historicalLine
-      });
-    }
+  // Determinar a data do gap (hoje)
+  let gapDate: Date | null = null;
+  if (histDates.length && forecastDates.length) {
+    const lastHist = new Date(histDates[histDates.length - 1]);
+    const firstForecast = new Date(forecastDates[0]);
+    // O gap é o dia imediatamente após o último histórico e antes do primeiro previsto
+    gapDate = new Date(lastHist);
+    gapDate.setDate(gapDate.getDate() + 1);
+  }
 
-    if (forecastLine.length > 0) {
-      lines.push({
-        id: 'Previsão',
-        color: metricConfig.color,
-        data: forecastLine,
-        lineType: 'dashed'
-      });
-    }
+  // Gerar range completo: minDate -> maxDate, incluindo gap
+  let fullRange: Date[] = [];
+  if (minDate && maxDate) {
+    fullRange = getDateRange(minDate, maxDate);
+  }
 
-    return lines;
-  }, [historical, forecast, metricConfig, metric]);
+  // Gerar série contínua para histórico e previsão, respeitando o gap
+  const historicalSeries = {
+    id: 'Histórico',
+    color: metricConfig.color,
+    data: fullRange.map(dateObj => {
+      // Posicionar ponto no início do dia (meia-noite)
+      const dateStr = dateObj.toISOString().slice(0, 10);
+      const dateMid = new Date(dateStr + 'T00:00:00');
+      if (histMap.has(dateStr)) {
+        return { x: dateMid, y: histMap.get(dateStr) };
+      }
+      return { x: dateMid, y: null };
+    })
+  };
+  const forecastSeries = {
+    id: 'Previsão',
+    color: metricConfig.forecastColor || '#00E0FF',
+    data: fullRange.map(dateObj => {
+      const dateStr = dateObj.toISOString().slice(0, 10);
+      const dateMid = new Date(dateStr + 'T00:00:00');
+      if (forecastMap.has(dateStr)) {
+        return { x: dateMid, y: forecastMap.get(dateStr) };
+      }
+      return { x: dateMid, y: null };
+    })
+  };
+
+  // Ajustar o range do eixo X para incluir o final do último dia previsto
+  let xMin = fullRange[0];
+  let xMax = fullRange[fullRange.length - 1];
+  if (xMax) {
+    xMax = new Date(xMax);
+    xMax.setHours(23, 59, 59, 999);
+  }
+
+  const chartData = [historicalSeries, forecastSeries];
+
+  // Gerar array de datas dos pontos para ticks do eixo X
+  const tickDates = fullRange.map(dateObj => {
+    const dateStr = dateObj.toISOString().slice(0, 10);
+    return new Date(dateStr + 'T00:00:00');
+  });
 
   // Se não há dados para exibir, mostrar placeholder
   if (!chartData || chartData.length === 0) {
@@ -229,7 +270,13 @@ const ForecastChart: React.FC<{
       <ResponsiveLine
         data={chartData}
         margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
-        xScale={{ type: 'point' }}
+        xScale={{ 
+          type: 'time', 
+          format: '%Y-%m-%d',
+          precision: 'day',
+          min: xMin,
+          max: xMax
+        }}
         yScale={{ 
           type: 'linear', 
           min: 'auto', 
@@ -245,13 +292,8 @@ const ForecastChart: React.FC<{
           legend: 'Data',
           legendOffset: 40,
           legendPosition: 'middle',
-          format: (value) => {
-            try {
-              return format(new Date(value), 'dd/MM');
-            } catch {
-              return String(value);
-            }
-          }
+          format: '%d/%m',
+          tickValues: tickDates
         }}
         axisLeft={{
           tickSize: 5,
@@ -260,120 +302,74 @@ const ForecastChart: React.FC<{
           legend: metricConfig.label,
           legendOffset: -50,
           legendPosition: 'middle',
-          format: (value) => {
-            try {
-              return metricConfig.format(Number(value));
-            } catch {
-              return String(value);
-            }
-          }
         }}
-        pointSize={4}
+        enablePoints={true}
+        pointSize={8}
         pointColor={{ theme: 'background' }}
         pointBorderWidth={2}
         pointBorderColor={{ from: 'serieColor' }}
-        pointLabelYOffset={-12}
         useMesh={true}
-        legends={[
-          {
-            anchor: 'top',
-            direction: 'row',
-            justify: false,
-            translateX: 0,
-            translateY: -10,
-            itemsSpacing: 0,
-            itemDirection: 'left-to-right',
-            itemWidth: 80,
-            itemHeight: 20,
-            itemOpacity: 0.75,
-            symbolSize: 12,
-            symbolShape: 'circle',
-            symbolBorderColor: 'rgba(0, 0, 0, .5)',
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemBackground: 'rgba(0, 0, 0, .03)',
-                  itemOpacity: 1
-                }
-              }
-            ]
+        enableArea={false}
+        curve="linear"
+        tooltip={input => {
+          // input pode ser um ponto ou um slice
+          let date, value, label;
+          if (input.point) {
+            date = input.point.data.x instanceof Date ? format(input.point.data.x, 'EEE dd/MM', { locale: ptBR }) : String(input.point.data.x);
+            value = input.point.data.yFormatted;
+            label = input.point.serieId || metricConfig.label;
+          } else if (input.slice) {
+            const pt = input.slice.points[0];
+            date = pt.data.x instanceof Date ? format(pt.data.x, 'EEE dd/MM', { locale: ptBR }) : String(pt.data.x);
+            value = pt.data.yFormatted;
+            label = pt.serieId || metricConfig.label;
           }
-        ]}
+          // Debug: logar o conteúdo do tooltip
+          console.log('TOOLTIP', { date, value, label, input });
+          // Garantir fallback seguro
+          const safeDate = date || 'N/A';
+          const safeValue = value || 'N/A';
+          const safeLabel = label || 'N/A';
+          return (
+            <div className="p-2 rounded text-xs" style={{ color: '#fff', background: 'transparent' }}>
+              <span>{safeDate} - {safeValue} {safeLabel}</span>
+            </div>
+          );
+        }}
         theme={{
-          background: 'transparent',
-          text: {
-            fill: '#ffffff',
-            fontSize: 11
-          },
           axis: {
-            domain: {
-              line: {
-                stroke: '#ffffff',
-                strokeWidth: 1
-              }
-            },
             ticks: {
-              line: {
-                stroke: '#ffffff',
-                strokeWidth: 1
-              },
               text: {
-                fill: '#ffffff',
-                fontSize: 11
+                fill: '#fff',
+                fontSize: 12
               }
             },
             legend: {
               text: {
-                fill: '#ffffff',
-                fontSize: 12
+                fill: '#fff',
+                fontSize: 14
               }
             }
           },
           grid: {
             line: {
-              stroke: '#ffffff',
-              strokeWidth: 0.5,
-              strokeOpacity: 0.2
-            }
-          },
-          legends: {
-            text: {
-              fill: '#ffffff',
-              fontSize: 11
+              stroke: '#fff',
+              strokeOpacity: 0.1
             }
           },
           tooltip: {
             container: {
-              background: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#ffffff'
+              background: '#222',
+              color: '#fff',
+              fontSize: 12
             }
           }
         }}
-        tooltip={({ point }) => (
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-3">
-            <div className="font-medium text-white">
-              {(() => {
-                try {
-                  return format(new Date(point.data.x), 'dd/MM/yyyy');
-                } catch {
-                  return String(point.data.x);
-                }
-              })()}
-            </div>
-            <div className="text-sm text-gray-300">
-              {point.seriesId}: {(() => {
-                try {
-                  return metricConfig.format(Number(point.data.y));
-                } catch {
-                  return String(point.data.y);
-                }
-              })()}
-            </div>
-          </div>
-        )}
+        isInteractive={true}
+        enableCrosshair={true}
+        lineWidth={3}
+        enablePointLabel={false}
+        legends={[]}
       />
     </div>
   );

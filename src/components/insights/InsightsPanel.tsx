@@ -320,7 +320,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
           <EmptyState />
         )}
         {!loading && !error && insights.length > 0 && (
-          <ul className="insights-list space-y-3">
+          <ul className="insights-list space-y-3" role="list">
             {insights.filter(insight => typeof insight.title === 'string' && insight.title).map((insight, index) => {
               // Gerar chave única combinando múltiplos campos
               const uniqueKey = `insight-${insight.campaignId || 'global'}-${insight.title}-${insight.variation}-${index}`;
@@ -342,14 +342,24 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                     hover:bg-white/10 
                     hover:border-white/20
                     ${getMetricColor(insight.metric)}
+                    focus:outline-none focus:ring-2 focus:ring-yellow-400
+                    animate-fadein
                   `}
+                  tabIndex={0}
+                  aria-label={`Insight: ${insight.title}. ${insight.description}`}
+                  role="listitem"
+                  title={`Insight: ${insight.title}\n${insight.description}\nVariação: ${insight.variation > 0 ? '+' : ''}${insight.variationPercent?.toFixed(1)}%`}
                 >
-                  <div className={`
-                    p-2 
-                    rounded-full 
-                    flex-shrink-0
-                    ${getMetricColor(insight.metric)}
-                  `}>
+                  <div 
+                    className={`
+                      p-2 
+                      rounded-full 
+                      flex-shrink-0
+                      ${getMetricColor(insight.metric)}
+                    `}
+                    title={`Métrica: ${insight.metric || 'Geral'}`}
+                    aria-label={`Ícone da métrica ${insight.metric || 'Geral'}`}
+                  >
                     {getMetricIcon(insight.metric)}
                   </div>
                   
@@ -358,10 +368,14 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                       <h3 className="text-sm font-semibold text-white">
                         {insight.campaignName || insight.campaignId || 'Geral'}
                       </h3>
-                      <span className={`
-                        text-xs font-medium px-2 py-1 rounded-full
-                        ${insight.variation > 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}
-                      `}>
+                      <span 
+                        className={`
+                          text-xs font-medium px-2 py-1 rounded-full
+                          ${insight.variation > 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}
+                        `}
+                        title={`Variação: ${insight.variation > 0 ? '+' : ''}${insight.variationPercent?.toFixed(1)}%`}
+                        aria-label={`Variação percentual: ${insight.variation > 0 ? '+' : ''}${insight.variationPercent?.toFixed(1)}%`}
+                      >
                         {insight.variation > 0 ? '+' : ''}{insight.variationPercent?.toFixed(1)}%
                       </span>
                     </div>
@@ -388,9 +402,10 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
       {/* Footer */}
       {!loading && !error && insights.length > 0 && (
         <div className="mt-6 pt-4 border-t border-white/10">
-          <p className="text-xs text-gray-400 text-center">
-            Insights baseados em variações superiores a {config?.threshold || 10}%
-          </p>
+          {/* Aviso sobre threshold de variação */}
+          <div className="text-sm font-semibold text-yellow-400 mb-2">
+            Somente são apresentados dados de variações acima de 10%
+          </div>
         </div>
       )}
     </div>

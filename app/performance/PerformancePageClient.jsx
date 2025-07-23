@@ -338,12 +338,14 @@ export default function PerformancePageClient() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8" data-testid="performance-page">
       {/* Filtros de período - SEGUINDO PADRÃO DO DASHBOARD */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-4">
+          {/* Label para Presets de data */}
+          <label className="text-sm text-white/70 mb-1">Presets</label>
           {/* Presets de data */}
-          <div className="flex space-x-2">
+          <div id="date-presets" className="flex space-x-2">
             {datePresets.map((preset, index) => (
               <button
                 key={index}
@@ -358,28 +360,31 @@ export default function PerformancePageClient() {
               </button>
             ))}
           </div>
-          
-          {/* Campos de data customizada */}
-          {selectedPreset === 4 && ( // Índice 4 = "Personalizado"
-            <div className="flex space-x-4 items-center">
-              <div className="flex flex-col">
-                <label className="text-sm text-white/70 mb-1">Data inicial:</label>
-                <input
-                  type="date"
-                  value={customDateRange.start}
-                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
-                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm text-white/70 mb-1">Data final:</label>
-                <input
-                  type="date"
-                  value={customDateRange.end}
-                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
-                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
-                />
-              </div>
+          {/* Labels e campos de data customizada sempre visíveis */}
+          <div className="flex space-x-4 items-center mt-2">
+            <div className="flex flex-col">
+              <label htmlFor="custom-date-start" className="text-sm text-white/70 mb-1">Data Início</label>
+              <input
+                id="custom-date-start"
+                type="date"
+                value={customDateRange.start || filters.startDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                disabled={selectedPreset !== 4}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="custom-date-end" className="text-sm text-white/70 mb-1">Data Fim</label>
+              <input
+                id="custom-date-end"
+                type="date"
+                value={customDateRange.end || filters.endDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                disabled={selectedPreset !== 4}
+              />
+            </div>
+            {selectedPreset === 4 && (
               <button
                 onClick={() => applyCustomDateRange()}
                 disabled={!customDateRange.start || !customDateRange.end}
@@ -387,9 +392,8 @@ export default function PerformancePageClient() {
               >
                 Aplicar
               </button>
-            </div>
-          )}
-          
+            )}
+          </div>
           {/* Período selecionado */}
           <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
             <span className="font-medium text-white">Período:</span> {
@@ -399,14 +403,40 @@ export default function PerformancePageClient() {
             }
           </div>
         </div>
-        <div className="text-sublabel-refined text-white/70">
-          Última atualização: {currentTime || 'Carregando...'}
+        <div className="flex flex-col gap-2 items-end">
+          {/* Label para filtro de status */}
+          <label htmlFor="status-filter" className="text-sm text-white/70 mb-1">Status</label>
+          {/* Botões de status para compatibilidade com E2E */}
+          <div className="flex space-x-2 mb-2">
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ACTIVE', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ACTIVE' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Ativo</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'PAUSED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'PAUSED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Pausado</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'DELETED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'DELETED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Excluído</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ARCHIVED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ARCHIVED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Arquivado</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ALL', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ALL' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Todos</button>
+          </div>
+          {/* Select de status (mantido para acessibilidade) */}
+          <select
+            id="status-filter"
+            value={filters.status}
+            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
+            className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-primary focus:outline-none"
+            style={{ minWidth: 120 }}
+          >
+            <option value="ACTIVE">Ativo</option>
+            <option value="PAUSED">Pausado</option>
+            <option value="DELETED">Excluído</option>
+            <option value="ARCHIVED">Arquivado</option>
+            <option value="ALL">Todos</option>
+          </select>
+          <div className="text-sublabel-refined text-white/70">
+            Última atualização: {currentTime || 'Carregando...'}
+          </div>
         </div>
       </div>
 
-      {/* Métricas agregadas expandidas (6 cards) - COM CORES E HOVER EFFECTS */}
+      {/* Métricas agregadas expandidas (7 cards) - COM CORES E HOVER EFFECTS */}
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-6">
           {/* Total de Leads */}
           <motion.div 
             whileHover={{ scale: 1.04 }}
@@ -489,6 +519,20 @@ export default function PerformancePageClient() {
               <DollarSign className="w-4 h-4 text-orange-400" />
             </div>
             <div className="text-2xl font-bold text-white">{formatNumberShort(metrics.averageCPL)}</div>
+          </motion.div>
+
+          {/* ROI Médio - 7º card */}
+          <motion.div 
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/20 hover:bg-yellow-900/40 hover:border-yellow-500/40 transition-all duration-300"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-yellow-400 text-sm font-medium">ROI Médio</div>
+              <TrendingUp className="w-4 h-4 text-yellow-400" />
+            </div>
+            <div className="text-2xl font-bold text-white">{formatPercentage(metrics.averageROI)}</div>
           </motion.div>
         </div>
       )}

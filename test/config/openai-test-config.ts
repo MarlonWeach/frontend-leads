@@ -75,3 +75,28 @@ export const createTestPrompt = (type: 'analysis' | 'anomaly' | 'optimization') 
   
   return prompts[type] || prompts.analysis;
 }; 
+
+// Mock global para analyzePerformance e OptimizationEngine para garantir estrutura correta nos testes
+if (!OPENAI_TEST_CONFIG.useRealOpenAI()) {
+  jest.mock('../../src/lib/ai/aiService', () => ({
+    analyzePerformance: jest.fn(() => Promise.resolve({
+      analysis: 'Análise de performance detalhada',
+      insights: [
+        { type: 'INFO', title: 'Insight 1', description: 'Descrição do insight 1' },
+        { type: 'WARNING', title: 'Insight 2', description: 'Descrição do insight 2' }
+      ],
+      recommendations: [
+        { type: 'SEGMENTACAO', title: 'Recomende segmentação', description: 'Descrição da recomendação' },
+        { type: 'CRIATIVO', title: 'Recomende criativo', description: 'Descrição da recomendação' }
+      ]
+    }))
+  }));
+
+  jest.mock('../../src/lib/ai/optimizationEngine', () => ({
+    OptimizationEngine: jest.fn().mockImplementation(() => ({
+      generateSuggestions: jest.fn(() => Promise.resolve([
+        { id: '1', type: 'SEGMENTACAO', title: 'Recomende segmentação', description: 'Descrição da recomendação', impact: 'MEDIUM', confidence: 0.8 }
+      ]))
+    }))
+  }));
+} 
