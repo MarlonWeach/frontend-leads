@@ -219,7 +219,8 @@ const ForecastChart: React.FC<{
       const dateStr = dateObj.toISOString().slice(0, 10);
       const dateMid = new Date(dateStr + 'T00:00:00');
       if (histMap.has(dateStr)) {
-        return { x: dateMid, y: histMap.get(dateStr) };
+        const y = histMap.get(dateStr);
+        return { x: dateMid, y: typeof y === 'number' ? y : null };
       }
       return { x: dateMid, y: null };
     })
@@ -231,7 +232,8 @@ const ForecastChart: React.FC<{
       const dateStr = dateObj.toISOString().slice(0, 10);
       const dateMid = new Date(dateStr + 'T00:00:00');
       if (forecastMap.has(dateStr)) {
-        return { x: dateMid, y: forecastMap.get(dateStr) };
+        const y = forecastMap.get(dateStr);
+        return { x: dateMid, y: typeof y === 'number' ? y : null };
       }
       return { x: dateMid, y: null };
     })
@@ -312,27 +314,16 @@ const ForecastChart: React.FC<{
         enableArea={false}
         curve="linear"
         tooltip={input => {
-          // input pode ser um ponto ou um slice
-          let date, value, label;
+          // input é sempre PointTooltipProps
+          let date = 'N/A', value = 'N/A', label = metricConfig.label;
           if (input.point) {
             date = input.point.data.x instanceof Date ? format(input.point.data.x, 'EEE dd/MM', { locale: ptBR }) : String(input.point.data.x);
-            value = input.point.data.yFormatted;
-            label = input.point.serieId || metricConfig.label;
-          } else if (input.slice) {
-            const pt = input.slice.points[0];
-            date = pt.data.x instanceof Date ? format(pt.data.x, 'EEE dd/MM', { locale: ptBR }) : String(pt.data.x);
-            value = pt.data.yFormatted;
-            label = pt.serieId || metricConfig.label;
+            value = input.point.data.yFormatted ?? 'N/A';
+            label = input.point.seriesId || metricConfig.label;
           }
-          // Debug: logar o conteúdo do tooltip
-          console.log('TOOLTIP', { date, value, label, input });
-          // Garantir fallback seguro
-          const safeDate = date || 'N/A';
-          const safeValue = value || 'N/A';
-          const safeLabel = label || 'N/A';
           return (
             <div className="p-2 rounded text-xs" style={{ color: '#fff', background: 'transparent' }}>
-              <span>{safeDate} - {safeValue} {safeLabel}</span>
+              <span>{date} - {value} {label}</span>
             </div>
           );
         }}

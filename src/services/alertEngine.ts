@@ -536,7 +536,15 @@ class AlertEngine {
       let notificationsScheduled = 0;
 
       for (const channel of rule.notification_channels) {
-        const notificationData = {
+        const notificationData: {
+          alert_id: string;
+          rule_id: string;
+          channel: any;
+          content: string;
+          template_used: any;
+          status: string;
+          subject?: string;
+        } = {
           alert_id: alert.id,
           rule_id: alert.rule_id,
           channel,
@@ -544,10 +552,9 @@ class AlertEngine {
           template_used: rule.notification_template || 'default',
           status: 'pending'
         };
-
         if (channel === 'email') {
           // TODO: Adicionar recipient baseado na configuração
-          notificationData['subject'] = alert.title;
+          notificationData.subject = alert.title;
         }
 
         const { error } = await supabase

@@ -1,7 +1,7 @@
 // Types: adsetGoalsDashboard.ts
 // PBI 25 - Task 25-7: Dashboard de Acompanhamento de Metas
 
-import { AdsetGoal, AdsetProgressTracking } from './adsetGoals';
+import { AdsetGoal } from './goals';
 
 export interface AdsetGoalDashboardItem {
   // Dados básicos do adset
@@ -14,7 +14,7 @@ export interface AdsetGoalDashboardItem {
   goal: AdsetGoal | null;
   
   // Progresso atual
-  progress: AdsetProgressTracking | null;
+  progress: any | null;
   
   // Métricas calculadas para dashboard
   metrics: {

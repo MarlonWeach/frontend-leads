@@ -136,8 +136,8 @@ export default function AdsetGoalCard({
   // Dados agregados reais
   const totalLeads = item.goal ? item.goal.volume_captured : null;
   const totalLeadsTarget = item.goal ? item.goal.volume_contracted : null;
-  const totalSpend = item.metrics?.total_spend ?? null;
-  const totalImpressions = item.metrics?.total_impressions ?? null;
+  const totalSpend = (item as any).total_spend ?? null;
+  const totalImpressions = (item as any).total_impressions ?? null;
   const cplCurrent = totalSpend && totalLeads ? totalSpend / totalLeads : null;
   const cplTarget = item.goal ? item.goal.cpl_target : null;
   const budgetTotal = item.goal ? item.goal.budget_total : null;
@@ -149,7 +149,7 @@ export default function AdsetGoalCard({
 
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
-  const { adjustBudget, pauseAdset, resumeAdset, isLoading } = useAdsetActions({
+  const { adjustBudget, pauseAdset, resumeAdset, loading } = useAdsetActions({
     onSuccess: (action, data) => {
       console.log(`${action} realizado com sucesso:`, data);
       if (onEdit) {
@@ -239,8 +239,6 @@ export default function AdsetGoalCard({
             </span>
           </div>
           <GoalProgressBar 
-            current={totalLeads || 0}
-            target={totalLeadsTarget || 0}
             percentage={progressPercentage || 0}
             status={status}
           />
@@ -272,10 +270,10 @@ export default function AdsetGoalCard({
                 <span className="text-xs text-white/60">Leads/Dia</span>
               </div>
               <div className="text-sm font-semibold text-white">
-                {formatNumber(goal?.daily_target)}
+                {formatNumber(item.metrics?.leads_needed_daily)}
               </div>
               <div className="text-xs text-white/50">
-                Média: {formatNumber(goal?.daily_average)}
+                Média: {formatNumber(item.metrics?.daily_average_leads)}
               </div>
             </div>
           </div>
@@ -300,10 +298,10 @@ export default function AdsetGoalCard({
                 <span className="text-xs text-white/60">Dias Rest.</span>
               </div>
               <div className="text-sm font-semibold text-white">
-                {formatNumber(goal?.days_remaining)}
+                {formatNumber(item.metrics?.days_remaining)}
               </div>
               <div className="text-xs text-white/50">
-                de {formatNumber(goal?.days_total)} dias
+                de {formatNumber(item.metrics?.days_total)} dias
               </div>
             </div>
           </div>
@@ -321,7 +319,7 @@ export default function AdsetGoalCard({
         <div className="flex gap-2 pt-4 border-t border-white/10">
           <button
             onClick={() => setShowBudgetModal(true)}
-            disabled={isLoading}
+            disabled={loading}
             className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 glass-light text-white/80 hover:text-white rounded-lg transition-all disabled:opacity-50"
           >
             <Settings className="w-4 h-4" />
@@ -330,14 +328,14 @@ export default function AdsetGoalCard({
 
           <button
             onClick={() => isPaused ? resumeAdset(item.adset_id) : pauseAdset(item.adset_id)}
-            disabled={isLoading}
+            disabled={loading}
             className={`flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all disabled:opacity-50 ${
               isPaused 
                 ? 'bg-green-600 text-white hover:bg-green-700' 
                 : 'bg-orange-600 text-white hover:bg-orange-700'
             }`}
           >
-            {isLoading ? (
+            {loading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : isPaused ? (
               <>
@@ -359,8 +357,8 @@ export default function AdsetGoalCard({
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
         onConfirm={handleBudgetAdjust}
-        currentBudget={item.budget_diario || (budgetTotal && goal?.days_total ? budgetTotal / goal.days_total : 0)}
-        loading={isLoading}
+        currentBudget={budgetTotal && item.metrics?.days_total ? budgetTotal / item.metrics.days_total : 0}
+        loading={loading}
       />
     </>
   );

@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         goal: goal,
         progress: null,
         metrics: null,
-        status: goal ? 'no_prazo' : 'incompleto',
+        status: goal ? 'no_prazo' : 'critico',
         alerts: goal ? [] : [{ type: 'budget', severity: 'critical', message: 'Informações de meta incompletas para este adset', created_at: new Date().toISOString() }]
       };
     });

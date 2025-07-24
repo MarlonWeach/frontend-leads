@@ -223,7 +223,7 @@ function validateGoalInput(input: any) {
   // Required fields
   if (!input.adset_id) {
     errors.push({
-      field: 'adset_id',
+      field: 'adset_id' as keyof AdsetGoalInput,
       message: 'Adset ID é obrigatório',
       code: 'REQUIRED'
     });
@@ -232,39 +232,39 @@ function validateGoalInput(input: any) {
   // Budget validation
   if (!input.budget_total || input.budget_total <= 0) {
     errors.push({
-      field: 'budget_total',
+      field: 'budget_total' as keyof AdsetGoalInput,
       message: 'Budget deve ser maior que zero',
       code: 'INVALID_VALUE'
     });
   } else if (input.budget_total < GOAL_CONSTANTS.MIN_BUDGET) {
     warnings.push({
-      field: 'budget_total',
+      field: 'budget_total' as keyof AdsetGoalInput,
       message: `Budget muito baixo. Mínimo recomendado: R$ ${GOAL_CONSTANTS.MIN_BUDGET}`,
       code: 'LOW_BUDGET',
-      severity: 'medium'
+      severity: 'medium' as 'medium'
     });
   }
 
   // CPL validation
   if (!input.cpl_target || input.cpl_target <= 0) {
     errors.push({
-      field: 'cpl_target',
+      field: 'cpl_target' as keyof AdsetGoalInput,
       message: 'CPL alvo deve ser maior que zero',
       code: 'INVALID_VALUE'
     });
   } else if (input.cpl_target < GOAL_CONSTANTS.MIN_CPL) {
     warnings.push({
-      field: 'cpl_target',
+      field: 'cpl_target' as keyof AdsetGoalInput,
       message: `CPL muito baixo. Pode ser impossível de atingir.`,
       code: 'UNREALISTIC_CPL',
-      severity: 'high'
+      severity: 'high' as 'high'
     });
   }
 
   // Volume validation
   if (!input.volume_contracted || input.volume_contracted <= 0) {
     errors.push({
-      field: 'volume_contracted',
+      field: 'volume_contracted' as keyof AdsetGoalInput,
       message: 'Volume contratado deve ser maior que zero',
       code: 'INVALID_VALUE'
     });
@@ -272,7 +272,7 @@ function validateGoalInput(input: any) {
 
   if (input.volume_captured < 0) {
     errors.push({
-      field: 'volume_captured',
+      field: 'volume_captured' as keyof AdsetGoalInput,
       message: 'Volume captado não pode ser negativo',
       code: 'INVALID_VALUE'
     });
@@ -280,7 +280,7 @@ function validateGoalInput(input: any) {
 
   if (input.volume_captured > input.volume_contracted) {
     errors.push({
-      field: 'volume_captured',
+      field: 'volume_captured' as keyof AdsetGoalInput,
       message: 'Volume captado não pode ser maior que o contratado',
       code: 'INVALID_VALUE'
     });
@@ -292,7 +292,7 @@ function validateGoalInput(input: any) {
 
   if (isNaN(startDate.getTime())) {
     errors.push({
-      field: 'contract_start_date',
+      field: 'contract_start_date' as keyof AdsetGoalInput,
       message: 'Data de início inválida',
       code: 'INVALID_DATE'
     });
@@ -300,7 +300,7 @@ function validateGoalInput(input: any) {
 
   if (isNaN(endDate.getTime())) {
     errors.push({
-      field: 'contract_end_date',
+      field: 'contract_end_date' as keyof AdsetGoalInput,
       message: 'Data de fim inválida',
       code: 'INVALID_DATE'
     });
@@ -308,7 +308,7 @@ function validateGoalInput(input: any) {
 
   if (startDate >= endDate) {
     errors.push({
-      field: 'contract_end_date',
+      field: 'contract_end_date' as keyof AdsetGoalInput,
       message: 'Data de fim deve ser posterior à data de início',
       code: 'INVALID_DATE_RANGE'
     });

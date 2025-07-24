@@ -228,9 +228,12 @@ export function useAlertSummary(alerts: any[] = []) {
 
   return Object.entries(summary)
     .filter(([severity]) => severityConfig[severity as AlertSeverity]) // Filtrar severities válidas
-    .map(([severity, data]) => ({
-      severity: severity as AlertSeverity,
-      count: data.count,
-      latestMessage: data.latestMessage
-    }));
+    .map(([severity, data]) => {
+      const d = data as { count: number; latestMessage: string; latestTime: Date | null };
+      return {
+        severity: severity as AlertSeverity,
+        count: d.count,
+        latestMessage: d.latestMessage
+      };
+    });
 } 

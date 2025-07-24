@@ -17,6 +17,7 @@ import { useGoalFilters } from '@/hooks/useGoalFilters';
 import AdsetGoalCard from './AdsetGoalCard';
 import GoalStatusBadge from './GoalStatusBadge';
 import { formatInTimeZone } from 'date-fns-tz';
+import { AdsetGoalFilters } from '@/types/adsetGoalsDashboard';
 
 export default function AdsetGoalsOverview() {
   const { filters, setFilters, resetFilters, appliedFiltersCount } = useGoalFilters();
@@ -58,7 +59,7 @@ export default function AdsetGoalsOverview() {
       };
     }},
   ];
-  const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias padrão
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(2); // Últimos 7 dias padrão
   const [showDateMenu, setShowDateMenu] = useState(false);
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 220 });
@@ -137,10 +138,9 @@ export default function AdsetGoalsOverview() {
   const applyDatePreset = (presetIndex: number) => {
     const preset = datePresets[presetIndex];
     const range = preset.getRange();
-    setFilters(prev => ({
-      ...prev,
+    setFilters({
       date_range: { start: range.start, end: range.end }
-    }));
+    });
     setSelectedPreset(presetIndex);
     setShowDateMenu(false);
   };
