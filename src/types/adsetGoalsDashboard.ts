@@ -28,6 +28,11 @@ export interface AdsetGoalDashboardItem {
     current_cpl: number | null;
     projected_final_leads: number | null;
     projected_final_cpl: number | null;
+    total_impressions: number | null;
+    total_leads: number | null;
+    total_spend: number | null;
+    leads_in_goal_period: number | null;
+    leads_ontem: number | null;
   } | null;
   
   // Status visual

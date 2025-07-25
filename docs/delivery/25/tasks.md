@@ -24,6 +24,6 @@ This document lists all tasks associated with PBI 25.
 | 25-14   | [Atualizar hook useAdsetGoals para nova estrutura da API](./25-14.md) | Done | Remover mocks e consumir apenas dados reais |
 | 25-15   | [Remover completamente o uso de dados mock do dashboard de metas](./25-15.md) | Done | Garantir que apenas dados reais sejam exibidos |
 | 25-16   | [Adicionar filtro de data (timeframe) no dashboard/metas](./25-16.md) | Pending | Permitir seleção de Hoje, Ontem, Últimos 7 dias, etc. |
-| 25-17   | [Exibir métricas operacionais para todos os adsets](./25-17.md) | Pending | Exibir CPL, Leads, Spend, Impressions mesmo sem meta configurada |
-| 25-18   | [Adicionar botão 'Configurar Meta' e modal de cadastro/edição](./25-18.md) | Pending | Permitir cadastro/edição de meta (budget, cpl_target, volume, datas) via API | 
+| 25-17   | [Ajustar cálculo de progresso e status de adsets com meta](./25-17.md) | Done | Corrigir cálculo de progresso, leads/dia, status e exibição de alertas conforme dados reais do período da meta |
+| 25-18   | [Adicionar botão 'Configurar Meta' e modal de cadastro/edição](./25-18.md) | Done | Permitir cadastro/edição de meta (budget, cpl_target, volume, datas) | 
 | 25-19   | [Corrigir filtro de data/timeframe do dashboard de metas](./25-19.md) | Pending | Corrigir para que a seleção do período seja mantida corretamente no estado e refletida no label do botão, mesmo após navegação, reload ou troca de filtros. Garantir comportamento idêntico ao dashboard de /ads. | 

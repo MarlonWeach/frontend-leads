@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useCampaignsData } from '../hooks/useCampaignsData';
+import { useMetaActivities } from '../hooks/useMetaActivities';
 import { TrendingUp, Users, Target, DollarSign, Eye, MousePointer, CheckCircle, Clock, Layers, TrendingDown } from 'lucide-react';
 import { Card } from './ui/card';
 import LoadingState from './ui/LoadingState';
@@ -110,15 +111,21 @@ export default function DashboardOverview() {
     { label: 'CTR', leads: Math.round(metrics.ctr * 100), spend: Math.round(metrics.ctr * 100), impressions: Math.round(metrics.spend / (metrics.leads || 1)) },
   ], [metrics]);
 
-  // Estado para alertas e atividade recente
+  // Estado para alertas
   const [alerts, setAlerts] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
 
-  // Gerar alertas e atividade recente a partir dos dados de campanhas
+  // Hook para logs de atividades da Meta (agora só do Supabase)
+  const {
+    activities: recentActivity,
+    loading: activityLoading,
+    error: activityError,
+    refresh: refreshActivities
+  } = useMetaActivities({ limit: 50 });
+
+  // Gerar alertas
   useEffect(() => {
     if (!campaigns || campaigns.length === 0) {
       setAlerts([]);
-      setRecentActivity([]);
       return;
     }
     
@@ -132,59 +139,6 @@ export default function DashboardOverview() {
       href: '/campaigns?filter=low-leads'
     }] : [];
     setAlerts(alertsArr);
-    
-    // Atividade recente melhorada: campanhas com melhor performance e leads recentes
-    const now = new Date();
-    const activities = [];
-    
-    // Adicionar campanhas com melhor performance (mais leads)
-    const topCampaigns = campaigns
-      .filter(c => c.leads > 0)
-      .sort((a, b) => (b.leads || 0) - (a.leads || 0))
-      .slice(0, 3);
-    
-    topCampaigns.forEach(c => {
-      activities.push({
-        type: 'campaign',
-        value: c.leads,
-        timestamp: c.updated_time || c.created_time || now.toISOString(),
-        metadata: {
-          name: c.name,
-          spend: c.spend,
-          impressions: c.impressions,
-          clicks: c.clicks,
-          status: c.is_active ? 'Ativa' : 'Pausada'
-        }
-      });
-    });
-    
-    // Adicionar campanhas recentemente atualizadas
-    const recentCampaigns = campaigns
-      .filter(c => c.updated_time)
-      .sort((a, b) => new Date(b.updated_time) - new Date(a.updated_time))
-      .slice(0, 2);
-    
-    recentCampaigns.forEach(c => {
-      if (!activities.find(a => a.metadata.name === c.name)) {
-        activities.push({
-          type: 'update',
-          value: c.leads,
-          timestamp: c.updated_time,
-          metadata: {
-            name: c.name,
-            spend: c.spend,
-            impressions: c.impressions,
-            clicks: c.clicks,
-            status: c.is_active ? 'Ativa' : 'Pausada'
-          }
-        });
-      }
-    });
-    
-    // Ordenar por timestamp mais recente
-    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    setRecentActivity(activities.slice(0, 5));
   }, [campaigns]);
 
   // Estado de loading/erro
@@ -331,21 +285,54 @@ export default function DashboardOverview() {
       </div>
 
       {/* Bloco de Atividade Recente - Movido para o final */}
-      {recentActivity.length > 0 && (
+      {(recentActivity.length > 0 || activityLoading || activityError) && (
         <div className="bg-white/5 border border-white/10 rounded-lg p-4" data-testid="dashboard-activity">
-          <div className="font-semibold text-white mb-2">Atividade Recente</div>
-          <ul className="divide-y divide-white/10">
-            {recentActivity.map((activity, idx) => (
-              <li key={idx} className="py-2 flex items-center gap-3">
-                <span className="text-blue-400 font-bold">📝</span>
-                <div className="flex-1">
-                  <div className="text-white text-sm font-medium">{activity.metadata.name}</div>
-                  <div className="text-xs text-white/60">Leads: {activity.value} | Investimento: {formatNumberShort(activity.metadata.spend)} | Impressões: {formatNumberShort(activity.metadata.impressions)} | Cliques: {formatNumberShort(activity.metadata.clicks)}</div>
-                </div>
-                <div className="text-xs text-white/40">{activity.timestamp ? new Date(activity.timestamp).toLocaleDateString('pt-BR') : ''}</div>
-              </li>
-            ))}
-          </ul>
+          <div className="font-semibold text-white mb-2">Atividade Recente da Meta</div>
+          {activityLoading ? (
+            <div className="text-white/60 text-center py-4">Carregando atividades...</div>
+          ) : activityError ? (
+            <div className="text-red-400 text-center py-4">
+              {activityError}<br />
+              <button onClick={refreshActivities} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">Tentar novamente</button>
+            </div>
+          ) : (
+            <ul className="divide-y divide-white/10">
+              {recentActivity.map((activity, idx) => (
+                <li key={activity.id} className="py-2 flex items-center gap-3">
+                  <span className="text-blue-400 font-bold">
+                    {activity.event_type === 'ad_account_update_spend_limit' ? '💰' :
+                     activity.event_type === 'ad_account_update_status' ? '🔄' :
+                     activity.event_type === 'campaign_update_status' ? '📊' :
+                     activity.event_type === 'adset_update_status' ? '🎯' :
+                     activity.event_type === 'ad_update_status' ? '📝' : '📝'}
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-white text-sm font-medium">
+                      {activity.event_type === 'ad_account_update_spend_limit' ? 'Limite de gastos atualizado' :
+                       activity.event_type === 'ad_account_update_status' ? 'Status da conta alterado' :
+                       activity.event_type === 'campaign_update_status' ? `Campanha ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
+                       activity.event_type === 'adset_update_status' ? `Adset ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
+                       activity.event_type === 'ad_update_status' ? `Anúncio ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
+                       activity.event_type || 'Atividade'}
+                    </div>
+                    <div className="text-xs text-white/60">
+                      {activity.object_name && `Objeto: ${activity.object_name}`}
+                      {activity.value_old && activity.value_new && 
+                        ` | ${activity.value_old} → ${activity.value_new}`}
+                    </div>
+                  </div>
+                  <div className="text-xs text-white/40">
+                    {activity.event_time ? new Date(activity.event_time).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : ''}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

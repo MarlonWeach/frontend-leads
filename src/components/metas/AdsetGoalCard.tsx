@@ -20,6 +20,7 @@ import GoalStatusBadge from './GoalStatusBadge';
 import GoalProgressBar from './GoalProgressBar';
 import AlertIndicator, { useAlertSummary } from '../alerts/AlertIndicator';
 import { useAdsetActions } from '@/hooks/useAdsetActions';
+import { useState as useStateReact } from 'react';
 
 // Modal simples para ajuste de budget
 interface BudgetAdjustModalProps {
@@ -115,6 +116,136 @@ function BudgetAdjustModal({ isOpen, onClose, onConfirm, currentBudget, loading 
   );
 }
 
+// Modal para cadastro de meta
+interface MetaConfigModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (meta: any) => void;
+}
+
+// Função utilitária para salvar meta via API
+async function saveAdsetGoal(adset_id: string, meta: any, isEdit: boolean): Promise<{ success: boolean; error?: string }> {
+  try {
+    let res, data;
+    if (isEdit) {
+      res = await fetch(`/api/goals/${adset_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta)
+      });
+    } else {
+      // Criação: precisa incluir adset_id no payload
+      res = await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...meta, adset_id })
+      });
+    }
+    data = await res.json();
+    if (res.ok && !data.error) {
+      return { success: true };
+    }
+    return { success: false, error: data.error || 'Erro desconhecido' };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Erro desconhecido' };
+  }
+}
+
+function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: MetaConfigModalProps & { adsetId: string, isEdit: boolean, goal?: any }) {
+  const [budget, setBudget] = useState<number | ''>('');
+  const [cpl, setCpl] = useState<number | ''>('');
+  const [volume, setVolume] = useState<number | ''>('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useStateReact(false);
+  const [error, setError] = useStateReact<string | null>(null);
+  const [success, setSuccess] = useStateReact(false);
+
+  // Preencher campos ao abrir para edição
+  React.useEffect(() => {
+    if (isOpen && isEdit && goal) {
+      setBudget(goal.budget_total || '');
+      setCpl(goal.cpl_target || '');
+      setVolume(goal.volume_contracted || '');
+      setStartDate(goal.contract_start_date || '');
+      setEndDate(goal.contract_end_date || '');
+    } else if (isOpen && !isEdit) {
+      setBudget('');
+      setCpl('');
+      setVolume('');
+      setStartDate('');
+      setEndDate('');
+    }
+  }, [isOpen, isEdit, goal]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
+    if (budget && cpl && volume && startDate && endDate) {
+      setLoading(true);
+      const meta = {
+        budget_total: Number(budget),
+        cpl_target: Number(cpl),
+        volume_contracted: Number(volume),
+        contract_start_date: startDate,
+        contract_end_date: endDate
+      };
+      const result = await saveAdsetGoal(adsetId, meta, isEdit);
+      setLoading(false);
+      if (result.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          onSave(meta);
+        }, 800);
+      } else {
+        setError(result.error || 'Erro ao salvar meta');
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="glass-strong border border-white/20 rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-semibold text-white mb-4">Configurar Meta</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-1">Budget Total (R$)</label>
+            <input type="number" min="1" step="0.01" value={budget} onChange={e => setBudget(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-1">CPL Alvo (R$)</label>
+            <input type="number" min="1" step="0.01" value={cpl} onChange={e => setCpl(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-1">Volume Contratado (leads)</label>
+            <input type="number" min="1" step="1" value={volume} onChange={e => setVolume(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">Início</label>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">Fim</label>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+            </div>
+          </div>
+          {error && <div className="text-red-400 text-xs font-semibold mt-2">{error}</div>}
+          {success && <div className="text-green-400 text-xs font-semibold mt-2">Meta salva com sucesso!</div>}
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 glass-medium text-white/80 rounded-lg hover:text-white transition-colors" disabled={loading}>Cancelar</button>
+            <button type="submit" className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50" disabled={!budget || !cpl || !volume || !startDate || !endDate || loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdsetGoalCard({ 
   item, 
   onEdit, 
@@ -134,20 +265,22 @@ export default function AdsetGoalCard({
   } = item;
 
   // Dados agregados reais
-  const totalLeads = item.goal ? item.goal.volume_captured : null;
-  const totalLeadsTarget = item.goal ? item.goal.volume_contracted : null;
-  const totalSpend = (item as any).total_spend ?? null;
-  const totalImpressions = (item as any).total_impressions ?? null;
-  const cplCurrent = totalSpend && totalLeads ? totalSpend / totalLeads : null;
-  const cplTarget = item.goal ? item.goal.cpl_target : null;
-  const budgetTotal = item.goal ? item.goal.budget_total : null;
+  const totalLeads = item.goal?.volume_captured ?? (item.metrics as any)?.total_leads ?? null;
+  const totalLeadsTarget = item.goal?.volume_contracted ?? null;
+  const totalSpend = (item.metrics as any)?.total_spend ?? null;
+  const totalImpressions = (item.metrics as any)?.total_impressions ?? null;
+  const cplCurrent = item.metrics?.current_cpl ?? (totalSpend && totalLeads ? totalSpend / totalLeads : null);
+  const cplTarget = item.goal?.cpl_target ?? null;
+  const budgetTotal = item.goal?.budget_total ?? null;
   const budgetUtilization = budgetTotal && totalSpend ? (totalSpend / budgetTotal) * 100 : null;
-  const progressPercentage = totalLeads && totalLeadsTarget ? (totalLeads / totalLeadsTarget) * 100 : null;
+  const progressPercentage = item.metrics?.progress_percentage ?? (totalLeads && totalLeadsTarget ? (totalLeads / totalLeadsTarget) * 100 : null);
 
   // Checar se há informações essenciais faltando
   const missingFields = [budgetTotal, cplTarget, totalLeadsTarget, item.goal?.contract_start_date, item.goal?.contract_end_date].some(v => v === null || v === undefined || isNaN(Number(v)));
 
   const [showBudgetModal, setShowBudgetModal] = useState(false);
+  // Modal de configuração de meta
+  const [showMetaModal, setShowMetaModal] = useState(false);
 
   const { adjustBudget, pauseAdset, resumeAdset, loading } = useAdsetActions({
     onSuccess: (action, data) => {
@@ -195,10 +328,10 @@ export default function AdsetGoalCard({
     <>
       <div className="glass-medium rounded-lg border border-white/10 p-6 hover:glass-light transition-all duration-300">
         {/* Aviso de informações incompletas */}
-        {missingFields && (
+        {alertSummary.length > 0 && (
           <div className="mb-3 p-2 rounded bg-yellow-700/80 text-yellow-100 text-xs font-semibold flex items-center gap-2">
             <AlertIndicator count={1} severity="warning" size="sm" />
-            Informações incompletas para este adset. Configure meta, budget e datas para acompanhamento completo.
+            {alertSummary[0].latestMessage || 'Informações incompletas para este adset. Configure meta, budget e datas para acompanhamento completo.'}
           </div>
         )}
         {/* Header */}
@@ -242,8 +375,9 @@ export default function AdsetGoalCard({
             percentage={progressPercentage || 0}
             status={status}
           />
+          {/* Progress section: mostrar leads acumulados (leads_in_goal_period) e meta */}
           <div className="flex justify-between mt-1 text-xs text-white/60">
-            <span>{formatNumber(totalLeads)} leads</span>
+            <span>{formatNumber(item.metrics?.leads_in_goal_period)} leads acumulados</span>
             <span>Meta: {formatNumber(totalLeadsTarget)}</span>
           </div>
         </div>
@@ -265,6 +399,7 @@ export default function AdsetGoalCard({
             </div>
 
             <div>
+              {/* Metrics Grid: mostrar leads_ontem e leads_needed_daily */}
               <div className="flex items-center gap-2 mb-1">
                 <Users className="w-4 h-4 text-white/60" />
                 <span className="text-xs text-white/60">Leads/Dia</span>
@@ -273,7 +408,7 @@ export default function AdsetGoalCard({
                 {formatNumber(item.metrics?.leads_needed_daily)}
               </div>
               <div className="text-xs text-white/50">
-                Média: {formatNumber(item.metrics?.daily_average_leads)}
+                Ontem: {formatNumber(item.metrics?.leads_ontem)} | Média: {formatNumber(item.metrics?.daily_average_leads)}
               </div>
             </div>
           </div>
@@ -282,7 +417,7 @@ export default function AdsetGoalCard({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-white/60" />
-                <span className="text-xs text-white/60">Budget</span>
+                <span className="text-xs text-white/60">Custo</span>
               </div>
               <div className="text-sm font-semibold text-white">
                 {formatNumber(budgetUtilization)}%
@@ -350,6 +485,13 @@ export default function AdsetGoalCard({
             )}
           </button>
         </div>
+        {/* Botão de configuração de meta sempre visível, label muda conforme existência de meta */}
+        <button
+          onClick={() => setShowMetaModal(true)}
+          className="w-full mb-3 px-4 py-2 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
+        >
+          {item.goal ? 'Configuração' : 'Configurar Meta'}
+        </button>
       </div>
 
       {/* Budget Adjust Modal */}
@@ -359,6 +501,21 @@ export default function AdsetGoalCard({
         onConfirm={handleBudgetAdjust}
         currentBudget={budgetTotal && item.metrics?.days_total ? budgetTotal / item.metrics.days_total : 0}
         loading={loading}
+      />
+      {/* Modal de configuração de meta */}
+      <MetaConfigModal
+        isOpen={showMetaModal}
+        onClose={() => setShowMetaModal(false)}
+        onSave={Object.assign(
+          (meta: any) => {
+            setShowMetaModal(false);
+            if (onEdit) onEdit(item); // Trigger refresh
+          },
+          { adsetId: item.adset_id, isEdit: !!item.goal }
+        )}
+        adsetId={item.adset_id}
+        isEdit={!!item.goal}
+        goal={item.goal}
       />
     </>
   );

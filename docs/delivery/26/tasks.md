@@ -8,7 +8,7 @@ This document lists all tasks associated with PBI 26.
 
 | Task ID | Name | Status | Description |
 | :------ | :--- | :------ | :---------- |
-| 26-1 | [Criar sistema de análise de copies históricas](./26-1.md) | Proposed | Implementar módulo que analisa copies passadas e extrai padrões de alta performance |
+| 26-1 | [Criar sistema de análise de copies históricas](./26-1.md) | Agreed | Implementar módulo que analisa copies passadas e extrai padrões de alta performance |
 | 26-2 | [Desenvolver engine de geração de títulos](./26-2.md) | Proposed | Criar sistema que gera múltiplas variações de títulos otimizados |
 | 26-3 | [Implementar gerador de descrições persuasivas](./26-3.md) | Proposed | Desenvolver módulo para criar descrições que convertem, respeitando limites de caracteres |
 | 26-4 | [Criar sistema de sugestões de CTAs](./26-4.md) | Proposed | Implementar módulo que sugere call-to-actions baseados em performance histórica |

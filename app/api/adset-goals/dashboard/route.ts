@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer as supabase } from '@/lib/supabaseServer';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { AdsetGoalDashboardItem } from '@/types/adsetGoalsDashboard';
+import { AdsetGoalDashboardItem, AdsetGoalStatus } from '@/types/adsetGoalsDashboard';
 
 export async function GET(request: NextRequest) {
   try {
@@ -84,8 +84,95 @@ export async function GET(request: NextRequest) {
     }
 
     // 6. Montar resposta final
-    const items: AdsetGoalDashboardItem[] = filtered.map(i => {
+    const items: AdsetGoalDashboardItem[] = await Promise.all(filtered.map(async i => {
       const goal = goalsMap[i.adset_id] || null;
+      const cpl = i.total_leads > 0 ? i.total_spend / i.total_leads : null;
+      let metrics: any = {
+        days_total: null,
+        days_elapsed: null,
+        days_remaining: null,
+        progress_percentage: null,
+        daily_average_leads: null,
+        leads_needed_daily: null,
+        budget_utilization_percentage: null,
+        current_cpl: cpl,
+        projected_final_leads: null,
+        projected_final_cpl: null,
+        total_impressions: i.total_impressions,
+        total_leads: i.total_leads,
+        total_spend: i.total_spend,
+        leads_in_goal_period: null,
+        leads_ontem: null
+      };
+      let status: AdsetGoalStatus = 'critico';
+      let alerts: any[] = [];
+      if (goal) {
+        // Buscar soma de leads do adset no período da meta
+        const { data: leadsRows, error: leadsError } = await supabase
+          .from('adset_insights')
+          .select('leads, date')
+          .eq('adset_id', i.adset_id)
+          .gte('date', goal.contract_start_date)
+          .lte('date', goal.contract_end_date);
+        let leadsInGoalPeriod = 0;
+        let leadsOntem = 0;
+        if (!leadsError && Array.isArray(leadsRows)) {
+          leadsInGoalPeriod = leadsRows.reduce((sum, row) => sum + (Number(row.leads) || 0), 0);
+          // Buscar leads de ontem
+          const ontem = new Date();
+          ontem.setDate(ontem.getDate() - 1);
+          const ontemStr = ontem.toISOString().slice(0, 10);
+          leadsOntem = leadsRows.filter(row => row.date === ontemStr).reduce((sum, row) => sum + (Number(row.leads) || 0), 0);
+        }
+        const today = new Date();
+        const start = new Date(goal.contract_start_date);
+        const end = new Date(goal.contract_end_date);
+        const daysTotal = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        const daysElapsed = Math.max(0, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+        const daysRemaining = Math.max(0, Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+        const leadsNeededTotal = goal.volume_contracted - leadsInGoalPeriod;
+        const leadsNeededDaily = daysRemaining > 0 ? leadsNeededTotal / daysRemaining : 0;
+        const dailyAverageLeads = daysElapsed > 0 ? leadsInGoalPeriod / daysElapsed : 0;
+        const progressPercentage = goal.volume_contracted > 0 ? (leadsInGoalPeriod / goal.volume_contracted) * 100 : null;
+        const budgetUtilization = goal.budget_total > 0 ? (i.total_spend / goal.budget_total) * 100 : null;
+        const projectedFinalLeads = daysRemaining > 0 ? leadsInGoalPeriod + (dailyAverageLeads * daysRemaining) : leadsInGoalPeriod;
+        const projectedFinalCpl = projectedFinalLeads > 0 ? i.total_spend / projectedFinalLeads : null;
+        metrics = {
+          ...metrics,
+          days_total: daysTotal,
+          days_elapsed: daysElapsed,
+          days_remaining: daysRemaining,
+          progress_percentage: progressPercentage,
+          daily_average_leads: dailyAverageLeads,
+          leads_needed_daily: leadsNeededDaily,
+          budget_utilization_percentage: budgetUtilization,
+          projected_final_leads: projectedFinalLeads,
+          projected_final_cpl: projectedFinalCpl,
+          leads_in_goal_period: leadsInGoalPeriod,
+          leads_ontem: leadsOntem
+        };
+        // Status inteligente
+        if (
+          typeof leadsNeededDaily === 'number' &&
+          typeof leadsOntem === 'number' &&
+          leadsNeededDaily > 0
+        ) {
+          if (leadsOntem < leadsNeededDaily * 0.9) {
+            status = 'atrasado';
+          } else if (leadsOntem < leadsNeededDaily) {
+            status = 'atencao';
+          } else {
+            status = 'no_prazo';
+          }
+        } else {
+          status = 'no_prazo';
+        }
+        // Alerta só se faltar campo essencial
+        const missingFields = [goal.budget_total, goal.cpl_target, goal.volume_contracted, goal.contract_start_date, goal.contract_end_date].some(v => v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)));
+        if (missingFields) {
+          alerts.push({ type: 'budget', severity: 'critical', message: 'Informações de meta incompletas para este adset', created_at: new Date().toISOString() });
+        }
+      }
       return {
         adset_id: i.adset_id,
         adset_name: i.adset_name,
@@ -93,11 +180,11 @@ export async function GET(request: NextRequest) {
         campaign_name: '',
         goal: goal,
         progress: null,
-        metrics: null,
-        status: goal ? 'no_prazo' : 'critico',
-        alerts: goal ? [] : [{ type: 'budget', severity: 'critical', message: 'Informações de meta incompletas para este adset', created_at: new Date().toISOString() }]
+        metrics: metrics,
+        status: goal ? status : 'critico',
+        alerts: goal ? alerts : [{ type: 'budget', severity: 'critical', message: 'Informações de meta incompletas para este adset', created_at: new Date().toISOString() }]
       };
-    });
+    }));
 
     // 7. Ordenação simples (por enquanto)
     items.sort((a, b) => {

@@ -19,7 +19,10 @@ CREATE TABLE adset_goals (
 -- Indexes
 CREATE UNIQUE INDEX idx_adset_goals_adset_id ON adset_goals(adset_id);
 CREATE INDEX idx_adset_goals_dates ON adset_goals(contract_start_date, contract_end_date);
-CREATE INDEX idx_adset_goals_active ON adset_goals(contract_end_date) WHERE contract_end_date >= CURRENT_DATE;
+-- Removido índice parcial inválido:
+-- CREATE INDEX idx_adset_goals_active ON adset_goals(contract_end_date) WHERE contract_end_date >= CURRENT_DATE;
+-- Substituído por índice simples:
+CREATE INDEX idx_adset_goals_end_date ON adset_goals(contract_end_date);
 
 -- Constraints
 ALTER TABLE adset_goals ADD CONSTRAINT valid_dates 
