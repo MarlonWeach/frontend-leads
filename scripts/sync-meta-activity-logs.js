@@ -23,15 +23,74 @@ async function fetchMetaActivities({ since, until, after }) {
   return res.json();
 }
 
+function extractDetailsFromActivity(a) {
+  // Default values
+  let object_name = a.object_name || null;
+  let value_old = a.value?.old_value || null;
+  let value_new = a.value?.new_value || null;
+
+  // Extração customizada por tipo de evento
+  switch (a.event_type) {
+    case 'update_campaign_run_status':
+    case 'update_campaign_budget':
+      if (a.extra_data) {
+        object_name = a.extra_data.campaign_name || object_name;
+        value_old = a.extra_data.old_value || value_old;
+        value_new = a.extra_data.new_value || value_new;
+      }
+      break;
+    case 'update_ad_set_run_status':
+    case 'update_ad_set_budget':
+    case 'update_ad_set_optimization_goal':
+      if (a.extra_data) {
+        object_name = a.extra_data.adset_name || object_name;
+        value_old = a.extra_data.old_value || value_old;
+        value_new = a.extra_data.new_value || value_new;
+      }
+      break;
+    case 'update_ad_creative':
+      if (a.extra_data) {
+        object_name = a.extra_data.ad_name || object_name;
+        value_old = a.extra_data.old_value || value_old;
+        value_new = a.extra_data.new_value || value_new;
+      }
+      break;
+    case 'create_ad':
+      if (a.extra_data) {
+        object_name = a.extra_data.ad_name || object_name;
+      }
+      break;
+    case 'create_ad_set':
+      if (a.extra_data) {
+        object_name = a.extra_data.adset_name || object_name;
+      }
+      break;
+    case 'add_images':
+    case 'edit_images':
+      if (a.extra_data) {
+        object_name = a.extra_data.image_hash || object_name;
+      }
+      break;
+    // Adicione outros casos conforme necessário
+    default:
+      // Para debug: logar payloads desconhecidos
+      if (!object_name && a.extra_data) {
+        console.log('Payload desconhecido para event_type', a.event_type, a.extra_data);
+      }
+  }
+  return { object_name, value_old, value_new };
+}
+
 function normalizeActivity(a) {
+  const details = extractDetailsFromActivity(a);
   return {
     account_id: META_ACCOUNT_ID,
     event_type: a.event_type,
     event_time: new Date(a.event_time),
     object_id: a.object_id || null,
-    object_name: a.object_name || null,
-    value_old: a.value?.old_value || null,
-    value_new: a.value?.new_value || null,
+    object_name: details.object_name,
+    value_old: details.value_old,
+    value_new: details.value_new,
     application_id: a.application_id || null,
     extra_data: a.extra_data || null
   };
