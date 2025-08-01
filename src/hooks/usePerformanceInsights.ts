@@ -43,24 +43,28 @@ export const usePerformanceInsights = ({
   config = DEFAULT_CONFIG
 }: UsePerformanceInsightsProps): UsePerformanceInsightsReturn => {
   const [insights, setInsights] = useState<PerformanceInsight[]>([]);
-  const [comparison, setComparison] = useState<PeriodComparison | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // NOVA LÓGICA: Usar o dateRange selecionado pelo usuário
-  // Calcula o período anterior com base no range selecionado
-  const current = useMemo(() => ({
-    start: dateRange.start,
-    end: dateRange.end
-  }), [dateRange.start, dateRange.end]);
+  // Calcular períodos atual e anterior
+  const current = useMemo(() => {
+    return {
+      start: dateRange.start,
+      end: dateRange.end
+    };
+  }, [dateRange.start, dateRange.end]);
 
   const previous = useMemo(() => {
-    const duration = dateRange.end.getTime() - dateRange.start.getTime();
-    const prevEnd = new Date(dateRange.start.getTime() - 1); // Dia anterior ao início
-    const prevStart = new Date(prevEnd.getTime() - duration);
-    return {
-      start: prevStart,
-      end: prevEnd
-    };
+    const isSingleDay = dateRange.start.getTime() === dateRange.end.getTime();
+    if (isSingleDay) {
+      const prevDay = new Date(dateRange.start);
+      prevDay.setDate(prevDay.getDate() - 1);
+      return { start: prevDay, end: prevDay };
+    } else {
+      const duration = dateRange.end.getTime() - dateRange.start.getTime();
+      const prevEnd = new Date(dateRange.start.getTime() - 1);
+      const prevStart = new Date(prevEnd.getTime() - duration);
+      return { start: prevStart, end: prevEnd };
+    }
   }, [dateRange.start, dateRange.end]);
 
   const currentFilters = useMemo(() => ({
@@ -77,6 +81,7 @@ export const usePerformanceInsights = ({
   const { data: currentData, isLoading: currentLoading, error: currentError } = useQuery({
     queryKey: ['performance-insights', 'current', currentFilters],
     queryFn: async () => {
+      
       const { data, error } = await supabase
         .from('adset_insights')
         .select(`
@@ -91,14 +96,22 @@ export const usePerformanceInsights = ({
         .lte('date', currentFilters.endDate);
 
       if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const totalLeads = data.reduce((sum, item) => sum + (Number(item.leads) || 0), 0);
+      }
+      
       return data || [];
     },
-    enabled: !!currentFilters.startDate && !!currentFilters.endDate
+    enabled: !!currentFilters.startDate && !!currentFilters.endDate,
+    staleTime: 0, // Sempre buscar dados frescos
+    gcTime: 0  // Não usar cache
   });
 
   const { data: previousData, isLoading: previousLoading, error: previousError } = useQuery({
     queryKey: ['performance-insights', 'previous', previousFilters],
     queryFn: async () => {
+      
       const { data, error } = await supabase
         .from('adset_insights')
         .select(`
@@ -113,9 +126,16 @@ export const usePerformanceInsights = ({
         .lte('date', previousFilters.endDate);
 
       if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const totalLeads = data.reduce((sum, item) => sum + (Number(item.leads) || 0), 0);
+      }
+      
       return data || [];
     },
-    enabled: !!previousFilters.startDate && !!previousFilters.endDate
+    enabled: !!previousFilters.startDate && !!previousFilters.endDate,
+    staleTime: 0, // Sempre buscar dados frescos
+    gcTime: 0  // Não usar cache
   });
 
   const loading = currentLoading || previousLoading;
@@ -176,11 +196,6 @@ export const usePerformanceInsights = ({
         // Calcular variações
         const performanceMetrics = calculatePerformanceMetrics(currentMetrics, previousMetrics);
         
-        // DEBUG TEMPORÁRIO: Logar métricas e variações
-        console.log('🔎 DEBUG INSIGHTS - currentMetrics:', currentMetrics);
-        console.log('🔎 DEBUG INSIGHTS - previousMetrics:', previousMetrics);
-        console.log('🔎 DEBUG INSIGHTS - performanceMetrics:', performanceMetrics);
-        
         // Gerar insights
         const generatedInsights = processMetrics(performanceMetrics, {
           threshold: 10,
@@ -224,10 +239,10 @@ const calculateAggregatedMetrics = (data: any[]) => {
   }
 
   const totals = data.reduce((acc, item) => {
-    acc.leads += item.leads || 0;
-    acc.spend += item.spend || 0;
-    acc.impressions += item.impressions || 0;
-    acc.clicks += item.clicks || 0;
+    acc.leads += Number(item.leads) || 0;
+    acc.spend += Number(item.spend) || 0;
+    acc.impressions += Number(item.impressions) || 0;
+    acc.clicks += Number(item.clicks) || 0;
     return acc;
   }, { leads: 0, spend: 0, impressions: 0, clicks: 0 });
 

@@ -5,7 +5,8 @@ import {
   Lightbulb, 
   AlertTriangle,
   TrendingDown,
-  Info
+  Info,
+  BarChart3
 } from 'lucide-react';
 import { usePerformanceInsights } from '../../hooks/usePerformanceInsights';
 import { DateRange, InsightConfig, PerformanceInsight } from '../../types/insights';
@@ -218,10 +219,26 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   config,
   className = ''
 }) => {
-  const { insights, loading, error } = usePerformanceInsights({ 
-    dateRange, 
-    config 
-  });
+  const { insights, loading, error } = usePerformanceInsights({ dateRange });
+
+  if (loading) {
+    return (
+      <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 ${className}`}>
+        <div className="flex items-center space-x-3 mb-4">
+          <BarChart3 className="w-5 h-5 text-blue-400" />
+          <h2 className="text-lg font-semibold text-white">Insights de Performance</h2>
+        </div>
+        <div className="space-y-4">
+          <div className="h-32 bg-gray-700/50 rounded-lg animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-gray-700/50 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const formatDateRange = (range: DateRange) => {
     try {

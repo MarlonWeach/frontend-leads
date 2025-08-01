@@ -149,38 +149,6 @@ export default function Pagination({
           </button>
         </div>
       </div>
-
-      {/* Navegação rápida (apenas em telas maiores) */}
-      <div className="hidden md:flex items-center justify-center mt-4 pt-4 border-t border-card-border">
-        <div className="flex items-center space-x-2 text-sm">
-          <span className="text-white/70">Ir para página:</span>
-          <input
-            type="number"
-            value={inputPage}
-            onChange={(e) => setInputPage(e.target.value)}
-            onKeyPress={handlePageInput}
-            placeholder={currentPage.toString()}
-            min="1"
-            max={totalPages}
-            disabled={loading}
-            className="w-16 px-2 py-1 bg-background-secondary border border-card-border rounded text-white text-center focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-          />
-          <span className="text-white/70">de {totalPages}</span>
-          <button
-            onClick={() => {
-              const page = parseInt(inputPage);
-              if (page >= 1 && page <= totalPages) {
-                onPageChange(page);
-                setInputPage('');
-              }
-            }}
-            disabled={!inputPage || loading}
-            className="px-2 py-1 bg-primary text-white rounded text-xs hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Ir
-          </button>
-        </div>
-      </div>
     </div>
   );
 } 

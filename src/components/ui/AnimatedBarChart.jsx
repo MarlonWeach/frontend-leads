@@ -19,6 +19,21 @@ function formatNumberShort(num) {
   return Math.round(num).toLocaleString('pt-BR');
 }
 
+// Função para formatar valores monetários
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value || 0);
+}
+
+// Adicionar função para detectar se a chave é de gasto
+function isSpendKey(key) {
+  return key && (key.toString().toLowerCase().includes('spend') || key.toString().toLowerCase().includes('gasto') || key.toString().toLowerCase().includes('gastos'));
+}
+
 // Cores do tema
 const DEFAULT_COLORS = ["#2E5FF2", "#8A2BE2", "#F29D35", "#00E6C0"];
 
@@ -41,13 +56,13 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
     );
   }
 
-  // Filtrar dados com valores válidos
+  // Filtrar dados com valores válidos (incluindo zero para mostrar campanhas com gastos baixos)
   const validData = data.filter(item => 
     item && 
     keys.some(key => 
       typeof item[key] === 'number' && 
       !isNaN(item[key]) && 
-      item[key] >= 0
+      item[key] >= 0 // Mudança: incluir valores zero
     )
   );
 
@@ -59,14 +74,14 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
     );
   }
 
-  // Verificar se há pelo menos um valor maior que zero
+  // Verificar se há pelo menos um valor (incluindo zero)
   const hasValidValues = validData.some(item => 
-    keys.some(key => item[key] > 0)
+    keys.some(key => item[key] >= 0) // Mudança: incluir valores zero
   );
   if (!hasValidValues) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
-        <p>Nenhum valor positivo para exibir</p>
+        <p>Nenhum valor válido para exibir</p>
       </div>
     );
   }
@@ -139,6 +154,21 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
     '#4169E1', // Azul royal
   ];
 
+  // Função para formatar ticks do eixo Y
+  const formatYAxisTick = (value) => {
+    if (isSpendKey(keys[0])) {
+      // Para gastos, usar formatação abreviada para valores grandes
+      if (value >= 1000) {
+        return formatNumberShort(value);
+      } else {
+        return formatCurrency(value);
+      }
+    } else {
+      // Para outras métricas, usar formatação abreviada
+      return formatNumberShort(value);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -158,7 +188,7 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
         margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
         padding={0.3}
         groupMode="grouped"
-        valueScale={{ type: 'linear' }}
+        valueScale={{ type: 'linear', min: 0 }}
         indexScale={{ type: 'band', round: true }}
         colors={colors}
         borderColor={{
@@ -182,6 +212,8 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
           legend: '',
           legendPosition: 'middle',
           legendOffset: -40,
+          // Usar formatação personalizada para o eixo Y
+          format: formatYAxisTick
         }}
         labelSkipWidth={12}
         labelSkipHeight={12}
@@ -194,6 +226,9 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
         motionStiffness={90}
         motionDamping={15}
         enableLabel={false}
+        // Garantir que valores baixos sejam visíveis
+        minValue={0}
+        maxValue="auto"
         tooltip={({ id, value, color, indexValue }) => (
           <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
             <div className="flex items-center gap-2 mb-1">
@@ -206,7 +241,7 @@ const AnimatedBarChart = ({ data, keys, indexBy = 'label', height = 300 }) => {
               </span>
             </div>
             <div className="text-gray-300 text-sm font-satoshi">
-              {id}: <span className="text-white font-semibold">{value}</span>
+              {id}: <span className="text-white font-semibold">{isSpendKey(id) ? formatCurrency(value) : value}</span>
             </div>
           </div>
         )}

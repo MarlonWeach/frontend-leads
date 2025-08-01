@@ -10,22 +10,32 @@ const DEFAULT_FILTERS: AdsetGoalFilters = {
 };
 
 export function useGoalFilters(initialFilters?: Partial<AdsetGoalFilters>): UseGoalFiltersReturn {
+  // Calcular range padrão dinamicamente
+  const getDefaultDateRange = () => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0]
+    };
+  };
+
   const [filters, setFiltersState] = useState<AdsetGoalFilters>({
     ...DEFAULT_FILTERS,
+    date_range: getDefaultDateRange(),
     ...initialFilters
   });
+  
+
 
   // Permitir setFilters ser objeto ou função updater
   const setFilters = useCallback((newFiltersOrUpdater: Partial<AdsetGoalFilters> | ((prev: AdsetGoalFilters) => AdsetGoalFilters)) => {
     setFiltersState(prev => {
-      if (typeof newFiltersOrUpdater === 'function') {
-        return newFiltersOrUpdater(prev);
-      } else {
-        return {
-          ...prev,
-          ...newFiltersOrUpdater
-        };
-      }
+      const newState = typeof newFiltersOrUpdater === 'function' 
+        ? newFiltersOrUpdater(prev)
+        : { ...prev, ...newFiltersOrUpdater };
+      return newState;
     });
   }, []);
 

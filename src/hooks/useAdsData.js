@@ -19,10 +19,12 @@ const fetchAds = async ({ campaignId, adsetId, startDate, endDate, status, limit
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ campaignId, adsetId, startDate, endDate, status, limit })
   });
+  
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(`Erro ao buscar ads: ${response.status} - ${errorData.details || errorData.error || 'Erro desconhecido'}`);
   }
+  
   const data = await response.json();
   return data.ads || [];
 };

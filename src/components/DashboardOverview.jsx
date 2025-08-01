@@ -8,9 +8,9 @@ import { Card } from './ui/card';
 import LoadingState from './ui/LoadingState';
 import ErrorMessage from './ui/ErrorMessage';
 import ChartContainer from './ui/ChartContainer';
-import AnimatedLineChart from './ui/AnimatedLineChart';
 import AnimatedPieChart from './ui/AnimatedPieChart';
 import AnimatedBarChart from './ui/AnimatedBarChart';
+import Pagination from './ui/Pagination';
 
 function formatNumberShort(num) {
   if (num === null || num === undefined) return '';
@@ -42,6 +42,79 @@ const PERIODS = [
   { key: '7d', label: '7 dias' },
   { key: '30d', label: '30 dias' }
 ];
+
+const ALL_EVENT_TYPES = [
+  "ad_account_billing_charge",
+  "add_images",
+  "create_ad",
+  "create_ad_set",
+  "edit_images",
+  "first_delivery_event",
+  "update_ad_creative",
+  "update_ad_run_status",
+  "update_ad_set_bid_strategy",
+  "update_ad_set_budget",
+  "update_ad_set_optimization_goal",
+  "update_ad_set_run_status",
+  "update_ad_set_target_spec",
+  "update_campaign_budget",
+  "update_campaign_run_status"
+];
+
+const EVENT_TYPE_LABELS = {
+  ad_account_billing_charge: 'Cobrança/Billing',
+  add_images: 'Adicionar Imagens',
+  create_ad: 'Criar Anúncio',
+  create_ad_set: 'Criar Adset',
+  edit_images: 'Editar Imagens',
+  first_delivery_event: 'Primeira Entrega',
+  update_ad_creative: 'Atualizar Criativo',
+  update_ad_run_status: 'Status do Anúncio',
+  update_ad_set_bid_strategy: 'Estratégia de Lance',
+  update_ad_set_budget: 'Orçamento do Adset',
+  update_ad_set_optimization_goal: 'Meta de Otimização',
+  update_ad_set_run_status: 'Status do Adset',
+  update_ad_set_target_spec: 'Segmentação do Adset',
+  update_campaign_budget: 'Orçamento da Campanha',
+  update_campaign_run_status: 'Status da Campanha'
+};
+
+function getActivityMessage(activity) {
+  switch (activity.event_type) {
+    case 'update_campaign_run_status':
+      return `Status da Campanha - ${activity.object_name || 'Campanha'} - ${activity.value_new || ''}`;
+    case 'update_campaign_budget':
+      return `Orçamento da Campanha - ${activity.object_name || 'Campanha'}${activity.value_new ? ` - ${activity.value_new}` : ''}`;
+    case 'update_ad_set_run_status':
+      return `Status do Adset - ${activity.object_name || 'Adset'} - ${activity.value_new || ''}`;
+    case 'update_ad_set_budget':
+      return `Orçamento do Adset - ${activity.object_name || 'Adset'}${activity.value_new ? ` - ${activity.value_new}` : ''}`;
+    case 'update_ad_run_status':
+      return `Status do Anúncio - ${activity.object_name || 'Anúncio'} - ${activity.value_new || ''}`;
+    case 'update_ad_creative':
+      return `Criativo do Anúncio Atualizado - ${activity.object_name || 'Anúncio'}`;
+    case 'ad_account_billing_charge':
+      return `Cobrança/Billing - ${activity.value_new || ''}`;
+    case 'add_images':
+      return `Imagens adicionadas - ${activity.object_name || ''}`;
+    case 'edit_images':
+      return `Imagens editadas - ${activity.object_name || ''}`;
+    case 'create_ad':
+      return `Anúncio criado - ${activity.object_name || ''}`;
+    case 'create_ad_set':
+      return `Adset criado - ${activity.object_name || ''}`;
+    case 'update_ad_set_bid_strategy':
+      return `Estratégia de Lance do Adset - ${activity.object_name || ''} - ${activity.value_new || ''}`;
+    case 'update_ad_set_optimization_goal':
+      return `Meta de Otimização do Adset - ${activity.object_name || ''} - ${activity.value_new || ''}`;
+    case 'update_ad_set_target_spec':
+      return `Segmentação do Adset - ${activity.object_name || ''}`;
+    case 'first_delivery_event':
+      return `Primeira Entrega - ${activity.object_name || ''}`;
+    default:
+      return `${EVENT_TYPE_LABELS[activity.event_type] || activity.event_type}${activity.object_name ? ' - ' + activity.object_name : ''}${activity.value_new ? ' - ' + activity.value_new : ''}`;
+  }
+}
 
 export default function DashboardOverview() {
   const [period, setPeriod] = useState('7d');
@@ -114,6 +187,19 @@ export default function DashboardOverview() {
   // Estado para alertas
   const [alerts, setAlerts] = useState([]);
 
+  // Filtro de tipos de atividade
+  const [selectedTypes, setSelectedTypes] = useState(() =>
+    ALL_EVENT_TYPES.filter(t => t !== 'ad_account_billing_charge')
+  );
+
+  const handleTypeToggle = (type) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
   // Hook para logs de atividades da Meta (agora só do Supabase)
   const {
     activities: recentActivity,
@@ -121,6 +207,24 @@ export default function DashboardOverview() {
     error: activityError,
     refresh: refreshActivities
   } = useMetaActivities({ limit: 50 });
+
+  const filteredActivity = recentActivity.filter(a => selectedTypes.includes(a.event_type));
+
+  // Estado para paginação da atividade
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityPageSize, setActivityPageSize] = useState(10);
+
+  // Paginação dos logs filtrados
+  const paginatedActivity = filteredActivity.slice(
+    (activityPage - 1) * activityPageSize,
+    activityPage * activityPageSize
+  );
+  const totalActivityPages = Math.ceil(filteredActivity.length / activityPageSize) || 1;
+
+  // Resetar página ao filtrar
+  useEffect(() => {
+    setActivityPage(1);
+  }, [filteredActivity, activityPageSize]);
 
   // Gerar alertas
   useEffect(() => {
@@ -288,6 +392,20 @@ export default function DashboardOverview() {
       {(recentActivity.length > 0 || activityLoading || activityError) && (
         <div className="bg-white/5 border border-white/10 rounded-lg p-4" data-testid="dashboard-activity">
           <div className="font-semibold text-white mb-2">Atividade Recente da Meta</div>
+          {/* Filtro de tipos de atividade */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {ALL_EVENT_TYPES.map(type => (
+              <label key={type} className="flex items-center gap-1 text-xs text-white/80 bg-white/10 px-2 py-1 rounded cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes(type)}
+                  onChange={() => handleTypeToggle(type)}
+                  className="accent-blue-500"
+                />
+                {EVENT_TYPE_LABELS[type] || type}
+              </label>
+            ))}
+          </div>
           {activityLoading ? (
             <div className="text-white/60 text-center py-4">Carregando atividades...</div>
           ) : activityError ? (
@@ -296,8 +414,9 @@ export default function DashboardOverview() {
               <button onClick={refreshActivities} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">Tentar novamente</button>
             </div>
           ) : (
+            <>
             <ul className="divide-y divide-white/10">
-              {recentActivity.map((activity, idx) => (
+              {paginatedActivity.map((activity, idx) => (
                 <li key={activity.id} className="py-2 flex items-center gap-3">
                   <span className="text-blue-400 font-bold">
                     {activity.event_type === 'ad_account_update_spend_limit' ? '💰' :
@@ -308,12 +427,7 @@ export default function DashboardOverview() {
                   </span>
                   <div className="flex-1">
                     <div className="text-white text-sm font-medium">
-                      {activity.event_type === 'ad_account_update_spend_limit' ? 'Limite de gastos atualizado' :
-                       activity.event_type === 'ad_account_update_status' ? 'Status da conta alterado' :
-                       activity.event_type === 'campaign_update_status' ? `Campanha ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
-                       activity.event_type === 'adset_update_status' ? `Adset ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
-                       activity.event_type === 'ad_update_status' ? `Anúncio ${activity.object_name || 'N/A'} ${activity.value_new || ''}` :
-                       activity.event_type || 'Atividade'}
+                      {getActivityMessage(activity)}
                     </div>
                     <div className="text-xs text-white/60">
                       {activity.object_name && `Objeto: ${activity.object_name}`}
@@ -332,6 +446,16 @@ export default function DashboardOverview() {
                 </li>
               ))}
             </ul>
+            <Pagination
+              currentPage={activityPage}
+              totalPages={totalActivityPages}
+              totalItems={filteredActivity.length}
+              pageSize={activityPageSize}
+              onPageChange={setActivityPage}
+              onPageSizeChange={setActivityPageSize}
+              loading={activityLoading}
+            />
+            </>
           )}
         </div>
       )}

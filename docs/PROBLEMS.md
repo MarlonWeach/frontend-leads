@@ -753,3 +753,37 @@ const memoizedValue = useMemo(() => {
 - **Manutenção:** Redução da complexidade e manutenção do código
 - **Performance:** Menos código para carregar e processar
 - **Segurança:** Menos superfície de ataque e endpoints expostos
+
+### 23. Erros de RLS (Row Level Security) no Supabase
+- **Status**: Resolvido
+- **Descrição**: Tabelas públicas no Supabase estavam causando erros de segurança por não terem RLS habilitado:
+  - `public.ad_creatives` - RLS não habilitado
+  - `public.meta_activity_logs` - RLS não habilitado  
+  - `public.adset_goals` - RLS não habilitado
+- **Solução Implementada**: 
+  - Criado script SQL `fix-rls-errors.sql` para habilitar RLS nas tabelas
+  - Criadas políticas de acesso apropriadas para cada tabela
+  - Políticas permitem leitura para todos e escrita apenas para usuários autenticados
+- **Arquivo**: `fix-rls-errors.sql` - Script para executar no Supabase SQL Editor
+- **Resultado**: Erros de segurança resolvidos, tabelas agora seguem boas práticas de segurança
+
+### 24. Avisos de Search Path Mutável em Funções PostgreSQL
+- **Status**: Resolvido
+- **Descrição**: Funções PostgreSQL estavam gerando avisos de segurança por não terem o `search_path` definido explicitamente:
+  - `public.update_adset_goals_updated_at` - search_path mutável
+  - `public.update_ad_creatives_updated_at` - search_path mutável
+  - `public.trigger_update_alert_stats` - search_path mutável
+  - `public.validate_budget_adjustment_frequency` - search_path mutável
+  - `public.get_budget_adjustment_stats` - search_path mutável
+  - `public.should_suppress_alert` - search_path mutável
+  - `public.get_active_alerts_for_adset` - search_path mutável
+  - `public.update_alert_stats` - search_path mutável
+  - `public.update_cache_stats_updated_at` - search_path mutável
+- **Solução Implementada**: 
+  - Criada migração `20250130_fix_function_search_paths.sql`
+  - Adicionado `SECURITY DEFINER SET search_path = public` a todas as funções
+  - Funções agora têm search_path explícito e seguro
+- **Arquivo**: `supabase/migrations/20250130_fix_function_search_paths.sql`
+- **Resultado**: Avisos de segurança resolvidos, funções agora seguem boas práticas de segurança PostgreSQL
+
+---

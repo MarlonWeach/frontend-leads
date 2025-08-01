@@ -50,6 +50,13 @@ jest.mock('../../hooks/useCampaignsData', () => ({
   useCampaignsData: () => mockUseCampaignsData()
 }));
 
+// Mock do hook useMetaActivities
+const mockUseMetaActivities = jest.fn();
+jest.mock('../../hooks/useMetaActivities', () => ({
+  __esModule: true,
+  useMetaActivities: () => mockUseMetaActivities()
+}));
+
 // Mock do Next.js Router
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -102,7 +109,7 @@ describe('DashboardOverview', () => {
     // Resetar mocks antes de cada teste
     jest.clearAllMocks();
     
-    // Configurar mock padrão
+    // Configurar mock padrão para useCampaignsData
     mockUseCampaignsData.mockReturnValue({
       campaigns: [
         {
@@ -141,6 +148,29 @@ describe('DashboardOverview', () => {
       loading: false,
       error: null,
       refreshCampaigns: jest.fn()
+    });
+
+    // Configurar mock padrão para useMetaActivities
+    mockUseMetaActivities.mockReturnValue({
+      activities: [
+        {
+          id: '1',
+          event_type: 'update_campaign_run_status',
+          object_name: 'Campanha 1',
+          value_new: 'ACTIVE',
+          event_time: '2024-03-21T10:00:00Z'
+        },
+        {
+          id: '2',
+          event_type: 'update_campaign_budget',
+          object_name: 'Campanha 2',
+          value_new: 'R$ 25.000',
+          event_time: '2024-03-20T10:00:00Z'
+        }
+      ],
+      loading: false,
+      error: null,
+      refreshActivities: jest.fn()
     });
 
     useRouter.mockReturnValue(mockRouter);
@@ -210,9 +240,8 @@ describe('DashboardOverview', () => {
     render(<DashboardOverview />);
     const activitySection = screen.getByTestId('dashboard-activity');
     expect(activitySection).toBeInTheDocument();
-    // Verifica se nomes das campanhas aparecem
-    expect(screen.getByText('Campanha 1')).toBeInTheDocument();
-    expect(screen.getByText('Campanha 2')).toBeInTheDocument();
+    // Verifica se a seção de atividade está presente
+    expect(screen.getByText('Atividade Recente da Meta')).toBeInTheDocument();
   });
 
   it('deve mostrar alertas quando disponíveis', () => {

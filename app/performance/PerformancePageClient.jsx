@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
-import { ArrowUpDown, TrendingUp, Eye, MousePointer, DollarSign, Users } from 'lucide-react';
+import { ArrowUpDown, TrendingUp, Eye, MousePointer, DollarSign, Users, Clock } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
 import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
-import AnimatedLineChart from '../../src/components/ui/AnimatedLineChart';
 import { AIPanel } from '@/components/ai/AIPanel';
 import { OpenAIBillingWidget } from '@/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
@@ -108,9 +107,14 @@ export default function PerformancePageClient() {
       threeDaysAgoDate.setDate(todaySPDate.getDate() - 2);
       const threeDaysAgoSP = formatInTimeZone(threeDaysAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
       
+      // CORREÇÃO: Últimos 3 dias deve ser ontem, anteontem e 3 dias atrás (não incluir hoje)
+      const yesterdayDate = new Date(todaySPDate);
+      yesterdayDate.setDate(todaySPDate.getDate() - 1);
+      const yesterdaySP = formatInTimeZone(yesterdayDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      
       return { 
         start: threeDaysAgoSP, 
-        end: todaySP 
+        end: yesterdaySP 
       };
     }},
     { label: 'Últimos 7 dias', getRange: () => {
@@ -121,9 +125,14 @@ export default function PerformancePageClient() {
       sevenDaysAgoDate.setDate(todaySPDate.getDate() - 6);
       const sevenDaysAgoSP = formatInTimeZone(sevenDaysAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
       
+      // CORREÇÃO: Últimos 7 dias deve ser os 7 dias anteriores a hoje (não incluir hoje)
+      const yesterdayDate = new Date(todaySPDate);
+      yesterdayDate.setDate(todaySPDate.getDate() - 1);
+      const yesterdaySP = formatInTimeZone(yesterdayDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
+      
       return { 
         start: sevenDaysAgoSP, 
-        end: todaySP 
+        end: yesterdaySP 
       };
     }},
     { label: 'Personalizado', getRange: () => {
@@ -151,13 +160,11 @@ export default function PerformancePageClient() {
     // Garantir que o preset selecionado seja "Hoje" na montagem
     // (os filtros já foram inicializados com a data correta)
     setSelectedPreset(0);
-    console.log('🔍 [PerformancePageClient] Preset inicial "Hoje" aplicado automaticamente na inicialização');
   }, []); // Executar apenas uma vez na montagem
 
   const applyDatePreset = (presetIndex) => {
     const preset = datePresets[presetIndex];
     const range = preset.getRange();
-    console.log(`🔍 [PerformancePageClient] Aplicando preset "${preset.label}":`, range);
     setFilters(prev => ({
       ...prev,
       startDate: range.start,
@@ -323,6 +330,19 @@ export default function PerformancePageClient() {
     }
   });
 
+  // Calcular altura dinâmica da tabela baseada no número de campanhas
+  const calculateTableHeight = () => {
+    const baseHeight = 60; // Altura do cabeçalho
+    const rowHeight = 72; // Altura estimada por linha (p-4 = 16px top + 16px bottom + ~40px conteúdo)
+    const maxRows = 10; // Máximo de linhas visíveis antes do scroll
+    const totalHeight = baseHeight + (sortedCampaigns.length * rowHeight);
+    const maxHeight = baseHeight + (maxRows * rowHeight);
+    
+    return Math.min(totalHeight, maxHeight);
+  };
+
+  const tableHeight = calculateTableHeight();
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
@@ -339,102 +359,22 @@ export default function PerformancePageClient() {
 
   return (
     <div className="flex flex-col gap-8" data-testid="performance-page">
-      {/* Filtros de período - SEGUINDO PADRÃO DO DASHBOARD */}
+      {/* Resumo do período no topo da página */}
       <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-4">
-          {/* Label para Presets de data */}
-          <label className="text-sm text-white/70 mb-1">Presets</label>
-          {/* Presets de data */}
-          <div id="date-presets" className="flex space-x-2">
-            {datePresets.map((preset, index) => (
-              <button
-                key={index}
-                onClick={() => applyDatePreset(index)}
-                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-300 backdrop-blur-lg
-                  ${selectedPreset === index
-                    ? 'bg-primary text-white shadow-primary-glow'
-                    : 'glass-light text-white hover:glass-medium'}
-                `}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          {/* Labels e campos de data customizada sempre visíveis */}
-          <div className="flex space-x-4 items-center mt-2">
-            <div className="flex flex-col">
-              <label htmlFor="custom-date-start" className="text-sm text-white/70 mb-1">Data Início</label>
-              <input
-                id="custom-date-start"
-                type="date"
-                value={customDateRange.start || filters.startDate}
-                onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
-                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
-                disabled={selectedPreset !== 4}
-              />
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="custom-date-end" className="text-sm text-white/70 mb-1">Data Fim</label>
-              <input
-                id="custom-date-end"
-                type="date"
-                value={customDateRange.end || filters.endDate}
-                onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
-                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
-                disabled={selectedPreset !== 4}
-              />
-            </div>
-            {selectedPreset === 4 && (
-              <button
-                onClick={() => applyCustomDateRange()}
-                disabled={!customDateRange.start || !customDateRange.end}
-                className="px-4 py-2 mt-6 rounded-lg bg-primary text-white disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-primary/80 transition-colors"
-              >
-                Aplicar
-              </button>
-            )}
-          </div>
-          {/* Período selecionado */}
-          <div className="text-sublabel-refined text-white glass-light px-3 py-2 rounded-2xl">
-            <span className="font-medium text-white">Período:</span> {
-              filters.startDate && filters.endDate 
-                ? `${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`
-                : 'Últimos 7 dias'
-            }
-          </div>
+        <div className="text-sublabel-refined text-white glass-light px-4 py-3 rounded-2xl">
+          <span className="font-medium text-white">Período Selecionado:</span> {
+            filters.startDate && filters.endDate 
+              ? `${formatDate(filters.startDate)} a ${formatDate(filters.endDate)}`
+              : 'Últimos 7 dias'
+          }
         </div>
-        <div className="flex flex-col gap-2 items-end">
-          {/* Label para filtro de status */}
-          <label htmlFor="status-filter" className="text-sm text-white/70 mb-1">Status</label>
-          {/* Botões de status para compatibilidade com E2E */}
-          <div className="flex space-x-2 mb-2">
-            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ACTIVE', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ACTIVE' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Ativo</button>
-            <button onClick={() => setFilters(prev => ({ ...prev, status: 'PAUSED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'PAUSED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Pausado</button>
-            <button onClick={() => setFilters(prev => ({ ...prev, status: 'DELETED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'DELETED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Excluído</button>
-            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ARCHIVED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ARCHIVED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Arquivado</button>
-            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ALL', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ALL' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Todos</button>
-          </div>
-          {/* Select de status (mantido para acessibilidade) */}
-          <select
-            id="status-filter"
-            value={filters.status}
-            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
-            className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-primary focus:outline-none"
-            style={{ minWidth: 120 }}
-          >
-            <option value="ACTIVE">Ativo</option>
-            <option value="PAUSED">Pausado</option>
-            <option value="DELETED">Excluído</option>
-            <option value="ARCHIVED">Arquivado</option>
-            <option value="ALL">Todos</option>
-          </select>
-          <div className="text-sublabel-refined text-white/70">
-            Última atualização: {currentTime || 'Carregando...'}
-          </div>
+        <div className="text-sublabel-refined text-white/70 flex items-center">
+          <Clock className="h-4 w-4 mr-2" />
+          Última atualização: {currentTime || 'Carregando...'}
         </div>
       </div>
 
-      {/* Métricas agregadas expandidas (7 cards) - COM CORES E HOVER EFFECTS */}
+      {/* Métricas agregadas no topo */}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-6">
           {/* Total de Leads */}
@@ -526,16 +466,100 @@ export default function PerformancePageClient() {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/20 hover:bg-yellow-900/40 hover:border-yellow-500/40 transition-all duration-300"
+            className="bg-pink-900/30 rounded-lg p-4 border border-pink-500/20 hover:bg-pink-900/40 hover:border-pink-500/40 transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-2">
-              <div className="text-yellow-400 text-sm font-medium">ROI Médio</div>
-              <TrendingUp className="w-4 h-4 text-yellow-400" />
+              <div className="text-pink-400 text-sm font-medium">ROI Médio</div>
+              <TrendingUp className="w-4 h-4 text-pink-400" />
             </div>
             <div className="text-2xl font-bold text-white">{formatPercentage(metrics.averageROI)}</div>
           </motion.div>
         </div>
       )}
+
+      {/* Filtros de período - SEGUINDO PADRÃO DO DASHBOARD */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4">
+          {/* Label para Presets de data */}
+          <label className="text-sm text-white/70 mb-1">Presets</label>
+          {/* Presets de data */}
+          <div id="date-presets" className="flex space-x-2">
+            {datePresets.map((preset, index) => (
+              <button
+                key={index}
+                onClick={() => applyDatePreset(index)}
+                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-300 backdrop-blur-lg
+                  ${selectedPreset === index
+                    ? 'bg-primary text-white shadow-primary-glow'
+                    : 'glass-light text-white hover:glass-medium'}
+                `}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          {/* Labels e campos de data customizada sempre visíveis */}
+          <div className="flex space-x-4 items-center mt-2">
+            <div className="flex flex-col">
+              <label htmlFor="custom-date-start" className="text-sm text-white/70 mb-1">Data Início</label>
+              <input
+                id="custom-date-start"
+                type="date"
+                value={customDateRange.start || filters.startDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                disabled={selectedPreset !== 4}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="custom-date-end" className="text-sm text-white/70 mb-1">Data Fim</label>
+              <input
+                id="custom-date-end"
+                type="date"
+                value={customDateRange.end || filters.endDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
+                disabled={selectedPreset !== 4}
+              />
+            </div>
+            {selectedPreset === 4 && (
+              <button
+                onClick={() => applyCustomDateRange()}
+                disabled={!customDateRange.start || !customDateRange.end}
+                className="px-4 py-2 mt-6 rounded-lg bg-primary text-white disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-primary/80 transition-colors"
+              >
+                Aplicar
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 items-end">
+          {/* Label para filtro de status */}
+          <label htmlFor="status-filter" className="text-sm text-white/70 mb-1">Status</label>
+          {/* Botões de status para compatibilidade com E2E */}
+          <div className="flex space-x-2 mb-2">
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ACTIVE', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ACTIVE' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Ativo</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'PAUSED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'PAUSED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Pausado</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'DELETED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'DELETED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Excluído</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ARCHIVED', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ARCHIVED' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Arquivado</button>
+            <button onClick={() => setFilters(prev => ({ ...prev, status: 'ALL', page: 1 }))} className={`px-3 py-1 rounded ${filters.status === 'ALL' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}>Todos</button>
+          </div>
+          {/* Select de status (mantido para acessibilidade) */}
+          <select
+            id="status-filter"
+            value={filters.status}
+            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
+            className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-primary focus:outline-none"
+            style={{ minWidth: 120 }}
+          >
+            <option value="ACTIVE">Ativo</option>
+            <option value="PAUSED">Pausado</option>
+            <option value="DELETED">Excluído</option>
+            <option value="ARCHIVED">Arquivado</option>
+            <option value="ALL">Todos</option>
+          </select>
+        </div>
+      </div>
 
       {/* Gráficos de Performance */}
       {!loading && campaigns.length > 0 && campaigns.some(campaign => campaign.leads > 0 || campaign.spend > 0) && (
@@ -577,36 +601,6 @@ export default function PerformancePageClient() {
               />
             </CardContent>
           </Card>
-
-          {/* Gráfico de Linha - Tendências de Performance */}
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 lg:col-span-2 hover:bg-white/15 transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-white">Tendências de Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AnimatedLineChart
-                data={[
-                  {
-                    id: 'Leads',
-                    color: '#8A2BE2',
-                    data: campaigns.slice(0, 10).map((campaign, index) => ({
-                      x: `Campanha ${index + 1}`,
-                      y: campaign.leads || 0
-                    }))
-                  },
-                  {
-                    id: 'Gastos (R$)',
-                    color: '#00BFFF',
-                    data: campaigns.slice(0, 10).map((campaign, index) => ({
-                      x: `Campanha ${index + 1}`,
-                      y: campaign.spend || 0
-                    }))
-                  }
-                ]}
-                height={300}
-              />
-            </CardContent>
-          </Card>
         </div>
       )}
 
@@ -634,18 +628,23 @@ export default function PerformancePageClient() {
       {/* Painel de Insights Automáticos */}
       {!loading && campaigns.length > 0 && filters.startDate && filters.endDate && (
         <div className="mb-6">
-          <InsightsPanel 
-            dateRange={{
+          {(() => {
+            const dateRange = {
               start: new Date(filters.startDate + 'T00:00:00'),
-              end: new Date(filters.endDate + 'T23:59:59')
-            }}
-            config={{
-              threshold: 10,
-              maxInsights: 5,
-              enableAI: false
-            }}
-            className="bg-white/5 rounded-lg p-6 backdrop-blur-sm border border-white/10"
-          />
+              end: new Date(filters.endDate + 'T00:00:00')
+            };
+            return (
+              <InsightsPanel 
+                dateRange={dateRange}
+                config={{
+                  threshold: 10,
+                  maxInsights: 5,
+                  enableAI: false
+                }}
+                className="bg-white/5 rounded-lg p-6 backdrop-blur-sm border border-white/10"
+              />
+            );
+          })()}
         </div>
       )}
 
@@ -655,9 +654,9 @@ export default function PerformancePageClient() {
           <PerformanceForecast 
             dateRange={{
               start: new Date(filters.startDate + 'T00:00:00'),
-              end: new Date(filters.endDate + 'T23:59:59')
+              end: new Date(filters.endDate + 'T00:00:00')
             }}
-            className="w-full"
+            className="col-span-full"
           />
         </div>
       )}
@@ -682,73 +681,82 @@ export default function PerformancePageClient() {
         ) : (
           <Card className="backdrop-blur-md bg-white/10 border border-white/20">
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full" data-testid="performance-table">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('campaign_name')}>
-                        <div className="flex items-center space-x-2">
-                          <span>Campanha</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('status')}>
-                        <div className="flex items-center space-x-2">
-                          <span>Status</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('leads')}>
-                        <div className="flex items-center space-x-2">
-                          <span>Leads</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('spend')}>
-                        <div className="flex items-center space-x-2">
-                          <span>Gasto</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('ctr')}>
-                        <div className="flex items-center space-x-2">
-                          <span>CTR</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                      <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors" onClick={() => handleSort('cpl')}>
-                        <div className="flex items-center space-x-2">
-                          <span>CPL</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedCampaigns.map((campaign, index) => (
-                      <tr key={campaign.id || index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="p-4 text-white">
-                          <div className="font-medium">{campaign.campaign_name || 'Nome não disponível'}</div>
-                        </td>
-                        <td className="p-4">
-                          <span 
-                            className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(campaign.status)}`}
-                            data-testid="campaign-status"
-                          >
-                            {campaign.status === 'ACTIVE' ? 'Ativa' : 
-                             campaign.status === 'PAUSED' ? 'Pausada' : 
-                             campaign.status === 'DELETED' ? 'Excluída' : 
-                             campaign.status === 'ARCHIVED' ? 'Arquivada' : campaign.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-white">{formatNumberShort(campaign.leads || 0)}</td>
-                        <td className="p-4 text-white">{formatCurrency(campaign.spend || 0)}</td>
-                        <td className="p-4 text-white">{formatPercentage(campaign.ctr || 0)}</td>
-                        <td className="p-4 text-white">{formatCurrency(campaign.cpl || 0)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div 
+                className="table-responsive table-container w-full overflow-y-auto"
+                style={{ maxHeight: `${tableHeight}px` }}
+              >
+                <div className="min-w-full inline-block align-middle">
+                  <div className="overflow-hidden">
+                    <table className="min-w-full divide-y divide-white/10 table-fixed" data-testid="performance-table">
+                      <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10">
+                        <tr className="border-b border-white/10">
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/4" onClick={() => handleSort('campaign_name')}>
+                            <div className="flex items-center space-x-2">
+                              <span>Campanha</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/6" onClick={() => handleSort('status')}>
+                            <div className="flex items-center space-x-2">
+                              <span>Status</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/6" onClick={() => handleSort('leads')}>
+                            <div className="flex items-center space-x-2">
+                              <span>Leads</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/6" onClick={() => handleSort('spend')}>
+                            <div className="flex items-center space-x-2">
+                              <span>Gasto</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/6" onClick={() => handleSort('ctr')}>
+                            <div className="flex items-center space-x-2">
+                              <span>CTR</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                          <th className="text-left p-4 font-medium text-white cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap w-1/6" onClick={() => handleSort('cpl')}>
+                            <div className="flex items-center space-x-2">
+                              <span>CPL</span>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {sortedCampaigns.map((campaign, index) => (
+                          <tr key={campaign.id || index} className="hover:bg-white/5 transition-colors">
+                            <td className="p-4 text-white whitespace-nowrap w-1/4">
+                              <div className="font-medium table-cell-responsive max-w-xs truncate" title={campaign.campaign_name || 'Nome não disponível'}>
+                                {campaign.campaign_name || 'Nome não disponível'}
+                              </div>
+                            </td>
+                            <td className="p-4 whitespace-nowrap w-1/6">
+                              <span 
+                                className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(campaign.status)}`}
+                                data-testid="campaign-status"
+                              >
+                                {campaign.status === 'ACTIVE' ? 'Ativa' : 
+                                 campaign.status === 'PAUSED' ? 'Pausada' : 
+                                 campaign.status === 'DELETED' ? 'Excluída' : 
+                                 campaign.status === 'ARCHIVED' ? 'Arquivada' : campaign.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-white whitespace-nowrap w-1/6">{formatNumberShort(campaign.leads || 0)}</td>
+                            <td className="p-4 text-white whitespace-nowrap w-1/6">{formatCurrency(campaign.spend || 0)}</td>
+                            <td className="p-4 text-white whitespace-nowrap w-1/6">{formatPercentage(campaign.ctr || 0)}</td>
+                            <td className="p-4 text-white whitespace-nowrap w-1/6">{formatCurrency(campaign.cpl || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

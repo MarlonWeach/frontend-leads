@@ -309,11 +309,15 @@ const calculateWeightedTrend = (data: number[]): {
 const generateIntelligentForecast = (
   rawHistoricalData: number[],
   daysToForecast: number,
-  metricName: string
+  metricName: string,
+  baseDate?: Date // Adicionar parâmetro para data base
 ): ForecastData[] => {
   const historicalData = validateAndCleanData(rawHistoricalData, metricName);
   
   console.log(`📊 Forecast ${metricName}: ${rawHistoricalData.length} dados brutos → ${historicalData.length} dados limpos`);
+  
+  // Usar data base fornecida ou data atual como fallback
+  const forecastBaseDate = baseDate || new Date();
   
   if (historicalData.length < 3) {
     // Usar último valor disponível como base para poucos dados
@@ -328,7 +332,7 @@ const generateIntelligentForecast = (
     console.log(`⚠️ Poucos dados para ${metricName}. Usando último valor: ${lastValue} ou fallback: ${fallbackValue}`);
     
     return Array.from({ length: daysToForecast }, (_, i) => {
-      const date = format(addDays(new Date(), i + 1), 'yyyy-MM-dd');
+      const date = format(addDays(forecastBaseDate, i + 1), 'yyyy-MM-dd');
       const prediction = applyBusinessConstraints(fallbackValue, metricName);
       
       return {
@@ -356,7 +360,7 @@ const generateIntelligentForecast = (
   const n = historicalData.length;
   
   for (let i = 1; i <= daysToForecast; i++) {
-    const date = format(addDays(new Date(), i), 'yyyy-MM-dd');
+    const date = format(addDays(forecastBaseDate, i), 'yyyy-MM-dd');
     
     // BASE: Regressão linear ponderada
     let basePrediction = intercept + slope * (n - 1 + i);
@@ -465,6 +469,10 @@ export async function POST(request: NextRequest) {
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
+      
+      // CORREÇÃO: Usar a data do período selecionado como base para previsões
+      const baseDate = new Date(endDate + 'T00:00:00');
+      
       // Histórico: do (yesterday - (data.length - 1)) até ontem
       historical[metric] = data.map((value, index) => {
         const dateObj = new Date(yesterday);
@@ -479,8 +487,8 @@ export async function POST(request: NextRequest) {
           actual: value
         };
       });
-      // Previsão: começa em amanhã (today + 1)
-      forecast[metric] = generateIntelligentForecast(data, daysToForecast, metric);
+      // Previsão: começa no dia seguinte ao período selecionado
+      forecast[metric] = generateIntelligentForecast(data, daysToForecast, metric, baseDate);
     });
 
     // Calcular métricas agregadas com análise de tendência melhorada

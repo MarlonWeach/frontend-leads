@@ -410,3 +410,93 @@ textarea:focus {
     color: #e2e8f0;
   }
 }
+
+/* Responsividade para tabelas */
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  max-width: 100%;
+  width: 100%;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Garantir que tabelas não vazem do container */
+.table-container {
+  max-width: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Estilos para células de tabela responsivas */
+.table-cell-responsive {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  display: block;
+}
+
+/* Forçar larguras mínimas para colunas */
+table.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 800px; /* Largura mínima para garantir que todas as colunas caibam */
+}
+
+/* Header fixo para tabelas com scroll */
+thead.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Media queries para diferentes tamanhos de tela */
+@media (max-width: 1024px) {
+  .table-cell-responsive {
+    max-width: 150px;
+  }
+  
+  table.table-fixed {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-cell-responsive {
+    max-width: 120px;
+  }
+  
+  table.table-fixed {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 640px) {
+  .table-cell-responsive {
+    max-width: 100px;
+  }
+  
+  table.table-fixed {
+    min-width: 500px;
+  }
+}

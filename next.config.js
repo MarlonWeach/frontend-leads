@@ -5,6 +5,30 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true,
   },
+  images: {
+    domains: [
+      'scontent.fstu2-1.fna.fbcdn.net',
+      'external.fstu2-1.fna.fbcdn.net',
+      'scontent.xx.fbcdn.net',
+      'external.xx.fbcdn.net',
+      'graph.facebook.com',
+      'platform-lookaside.fbsbx.com'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.fbcdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'graph.facebook.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform-lookaside.fbsbx.com',
+      }
+    ],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

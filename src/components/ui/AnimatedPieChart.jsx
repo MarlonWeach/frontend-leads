@@ -12,6 +12,15 @@ function formatNumberShort(num) {
   return Math.round(num).toLocaleString('pt-BR');
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value || 0);
+}
+
 const AnimatedPieChart = ({ data, height = 300 }) => {
   // Verificar se os dados são válidos
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -128,7 +137,12 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
           // Calcular porcentagem manualmente se não estiver disponível
           const total = validData.reduce((sum, item) => sum + (item.value || 0), 0);
           const percentage = total > 0 ? ((datum.value || 0) / total) * 100 : 0;
-          
+          const isSpend = (datum.id && datum.id.toString().toLowerCase().includes('spend')) || 
+                         (datum.label && datum.label.toString().toLowerCase().includes('spend')) ||
+                         (datum.id && datum.id.toString().toLowerCase().includes('gasto')) ||
+                         (datum.label && datum.label.toString().toLowerCase().includes('gasto')) ||
+                         (datum.id && datum.id.toString().toLowerCase().includes('gastos')) ||
+                         (datum.label && datum.label.toString().toLowerCase().includes('gastos'));
           return (
             <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 shadow-2xl">
               <div className="flex items-center gap-2 mb-1">
@@ -141,7 +155,7 @@ const AnimatedPieChart = ({ data, height = 300 }) => {
                 </span>
               </div>
               <div className="text-gray-300 text-sm font-satoshi">
-                Valor: <span className="text-white font-semibold">{formatNumberShort(datum.value)}</span>
+                Valor: <span className="text-white font-semibold">{isSpend ? formatCurrency(datum.value) : formatNumberShort(datum.value)}</span>
               </div>
               <div className="text-gray-300 text-sm font-satoshi">
                 Percentual: <span className="text-white font-semibold">{percentage.toFixed(1)}%</span>

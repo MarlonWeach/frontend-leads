@@ -20,45 +20,73 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { AdsetGoalFilters } from '@/types/adsetGoalsDashboard';
 
 export default function AdsetGoalsOverview() {
+  // Presets de data/timeframe
+  const datePresets = [
+    {
+      label: 'Hoje',
+      getRange: () => {
+        const today = new Date();
+        const start = today.toISOString().split('T')[0];
+        return { start, end: start };
+      }
+    },
+    {
+      label: 'Ontem',
+      getRange: () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const start = yesterday.toISOString().split('T')[0];
+        return { start, end: start };
+      }
+    },
+    {
+      label: 'Últimos 7 dias',
+      getRange: () => {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 6);
+        return {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0]
+        };
+      }
+    },
+    {
+      label: 'Últimos 30 dias',
+      getRange: () => {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 29);
+        return {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0]
+        };
+      }
+    },
+    {
+      label: 'Este mês',
+      getRange: () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        return {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0]
+        };
+      }
+    }
+  ];
+
   const { filters, setFilters, resetFilters, appliedFiltersCount } = useGoalFilters();
   const { data, summary, loading, error, refresh } = useAdsetGoals(filters);
   const [showFilters, setShowFilters] = useState(false);
 
+
+
+
+
   // Presets de data/timeframe
   const SAO_PAULO_TZ = 'America/Sao_Paulo';
-  const datePresets = [
-    { label: 'Hoje', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: todaySP, end: todaySP };
-    }},
-    { label: 'Ontem', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-      todaySPDate.setDate(todaySPDate.getDate() - 1);
-      const yestSP = formatInTimeZone(todaySPDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: yestSP, end: yestSP };
-    }},
-    { label: 'Últimos 7 dias', getRange: () => {
-      const now = new Date();
-      const todaySP = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      const todaySPDate = new Date(todaySP + 'T00:00:00-03:00');
-      const weekAgoDate = new Date(todaySPDate);
-      weekAgoDate.setDate(todaySPDate.getDate() - 6);
-      const weekAgoSP = formatInTimeZone(weekAgoDate, SAO_PAULO_TZ, 'yyyy-MM-dd');
-      return { start: weekAgoSP, end: todaySP };
-    }},
-    { label: 'Últimos 30 dias', getRange: () => {
-      const now = new Date();
-      const past = new Date();
-      past.setDate(now.getDate() - 29);
-      return {
-        start: formatInTimeZone(past, SAO_PAULO_TZ, 'yyyy-MM-dd'),
-        end: formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd')
-      };
-    }},
-  ];
   const [selectedPreset, setSelectedPreset] = useState<number | null>(2); // Últimos 7 dias padrão
   const [showDateMenu, setShowDateMenu] = useState(false);
   const dateButtonRef = useRef<HTMLButtonElement>(null);
@@ -66,7 +94,12 @@ export default function AdsetGoalsOverview() {
 
   // Sincronizar selectedPreset com filters.date_range
   useEffect(() => {
-    if (!filters.date_range) return;
+    if (!filters.date_range) {
+      // Se não há date_range, definir como padrão (Últimos 7 dias)
+      setSelectedPreset(2);
+      return;
+    }
+    
     const { start, end } = filters.date_range;
     let found = null;
     for (let i = 0; i < datePresets.length; i++) {
@@ -138,9 +171,13 @@ export default function AdsetGoalsOverview() {
   const applyDatePreset = (presetIndex: number) => {
     const preset = datePresets[presetIndex];
     const range = preset.getRange();
+    
+    // Atualizar filtros
     setFilters({
       date_range: { start: range.start, end: range.end }
     });
+    
+    // Atualizar selectedPreset imediatamente
     setSelectedPreset(presetIndex);
     setShowDateMenu(false);
   };

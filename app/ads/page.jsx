@@ -8,19 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/u
 import Button from '../../src/components/ui/button';
 import { ArrowUpDown, Filter, RefreshCw, Calendar, Brain } from 'lucide-react';
 import MainLayout from '../../src/components/MainLayout';
-import AdCreativePreview from '../../src/components/ui/AdCreativePreview';
-import AdCreativeModal from '../../src/components/ui/AdCreativeModal';
 import IndividualAnalysis from '../../src/components/ai/IndividualAnalysis';
 import { formatInTimeZone } from 'date-fns-tz';
 
 export default function AdsPage() {
+  console.log('🎯 AdsPage component rendering');
+  
   const [filters, setFilters] = useState({
     status: 'ACTIVE',
-    startDate: '',
-    endDate: '',
+    startDate: '2025-07-24',
+    endDate: '2025-07-30',
     campaignId: '',
     adsetId: ''
   });
+
+  console.log('📋 Initial filters:', filters);
 
   const [sortConfig, setSortConfig] = useState({
     key: 'name',
@@ -84,16 +86,6 @@ export default function AdsPage() {
   const [selectedPreset, setSelectedPreset] = useState(2); // Últimos 7 dias por padrão
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
-
-  useEffect(() => {
-    // Ao montar, aplicar o preset "Últimos 7 dias"
-    const range = datePresets[2].getRange();
-    setFilters(prev => ({
-      ...prev,
-      startDate: range.start,
-      endDate: range.end
-    }));
-  }, [datePresets]);
 
   // Resetar filtro de adset quando campanha mudar
   useEffect(() => {
@@ -288,7 +280,7 @@ export default function AdsPage() {
           <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/20 hover:bg-green-900/40 hover:border-green-500/40 transition-all duration-300">
             <div className="flex items-center justify-between mb-2">
               <div className="text-green-400 text-sm font-medium">Investimento</div>
-              <span className="text-green-400 font-bold">💸</span>
+              <span className="text-green-400 font-bold">��</span>
             </div>
             <div className="text-2xl font-bold text-white">
               R$ {metrics?.totalSpend ? metrics.totalSpend.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '0'}
@@ -516,21 +508,6 @@ export default function AdsPage() {
                     <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       ad_id
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Criativo
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider cursor-pointer hover:bg-white/10 transition-colors" onClick={() => handleSort('campaign_name')}>
-                      <div className="flex items-center gap-2">
-                        Campanha
-                        <ArrowUpDown className="w-4 h-4" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider cursor-pointer hover:bg-white/10 transition-colors" onClick={() => handleSort('adset_name')}>
-                      <div className="flex items-center gap-2">
-                        AdSet
-                        <ArrowUpDown className="w-4 h-4" />
-                      </div>
-                    </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-white/70 uppercase tracking-wider cursor-pointer hover:bg-white/10 transition-colors" onClick={() => handleSort('spend')}>
                       <div className="flex items-center gap-2">
                         Gasto
@@ -580,31 +557,19 @@ export default function AdsPage() {
                 </thead>
                 <tbody className="divide-y divide-white/20">
                   {loading ? (
-                    <tr><td colSpan={13} className="text-center py-12 text-white/70">Carregando...</td></tr>
+                    <tr><td colSpan={10} className="text-center py-12 text-white/70">Carregando...</td></tr>
                   ) : error ? (
-                    <tr><td colSpan={13} className="text-center py-12 text-red-400">Erro: {error}</td></tr>
+                    <tr><td colSpan={10} className="text-center py-12 text-red-400">Erro: {error}</td></tr>
                   ) : sortedAds.length === 0 ? (
-                    <tr><td colSpan={13} className="text-center py-12 text-white/70">Nenhum ad encontrado</td></tr>
+                    <tr><td colSpan={10} className="text-center py-12 text-white/70">Nenhum ad encontrado</td></tr>
                   ) : (
                     sortedAds.map((ad) => (
-                      <tr key={ad.id} className="hover:bg-white/5 transition-colors">
+                      <tr key={ad.ad_id} className="hover:bg-white/5 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {ad.name || 'Nome não disponível'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                          {ad.id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <AdCreativePreview 
-                            ad={ad} 
-                            onExpand={() => handleExpandCreative(ad)}
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                          {ad.campaign_name || 'Campanha não encontrada'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                          {ad.adset_name || 'AdSet não encontrado'}
+                          {ad.ad_id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
                           {formatCurrency(ad.spend)}
@@ -644,15 +609,6 @@ export default function AdsPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Modal de Criativo */}
-        {selectedAd && (
-          <AdCreativeModal
-            ad={selectedAd}
-            isOpen={showModal}
-            onClose={handleCloseModal}
-          />
-        )}
 
         {/* Modal de Análise Individual */}
         {analysisItem && (

@@ -12,6 +12,23 @@ function formatNumberShort(num) {
   return Math.round(num).toLocaleString('pt-BR');
 }
 
+// Função para formatar valores monetários
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value || 0);
+}
+
+// Função para detectar se a série é de gasto
+function isSpendSeries(seriesId) {
+  return seriesId && (seriesId.toString().toLowerCase().includes('spend') || 
+                     seriesId.toString().toLowerCase().includes('gasto') || 
+                     seriesId.toString().toLowerCase().includes('gastos'));
+}
+
 const AnimatedLineChart = ({ data, height = 300 }) => {
   // Verificar se os dados são válidos
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -217,7 +234,7 @@ const AnimatedLineChart = ({ data, height = 300 }) => {
               Período: <span className="text-white font-semibold">{point.data.x}</span>
             </div>
             <div className="text-gray-300 text-sm font-satoshi">
-              Valor: <span className="text-white font-semibold">{formatNumberShort(point.data.y)}</span>
+              Valor: <span className="text-white font-semibold">{isSpendSeries(point.serieId) ? formatCurrency(point.data.y) : formatNumberShort(point.data.y)}</span>
             </div>
           </div>
         )}

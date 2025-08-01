@@ -91,16 +91,22 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
       
       return (
         <div 
-          className="absolute z-50 bg-gray-900 border border-gray-600 rounded-lg p-4 shadow-xl min-w-64 top-full left-0 mt-2"
+          className="absolute z-50 bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-2xl min-w-64 max-w-sm"
           data-heatmap-preview
           style={{
-            // Ajustar posição para não sair da tela
-            left: index % 7 > 4 ? 'auto' : '0',
-            right: index % 7 > 4 ? '0' : 'auto'
+            // Posicionamento simples e robusto
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginTop: '8px',
+            // Garantir que não saia da tela
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 32px)',
+            overflow: 'auto',
           }}
         >
-          <div className="space-y-2">
-            <div className="font-medium text-white border-b border-gray-600 pb-2">
+          <div className="space-y-3">
+            <div className="font-semibold text-white border-b border-white/20 pb-2">
               {getTooltipData(day).weekday}, {getTooltipData(day).date}
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -133,10 +139,13 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
                 </>
               )}
             </div>
-            <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-600">
+            <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-white/20">
               Clique novamente para fechar
             </div>
           </div>
+          
+          {/* Seta do preview */}
+          <div className="absolute w-3 h-3 bg-gray-900/95 border border-white/20 transform rotate-45 -top-1.5 left-1/2 -translate-x-1/2 border-t-0 border-l-0" />
         </div>
       );
     };
@@ -205,6 +214,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
             onMouseLeave={() => setHoveredDay(null)}
             onClick={handleDayClick}
             data-heatmap-cell
+            data-date={day.date}
           >
             {filters.period <= 30 ? dayOfMonth : ''}
           </div>

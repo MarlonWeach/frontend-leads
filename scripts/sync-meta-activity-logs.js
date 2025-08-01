@@ -75,8 +75,12 @@ function extractDetailsFromActivity(a) {
     default:
       // Para debug: logar payloads desconhecidos
       if (!object_name && a.extra_data) {
-        console.log('Payload desconhecido para event_type', a.event_type, a.extra_data);
+        console.log('DEBUG: Payload desconhecido para event_type', a.event_type, JSON.stringify(a, null, 2));
       }
+  }
+  // Logar sempre que não conseguir extrair detalhes relevantes
+  if (!object_name && !value_old && !value_new) {
+    console.log('DEBUG: Evento sem detalhes extraídos:', a.event_type, JSON.stringify(a, null, 2));
   }
   return { object_name, value_old, value_new };
 }

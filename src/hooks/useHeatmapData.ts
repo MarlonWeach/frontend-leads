@@ -103,7 +103,7 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
         const startDate = format(filters.startDate, 'yyyy-MM-dd');
         const endDate = format(filters.endDate, 'yyyy-MM-dd');
         
-        // Buscar dados diretamente da tabela campaign_insights
+        // Buscar dados da tabela campaign_insights (agora com dados completos)
         let query = supabase
           .from('campaign_insights')
           .select('*')

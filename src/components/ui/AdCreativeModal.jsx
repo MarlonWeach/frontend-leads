@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from 'lucide-react';
-import Image from 'next/image';
+import { X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, ImageIcon } from 'lucide-react';
 
 export default function AdCreativeModal({ ad, isOpen, onClose }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -95,19 +94,54 @@ export default function AdCreativeModal({ ad, isOpen, onClose }) {
     }
 
     const currentImage = creativeData.images[currentImageIndex];
+    
+    // Para imagens do Facebook, mostrar apenas ícone para evitar erros 403
+    const isFacebookImage = currentImage.url && (
+      currentImage.url.includes('fbcdn.net') || 
+      currentImage.url.includes('facebook.com') ||
+      currentImage.url.includes('fbsbx.com')
+    );
+
+    if (isFacebookImage) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg">
+          <div className="text-center">
+            <ImageIcon className="w-16 h-16 text-blue-400 mx-auto mb-4" aria-hidden="true" />
+            <p className="text-gray-400">Imagem do Facebook</p>
+            <p className="text-gray-500 text-sm mt-2">Clique para ver detalhes do criativo</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Validar se a URL da imagem é válida para outras fontes
+    const isValidImageUrl = currentImage.url && 
+      (currentImage.url.startsWith('http://') || currentImage.url.startsWith('https://')) &&
+      currentImage.url.length > 10;
+
+    if (!isValidImageUrl) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg">
+          <p className="text-gray-400">URL da imagem inválida</p>
+        </div>
+      );
+    }
 
     return (
       <div className="relative">
-        <Image
+        <img
           src={currentImage.url}
           alt={currentImage.alt || 'Imagem do anúncio'}
-          width={800}
-          height={600}
           className="max-w-full max-h-96 object-contain rounded-lg"
           onError={(e) => {
-            e.target.src = '/placeholder-image.png';
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
           }}
         />
+        {/* Fallback para imagem quebrada */}
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg" style={{ display: 'none' }}>
+          <p className="text-gray-400">Imagem não carregou</p>
+        </div>
         
         {creativeData.images.length > 1 && (
           <>
@@ -175,19 +209,58 @@ export default function AdCreativeModal({ ad, isOpen, onClose }) {
     }
 
     const currentImage = creativeData.slideshow.images[currentImageIndex];
+    
+    // Para imagens do Facebook, mostrar apenas ícone para evitar erros 403
+    const isFacebookImage = currentImage.url && (
+      currentImage.url.includes('fbcdn.net') || 
+      currentImage.url.includes('facebook.com') ||
+      currentImage.url.includes('fbsbx.com')
+    );
+
+    if (isFacebookImage) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg">
+          <div className="text-center">
+            <div className="flex gap-1 justify-center mb-4">
+              <ImageIcon className="w-8 h-8 text-blue-400" />
+              <ImageIcon className="w-8 h-8 text-blue-400" />
+              <ImageIcon className="w-8 h-8 text-blue-400" />
+            </div>
+            <p className="text-gray-400">Slideshow do Facebook</p>
+            <p className="text-gray-500 text-sm mt-2">Clique para ver detalhes do criativo</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Validar se a URL da imagem é válida para outras fontes
+    const isValidImageUrl = currentImage.url && 
+      (currentImage.url.startsWith('http://') || currentImage.url.startsWith('https://')) &&
+      currentImage.url.length > 10;
+
+    if (!isValidImageUrl) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg">
+          <p className="text-gray-400">URL da imagem inválida</p>
+        </div>
+      );
+    }
 
     return (
       <div className="relative">
-        <Image
+        <img
           src={currentImage.url}
           alt={currentImage.alt || 'Slideshow'}
-          width={800}
-          height={600}
           className="max-w-full max-h-96 object-contain rounded-lg"
           onError={(e) => {
-            e.target.src = '/placeholder-image.png';
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
           }}
         />
+        {/* Fallback para imagem quebrada */}
+        <div className="flex items-center justify-center h-64 bg-gray-800 rounded-lg" style={{ display: 'none' }}>
+          <p className="text-gray-400">Imagem não carregou</p>
+        </div>
         
         {creativeData.slideshow.images.length > 1 && (
           <>

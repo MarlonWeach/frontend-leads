@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Image as ImageIcon, Video, FileText, Play, ChevronRight, ChevronLeft } from 'lucide-react';
-import Image from 'next/image';
 
 export default function AdCreativePreview({ ad, onExpand }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -59,19 +58,64 @@ export default function AdCreativePreview({ ad, onExpand }) {
   const renderImagePreview = () => {
     if (creativeData.images && creativeData.images.length > 0) {
       const image = creativeData.images[currentImageIndex];
+      
+      // Para imagens do Facebook, usar apenas ícone para evitar erros 403
+      const isFacebookImage = image.url && (
+        image.url.includes('fbcdn.net') || 
+        image.url.includes('facebook.com') ||
+        image.url.includes('fbsbx.com')
+      );
+      
+      if (isFacebookImage) {
+        return (
+          <div className="relative group cursor-pointer" onClick={onExpand}>
+            <div className="w-12 h-12 bg-blue-900/30 rounded-lg border border-blue-500/20 flex items-center justify-center">
+              <ImageIcon className="w-4 h-4 text-blue-400" aria-hidden="true" />
+            </div>
+            {creativeData.images.length > 1 && (
+              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {creativeData.images.length}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="w-4 h-4 text-white" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      // Validar se a URL da imagem é válida para outras fontes
+      const isValidImageUrl = image.url && 
+        (image.url.startsWith('http://') || image.url.startsWith('https://')) &&
+        image.url.length > 10;
+      
+      if (!isValidImageUrl) {
+        return (
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center cursor-pointer" onClick={onExpand}>
+            {getCreativeTypeIcon('TEXT')}
+          </div>
+        );
+      }
+      
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <Image
+          <img
             src={image.url}
             alt={image.alt || creativeData.title || 'Preview do anúncio'}
-            width={48}
-            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
-              e.target.src = '/placeholder-image.png';
+              // Fallback para imagem quebrada
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
             }}
             aria-label={image.alt || creativeData.title || 'Preview do anúncio'}
           />
+          {/* Fallback para imagem quebrada */}
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center absolute inset-0" style={{ display: 'none' }}>
+            {getCreativeTypeIcon('TEXT')}
+          </div>
           {creativeData.images.length > 1 && (
             <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {creativeData.images.length}
@@ -93,20 +137,37 @@ export default function AdCreativePreview({ ad, onExpand }) {
   };
 
   const renderVideoPreview = () => {
-    if (creativeData.video) {
+    if (creativeData.video && creativeData.video.thumbnail_url) {
+      // Validar se a URL do thumbnail é válida
+      const isValidThumbnailUrl = creativeData.video.thumbnail_url && 
+        (creativeData.video.thumbnail_url.startsWith('http://') || creativeData.video.thumbnail_url.startsWith('https://')) &&
+        creativeData.video.thumbnail_url.length > 10;
+      
+      if (!isValidThumbnailUrl) {
+        return (
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center cursor-pointer" onClick={onExpand}>
+            <Video className="w-4 h-4 text-red-400" aria-hidden="true" />
+          </div>
+        );
+      }
+      
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <Image
+          <img
             src={creativeData.video.thumbnail_url}
             alt={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
-            width={48}
-            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
-              e.target.src = '/placeholder-video.png';
+              // Fallback para thumbnail quebrado
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
             }}
             aria-label={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
           />
+          {/* Fallback para thumbnail quebrado */}
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center absolute inset-0" style={{ display: 'none' }}>
+            <Video className="w-4 h-4 text-red-400" aria-hidden="true" />
+          </div>
           <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
             <Play className="w-4 h-4 text-white fill-white" aria-hidden="true" />
           </div>
@@ -128,19 +189,74 @@ export default function AdCreativePreview({ ad, onExpand }) {
   const renderSlideshowPreview = () => {
     if (creativeData.slideshow && creativeData.slideshow.images && creativeData.slideshow.images.length > 0) {
       const image = creativeData.slideshow.images[currentImageIndex];
+      
+      // Para imagens do Facebook, usar apenas ícone para evitar erros 403
+      const isFacebookImage = image.url && (
+        image.url.includes('fbcdn.net') || 
+        image.url.includes('facebook.com') ||
+        image.url.includes('fbsbx.com')
+      );
+      
+      if (isFacebookImage) {
+        return (
+          <div className="relative group cursor-pointer" onClick={onExpand}>
+            <div className="w-12 h-12 bg-blue-900/30 rounded-lg border border-blue-500/20 flex items-center justify-center">
+              <div className="flex gap-0.5" aria-hidden="true">
+                <ImageIcon className="w-3 h-3 text-blue-400" />
+                <ImageIcon className="w-3 h-3 text-blue-400" />
+                <ImageIcon className="w-3 h-3 text-blue-400" />
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {creativeData.slideshow.images.length}
+            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="w-4 h-4 text-white" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      // Validar se a URL da imagem é válida para outras fontes
+      const isValidImageUrl = image.url && 
+        (image.url.startsWith('http://') || image.url.startsWith('https://')) &&
+        image.url.length > 10;
+      
+      if (!isValidImageUrl) {
+        return (
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center cursor-pointer" onClick={onExpand}>
+            <div className="flex gap-0.5" aria-hidden="true">
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+            </div>
+          </div>
+        );
+      }
+      
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <Image
+          <img
             src={image.url}
             alt={image.alt || creativeData.title || 'Slideshow preview'}
-            width={48}
-            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
-              e.target.src = '/placeholder-image.png';
+              // Fallback para imagem quebrada
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
             }}
             aria-label={image.alt || creativeData.title || 'Slideshow preview'}
           />
+          {/* Fallback para imagem quebrada */}
+          <div className="w-12 h-12 bg-gray-800 rounded-lg border border-white/10 flex items-center justify-center absolute inset-0" style={{ display: 'none' }}>
+            <div className="flex gap-0.5" aria-hidden="true">
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+              <ImageIcon className="w-3 h-3 text-blue-400" />
+            </div>
+          </div>
           <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {creativeData.slideshow.images.length}
           </div>

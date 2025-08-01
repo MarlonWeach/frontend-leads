@@ -41,7 +41,8 @@ export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
         }
       });
     }
-    fetch(`/api/adset-goals/dashboard?${params.toString()}`)
+    const url = `/api/adset-goals/dashboard?${params.toString()}`;
+    fetch(url)
       .then(res => res.json())
       .then((res) => {
         setData(res.data || []);
@@ -62,7 +63,7 @@ export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
         setError(err.message || 'Erro desconhecido');
         setLoading(false);
       });
-  }, [JSON.stringify(filters)]);
+  }, [filters]); // Usar filters diretamente ao invés de JSON.stringify
 
   // Função manual para refresh (mantida para interface)
   const refresh = () => {

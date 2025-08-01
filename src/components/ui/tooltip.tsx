@@ -20,41 +20,9 @@ export function Tooltip({
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    if (isVisible && triggerRef.current && tooltipRef.current) {
-      const triggerRect = triggerRef.current.getBoundingClientRect();
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      
-      let x = 0;
-      let y = 0;
-      
-      switch (position) {
-        case 'top':
-          x = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
-          y = triggerRect.top - tooltipRect.height - 12;
-          break;
-        case 'bottom':
-          x = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
-          y = triggerRect.bottom + 12;
-          break;
-        case 'left':
-          x = triggerRect.left - tooltipRect.width - 12;
-          y = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
-          break;
-        case 'right':
-          x = triggerRect.right + 12;
-          y = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
-          break;
-      }
-      
-      setTooltipPosition({ x, y });
-    }
-  }, [isVisible, position]);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -84,10 +52,43 @@ export function Tooltip({
     };
   }, []);
 
+  // Determinar posição baseada no viewport
+  const getTooltipPosition = () => {
+    if (!triggerRef.current) return position;
+    
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Se está na metade direita da tela, preferir left
+    if (rect.left > viewportWidth / 2) {
+      return 'left';
+    }
+    
+    // Se está na metade esquerda da tela, preferir right
+    if (rect.left < viewportWidth / 2) {
+      return 'right';
+    }
+    
+    // Se está no topo da tela, preferir bottom
+    if (rect.top < viewportHeight / 3) {
+      return 'bottom';
+    }
+    
+    // Se está na base da tela, preferir top
+    if (rect.bottom > viewportHeight * 2/3) {
+      return 'top';
+    }
+    
+    return position;
+  };
+
+  const tooltipPosition = getTooltipPosition();
+
   return (
     <div
       ref={triggerRef}
-      className={`inline-block ${className}`}
+      className={`relative inline-block ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -97,37 +98,37 @@ export function Tooltip({
           <motion.div
             ref={tooltipRef}
             key="tooltip"
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className={`
-              fixed z-50 px-4 py-3 text-sublabel-refined glass-strong glass-highlight
-              rounded-2xl text-white pointer-events-none
-              ${isMounted 
-                ? 'opacity-100 scale-100 translate-y-0' 
-                : 'opacity-0 scale-95 translate-y-2'
+              absolute z-50 px-3 py-2 
+              bg-gray-900/95 backdrop-blur-xl 
+              border border-white/20 
+              rounded-lg shadow-2xl 
+              text-white text-sm font-medium
+              pointer-events-none
+              whitespace-nowrap
+              ${tooltipPosition === 'top' ? 'bottom-full left-1/2 -translate-x-1/2 mb-2' :
+                tooltipPosition === 'bottom' ? 'top-full left-1/2 -translate-x-1/2 mt-2' :
+                tooltipPosition === 'left' ? 'right-full top-1/2 -translate-y-1/2 mr-2' :
+                'left-full top-1/2 -translate-y-1/2 ml-2'
               }
             `}
-            style={{
-              left: tooltipPosition.x,
-              top: tooltipPosition.y,
-            }}
           >
-            <div className="relative">
-              {content}
-              <div
-                className={`
-                  absolute w-3 h-3 glass-strong border-glass-border transform rotate-45
-                  transition-all duration-300 ease-out
-                  ${position === 'top' ? 'top-full left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
-                  position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 border-b-0 border-r-0' :
-                  position === 'left' ? 'left-full top-1/2 -translate-y-1/2 border-l-0 border-b-0' :
-                  'right-full top-1/2 -translate-y-1/2 border-r-0 border-t-0'
-                  }
-                `}
-              />
-            </div>
+            {content}
+            {/* Seta do tooltip */}
+            <div
+              className={`
+                absolute w-2 h-2 bg-gray-900/95 border border-white/20 transform rotate-45
+                ${tooltipPosition === 'top' ? 'top-full left-1/2 -translate-x-1/2 -mt-1 border-t-0 border-l-0' :
+                  tooltipPosition === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 -mb-1 border-b-0 border-r-0' :
+                  tooltipPosition === 'left' ? 'left-full top-1/2 -translate-y-1/2 -ml-1 border-l-0 border-b-0' :
+                  'right-full top-1/2 -translate-y-1/2 -mr-1 border-r-0 border-t-0'
+                }
+              `}
+            />
           </motion.div>
         )}
       </AnimatePresence>

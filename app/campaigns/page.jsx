@@ -189,18 +189,65 @@ function CampaignsPage() {
   return (
     <MainLayout title="Campanhas" breadcrumbs={[{ name: 'Campanhas', href: '/campaigns' }]}> 
       <SectionTransition direction="up" duration={600} className="space-y-8">
-        {/* Filtros de período e status */}
+        {/* Resumo do período no topo da página */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="text-sublabel-refined text-white glass-light px-4 py-3 rounded-2xl">
+            <span className="font-medium text-white">Período Selecionado:</span> <span className="text-white">Últimos {periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
+          </div>
+          <div className="text-sublabel-refined text-white/70 flex items-center">
+            <Clock className="h-4 w-4 mr-2" />
+            Última atualização: {lastUpdate ? lastUpdate.toLocaleTimeString('pt-BR') : 'Nunca'}
+          </div>
+        </div>
+
+        {/* Estatísticas resumidas no topo */}
+        {campaigns.length > 0 && (
+          <Card className="p-6">
+            <h4 className="text-header font-semibold text-white mb-4">Resumo do Período</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-metric-value text-primary">
+                  {formatNumber(campaigns.reduce((sum, c) => sum + c.leads, 0))}
+                </div>
+                <div className="text-metric-label text-white/70">Total de Leads</div>
+              </div>
+              <div className="text-center">
+                <div className="text-metric-value text-accent">
+                  {formatCurrency(campaigns.reduce((sum, c) => sum + c.spend, 0))}
+                </div>
+                <div className="text-metric-label text-white/70">Investimento Total</div>
+              </div>
+              <div className="text-center">
+                <div className="text-metric-value text-primary">
+                  {formatNumberShort(campaigns.reduce((sum, c) => sum + c.impressions, 0))}
+                </div>
+                <div className="text-metric-label text-white/70">Impressões</div>
+              </div>
+              <div className="text-center">
+                <div className="text-metric-value text-primary">
+                  {formatNumberShort(campaigns.reduce((sum, c) => sum + c.clicks, 0))}
+                </div>
+                <div className="text-metric-label text-white/70">Cliques</div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Filtros de período e status - PADRONIZADO COM /performance */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4">
+            {/* Label para Presets de período */}
+            <label className="text-sm text-white/70 mb-1">Período</label>
+            {/* Presets de período */}
             <div className="flex space-x-2">
               {periodOptions.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => handleFilterClick(opt.value)}
-                  className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-colors shadow-glass backdrop-blur-lg
+                  className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-300 backdrop-blur-lg
                     ${selectedPeriod === opt.value
-                      ? 'bg-primary text-white'
-                      : 'glass-card text-white hover:bg-white/10'}
+                      ? 'bg-primary text-white shadow-primary-glow'
+                      : 'glass-light text-white hover:glass-medium'}
                   `}
                   data-testid={`period-${opt.value}`}
                 >
@@ -208,41 +255,30 @@ function CampaignsPage() {
                 </button>
               ))}
             </div>
-            
-            {/* Separador */}
-            <div className="h-6 w-px bg-white/20"></div>
-            
+          </div>
+          
+          <div className="flex flex-col gap-2 items-end">
+            {/* Label para filtro de status */}
+            <label className="text-sm text-white/70 mb-1">Status</label>
             {/* Filtro de Status */}
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 mb-2">
               <button
                 onClick={() => setStatusFilter('active')}
-                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-200 backdrop-blur-lg
-                  ${statusFilter === 'active'
-                    ? 'bg-accent text-white shadow-accent-glow'
-                    : 'glass-card text-white/80 hover:glass-medium'}
-                `}
+                className={`px-3 py-1 rounded ${statusFilter === 'active' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}
                 data-testid="filter-campaigns-active"
               >
                 Apenas Ativas
               </button>
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-2xl text-sublabel-refined font-medium transition-all duration-200 backdrop-blur-lg
-                  ${statusFilter === 'all'
-                    ? 'bg-accent text-white shadow-accent-glow'
-                    : 'glass-card text-white/80 hover:glass-medium'}
-                `}
+                className={`px-3 py-1 rounded ${statusFilter === 'all' ? 'bg-primary text-white' : 'bg-white/10 text-white/70'}`}
                 data-testid="filter-campaigns-all"
               >
                 Todas
               </button>
             </div>
             
-            <div className="text-sublabel-refined text-white glass-card px-3 py-2 rounded-2xl shadow-glass backdrop-blur-lg">
-              <span className="font-medium text-white">Período:</span> <span className="text-white">Últimos {periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
+            {/* Botão de atualizar */}
             <button
               onClick={() => refetch()}
               className="glass-card p-2 rounded-2xl hover:glass-medium transition-all duration-200"
@@ -250,10 +286,6 @@ function CampaignsPage() {
             >
               <RefreshCw className="h-4 w-4 text-white" />
             </button>
-            <div className="text-sublabel-refined text-white/70 flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {lastUpdate ? lastUpdate.toLocaleTimeString('pt-BR') : 'Nunca'}
-            </div>
           </div>
         </div>
 
@@ -344,38 +376,7 @@ function CampaignsPage() {
           ))}
         </div>
 
-        {/* Estatísticas resumidas */}
-        {campaigns.length > 0 && (
-          <Card className="p-6 mt-8">
-            <h4 className="text-header font-semibold text-white mb-4">Resumo do Período</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-metric-value text-primary">
-                  {formatNumber(campaigns.reduce((sum, c) => sum + c.leads, 0))}
-                </div>
-                <div className="text-metric-label text-white/70">Total de Leads</div>
-              </div>
-              <div className="text-center">
-                <div className="text-metric-value text-accent">
-                  {formatCurrency(campaigns.reduce((sum, c) => sum + c.spend, 0))}
-                </div>
-                <div className="text-metric-label text-white/70">Investimento Total</div>
-              </div>
-              <div className="text-center">
-                <div className="text-metric-value text-primary">
-                  {formatNumberShort(campaigns.reduce((sum, c) => sum + c.impressions, 0))}
-                </div>
-                <div className="text-metric-label text-white/70">Impressões</div>
-              </div>
-              <div className="text-center">
-                <div className="text-metric-value text-primary">
-                  {formatNumberShort(campaigns.reduce((sum, c) => sum + c.clicks, 0))}
-                </div>
-                <div className="text-metric-label text-white/70">Cliques</div>
-              </div>
-            </div>
-          </Card>
-        )}
+
       </SectionTransition>
 
       {/* Modal de Análise Individual */}

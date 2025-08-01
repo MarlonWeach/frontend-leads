@@ -92,7 +92,7 @@ export function CardContent({
     <div 
       className={`
         p-6 pt-0 transition-all duration-500 ease-out
-        ${expanded ? 'max-h-screen opacity-100' : 'max-h-96 opacity-100'}
+        ${expanded ? 'max-h-screen opacity-100' : 'opacity-100'}
         ${className}
       `} 
       {...props}
