@@ -126,7 +126,7 @@ interface MetaConfigModalProps {
 // Função utilitária para salvar meta via API
 async function saveAdsetGoal(adset_id: string, meta: any, isEdit: boolean): Promise<{ success: boolean; error?: string }> {
   try {
-    let res, data;
+    let res;
     if (isEdit) {
       res = await fetch(`/api/goals/${adset_id}`, {
         method: 'PUT',
