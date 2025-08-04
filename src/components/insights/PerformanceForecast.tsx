@@ -175,7 +175,7 @@ const ForecastChart: React.FC<{
   // Utilitário para gerar range de datas (inclusive)
   function getDateRange(start: string | Date, end: string | Date): Date[] {
     const result: Date[] = [];
-    let current = new Date(start);
+    const current = new Date(start);
     const last = new Date(end);
     while (current <= last) {
       result.push(new Date(current));
@@ -240,7 +240,7 @@ const ForecastChart: React.FC<{
   };
 
   // Ajustar o range do eixo X para incluir o final do último dia previsto
-  let xMin = fullRange[0];
+  const xMin = fullRange[0];
   let xMax = fullRange[fullRange.length - 1];
   if (xMax) {
     xMax = new Date(xMax);

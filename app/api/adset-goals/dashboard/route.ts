@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
         leads_ontem: null
       };
       let status: AdsetGoalStatus = 'critico';
-      let alerts: any[] = [];
+      const alerts: any[] = [];
       if (goal) {
         // Buscar soma de leads do adset no período da meta
         const { data: leadsRows, error: leadsError } = await supabase

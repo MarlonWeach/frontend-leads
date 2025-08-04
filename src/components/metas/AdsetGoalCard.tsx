@@ -141,7 +141,7 @@ async function saveAdsetGoal(adset_id: string, meta: any, isEdit: boolean): Prom
         body: JSON.stringify({ ...meta, adset_id })
       });
     }
-    data = await res.json();
+    const data = await res.json();
     if (res.ok && !data.error) {
       return { success: true };
     }

@@ -195,7 +195,7 @@ export function useAnomalyDetection({
 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, refreshInterval]); // Removido detectAnomalies das dependências
+  }, [autoRefresh, refreshInterval, detectAnomalies]);
 
   // Detectar anomalias quando as dependências mudarem
   useEffect(() => {
@@ -305,7 +305,7 @@ export function useAnomalyDetection({
     }, 3000); // 3 segundos de debounce
 
     return () => clearTimeout(timeoutId);
-  }, [dateRange.startDate, dateRange.endDate, memoizedCampaignIds, sensitivity]);
+  }, [dateRange, memoizedCampaignIds, sensitivity]);
 
   // Funções de cache
   function getCachedData() {

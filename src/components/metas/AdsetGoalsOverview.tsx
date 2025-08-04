@@ -110,7 +110,7 @@ export default function AdsetGoalsOverview() {
       }
     }
     setSelectedPreset(found);
-  }, [filters.date_range]);
+  }, [filters.date_range, datePresets]);
 
   // Atualizar posição do menu ao abrir
   useEffect(() => {
