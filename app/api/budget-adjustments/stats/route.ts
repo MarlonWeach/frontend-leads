@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { DateTime } from 'luxon';
-import { supabaseServer as supabase } from '../../../lib/supabaseServer';
+import { supabaseServer as supabase } from '@/lib/supabaseServer';
 import { BudgetAdjustmentStatsQuery, BudgetAdjustmentStatsResponse } from '../../../src/types/budgetAdjustmentLogs';
 import { getBudgetAdjustmentStats } from '@/services/budgetAdjustmentLogService';
 

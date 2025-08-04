@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@/lib/*": [
+        "lib/*"
       ]
     },
     "allowJs": true,
@@ -35,6 +38,7 @@
     "app/**/*",
     "scripts/**/*",
     "test/**/*",
+    "lib/**/*",
     ".next/types/**/*.ts"
   ],
   "exclude": [
