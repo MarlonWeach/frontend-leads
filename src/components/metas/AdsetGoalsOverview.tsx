@@ -3,7 +3,7 @@
 // Component: AdsetGoalsOverview.tsx
 // PBI 25 - Task 25-11: Melhorar Interface do Dashboard de Metas
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Search, 
@@ -21,7 +21,7 @@ import { AdsetGoalFilters } from '@/types/adsetGoalsDashboard';
 
 export default function AdsetGoalsOverview() {
   // Presets de data/timeframe
-  const datePresets = [
+  const datePresets = useMemo(() => [
     {
       label: 'Hoje',
       getRange: () => {
@@ -75,7 +75,7 @@ export default function AdsetGoalsOverview() {
         };
       }
     }
-  ];
+  ], []);
 
   const { filters, setFilters, resetFilters, appliedFiltersCount } = useGoalFilters();
   const { data, summary, loading, error, refresh } = useAdsetGoals(filters);
