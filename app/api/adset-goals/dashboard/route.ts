@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { AdsetGoalDashboardItem, AdsetGoalStatus } from '@/types/adsetGoalsDashboard';
+import { AdsetGoalDashboardItem, AdsetGoalStatus } from '../../../../src/types/adsetGoalsDashboard';
 
 export async function GET(request: NextRequest) {
   try {

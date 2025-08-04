@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAudienceSuggestions } from '@/services/audienceSuggestionService';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {

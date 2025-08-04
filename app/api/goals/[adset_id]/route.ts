@@ -3,7 +3,7 @@
 // Purpose: CRUD operations for specific adset goal
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 import { 
   AdsetGoalInput, 
   GoalApiResponse,

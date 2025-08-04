@@ -2,8 +2,8 @@
 // PBI 25 - Task 25-6: Sistema de alerta quando em desvio de meta
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import { ProgressAlertHistory, AdsetProgressAlert } from '@/types/progress';
+import { supabaseServer as supabase } from '../../../../../src/lib/supabaseServer';
+import { ProgressAlertHistory, AdsetProgressAlert } from '../../../../../src/types/progress';
 
 // GET /api/goals/[adset_id]/alerts - Lista de alertas históricos
 export async function GET(

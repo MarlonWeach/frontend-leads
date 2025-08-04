@@ -2,8 +2,8 @@
 // PBI 25 - Task 25-3: Monitoramento diário de volume vs meta
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import { ProgressStatus, AdsetProgressTracking, ProgressHistory, ProgressSummary } from '@/types/progress';
+import { supabaseServer as supabase } from '../../../../../src/lib/supabaseServer';
+import { ProgressStatus, AdsetProgressTracking, ProgressHistory, ProgressSummary } from '../../../../../src/types/progress';
 
 // GET /api/goals/[adset_id]/progress - Histórico e status atual
 export async function GET(

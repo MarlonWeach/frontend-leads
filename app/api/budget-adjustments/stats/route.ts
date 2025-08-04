@@ -3,8 +3,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { DateTime } from 'luxon';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import { BudgetAdjustmentStatsQuery, BudgetAdjustmentStatsResponse } from '@/types/budgetAdjustmentLogs';
+import { supabaseServer as supabase } from '../../../src/lib/supabaseServer';
+import { BudgetAdjustmentStatsQuery, BudgetAdjustmentStatsResponse } from '../../../src/types/budgetAdjustmentLogs';
 import { getBudgetAdjustmentStats } from '@/services/budgetAdjustmentLogService';
 
 export async function GET(request: NextRequest) {

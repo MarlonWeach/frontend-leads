@@ -2,7 +2,7 @@
 // PBI 25 - Task 25-7: Dashboard de Acompanhamento de Metas
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
+import { supabaseServer as supabase } from '../../../src/lib/supabaseServer';
 import alertEngine from '@/services/alertEngine';
 import {
   AlertsQuery,
