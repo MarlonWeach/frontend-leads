@@ -21,7 +21,7 @@
         "src/*"
       ],
       "@/lib/*": [
-        "lib/*"
+        "src/lib/*"
       ]
     },
     "allowJs": true,
@@ -38,7 +38,6 @@
     "app/**/*",
     "scripts/**/*",
     "test/**/*",
-    "lib/**/*",
     ".next/types/**/*.ts"
   ],
   "exclude": [
