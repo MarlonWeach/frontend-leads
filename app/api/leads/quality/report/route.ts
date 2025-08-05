@@ -2,7 +2,9 @@
 // PBI 25-5: Relatório agregado de qualidade de leads
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeadQualityReport } from '@/services/leadQualityService';
+import { getLeadQualityReport } from '../../../../../src/services/leadQualityService';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/leads/quality/report?adset_id=...&campaign_id=...
 export async function GET(request: NextRequest) {

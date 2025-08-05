@@ -5,7 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   generateAudienceSuggestions, 
   getAudienceSuggestions 
-} from '@/services/audienceSuggestionService';
+} from '../../../src/services/audienceSuggestionService';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

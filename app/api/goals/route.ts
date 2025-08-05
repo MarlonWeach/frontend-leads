@@ -14,7 +14,7 @@ import {
   GoalApiResponse,
   GoalsListResponse,
   GOAL_CONSTANTS 
-} from '@/types/goals';
+} from '../../../src/types/goals';
 
 // GET /api/goals - List all goals or filter by adset_id
 export async function GET(request: NextRequest) {

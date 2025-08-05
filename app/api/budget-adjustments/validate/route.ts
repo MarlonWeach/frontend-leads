@@ -2,8 +2,10 @@
 // PBI 25 - Task 25-8: Sistema de Logs e Controle de Ajustes
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateBudgetAdjustmentFrequency } from '@/services/budgetAdjustmentLogService';
-import { ValidateBudgetAdjustmentRequest } from '@/types/budgetAdjustmentLogs';
+import { validateBudgetAdjustmentFrequency } from '../../../../src/services/budgetAdjustmentLogService';
+import { ValidateBudgetAdjustmentRequest } from '../../../../src/types/budgetAdjustmentLogs';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

@@ -3,12 +3,14 @@
 // Purpose: Detailed calculations endpoint for specific adset
 
 import { NextRequest, NextResponse } from 'next/server';
-import { LeadsCalculationService } from '@/services/LeadsCalculationService';
+import { LeadsCalculationService } from '../../../../../src/services/LeadsCalculationService';
 import { 
   CalculationRequest, 
   CalculationResponse,
   ProjectionScenario 
-} from '@/types/calculations';
+} from '../../../../../src/types/calculations';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/goals/[adset_id]/calculations - Get detailed calculations
 export async function GET(

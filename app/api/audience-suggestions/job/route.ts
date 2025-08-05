@@ -2,8 +2,10 @@
 // PBI 25 - Task 25-6: Sugestões de Otimização de Audiência
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAudienceSuggestions } from '@/services/audienceSuggestionService';
+import { generateAudienceSuggestions } from '../../../../src/services/audienceSuggestionService';
 import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

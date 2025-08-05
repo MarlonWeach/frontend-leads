@@ -3,12 +3,14 @@
 // Purpose: Generic calculations endpoint for on-demand calculations
 
 import { NextRequest, NextResponse } from 'next/server';
-import { LeadsCalculationService } from '@/services/LeadsCalculationService';
+import { LeadsCalculationService } from '../../../../src/services/LeadsCalculationService';
 import { 
   CalculationRequest, 
   CalculationResponse,
   ProjectionScenario 
-} from '@/types/calculations';
+} from '../../../../src/types/calculations';
+
+export const dynamic = 'force-dynamic';
 
 // POST /api/goals/calculate - Perform calculations on demand
 export async function POST(request: NextRequest) {

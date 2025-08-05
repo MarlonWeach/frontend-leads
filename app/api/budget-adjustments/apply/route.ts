@@ -2,8 +2,10 @@
 // PBI 25 - Task 25-9: Integração Meta API para Ajustes de Budget
 
 import { NextRequest, NextResponse } from 'next/server';
-import budgetAdjustmentEngine from '@/services/budgetAdjustmentEngine';
-import { ApplyBudgetAdjustmentRequest } from '@/types/metaBudgetAdjustment';
+import budgetAdjustmentEngine from '../../../../src/services/budgetAdjustmentEngine';
+import { ApplyBudgetAdjustmentRequest } from '../../../../src/types/metaBudgetAdjustment';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

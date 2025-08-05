@@ -8,7 +8,9 @@ import {
   AdsetGoalInput, 
   GoalApiResponse,
   GOAL_CONSTANTS 
-} from '@/types/goals';
+} from '../../../../src/types/goals';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/goals/[adset_id] - Get specific goal
 export async function GET(

@@ -2,8 +2,10 @@
 // PBI 25 - Task 25-4: Aplicação manual de ajuste de budget (máx 20%)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { applyBudgetAdjustment } from '@/services/budgetAdjustmentService';
-import { BudgetAdjustmentRequest } from '@/types/budget';
+import { applyBudgetAdjustment } from '../../../../../../src/services/budgetAdjustmentService';
+import { BudgetAdjustmentRequest } from '../../../../../../src/types/budget';
+
+export const dynamic = 'force-dynamic';
 
 // POST /api/goals/[adset_id]/budget/adjust
 export async function POST(

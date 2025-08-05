@@ -2,7 +2,9 @@
 // PBI 25-5: Recálculo/manual do score de qualidade de um lead
 
 import { NextRequest, NextResponse } from 'next/server';
-import { recalculateLeadQualityScore } from '@/services/leadQualityService';
+import { recalculateLeadQualityScore } from '../../../../../../src/services/leadQualityService';
+
+export const dynamic = 'force-dynamic';
 
 // POST /api/leads/[lead_id]/quality/recalculate
 export async function POST(

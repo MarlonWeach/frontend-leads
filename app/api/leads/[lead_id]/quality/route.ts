@@ -2,7 +2,9 @@
 // PBI 25-5: Consulta de score e logs de qualidade de um lead
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeadQualityScore } from '@/services/leadQualityService';
+import { getLeadQualityScore } from '../../../../../src/services/leadQualityService';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/leads/[lead_id]/quality
 export async function GET(
