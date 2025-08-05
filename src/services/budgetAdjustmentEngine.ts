@@ -18,7 +18,7 @@ import {
   BudgetAdjustmentEngineOptions,
   DEFAULT_BUDGET_RULES,
   BudgetAdjustmentContext
-} from '@/types/metaBudgetAdjustment';
+} from '../types/metaBudgetAdjustment';
 
 class BudgetAdjustmentEngine {
   private options: BudgetAdjustmentEngineOptions;

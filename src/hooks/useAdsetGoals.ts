@@ -6,7 +6,7 @@ import {
   AdsetGoalDashboardItem, 
   UseAdsetGoalsReturn,
   AdsetGoalFilters 
-} from '@/types/adsetGoalsDashboard';
+} from '../types/adsetGoalsDashboard';
 
 export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
   const [data, setData] = useState<AdsetGoalDashboardItem[]>([]);

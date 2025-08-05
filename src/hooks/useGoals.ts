@@ -13,7 +13,7 @@ import {
   GoalApiResponse,
   GoalsListResponse,
   GOAL_CONSTANTS 
-} from '@/types/goals';
+} from '../types/goals';
 
 interface UseGoalsOptions {
   adsetId?: string;

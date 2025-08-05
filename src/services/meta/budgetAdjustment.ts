@@ -9,7 +9,7 @@ import {
   MetaRateLimitInfo,
   MetaAPIConfig,
   AdsetBudgetValidationResult
-} from '@/types/metaBudgetAdjustment';
+} from '../../types/metaBudgetAdjustment';
 
 class MetaBudgetAdjustmentService {
   private config: MetaAPIConfig;
