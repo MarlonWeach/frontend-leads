@@ -25,7 +25,7 @@ export async function GET(
     const includeProjections = searchParams.get('projections') === 'true';
     const includeHistorical = searchParams.get('historical') !== 'false'; // Default true
     const projectionDays = parseInt(searchParams.get('projection_days') || '30');
-    const scenario = (searchParams.get('scenario') as ProjectionScenario) || 'realistic';
+    const scenario = (searchParams.get('scenario') as ProjectionScenario) || ProjectionScenario.REALISTIC;
 
     // Validate parameters
     if (!adset_id) {

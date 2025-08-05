@@ -58,7 +58,7 @@ async function calculateSingleAdset(body: any): Promise<NextResponse> {
     include_projections = false,
     include_historical = true,
     projection_days = 30,
-    scenario = 'realistic'
+    scenario = ProjectionScenario.REALISTIC
   } = body;
 
   if (!adset_id) {
@@ -99,7 +99,7 @@ async function calculateMultipleAdsets(body: any): Promise<NextResponse> {
     include_projections = false,
     include_historical = true,
     projection_days = 30,
-    scenario = 'realistic',
+    scenario = ProjectionScenario.REALISTIC,
     parallel = true
   } = body;
 
@@ -203,7 +203,7 @@ async function calculateBatch(body: any): Promise<NextResponse> {
     include_projections = false,
     include_historical = true,
     projection_days = 30,
-    scenario = 'realistic'
+    scenario = ProjectionScenario.REALISTIC
   } = body;
 
   // This would be used to calculate for adsets matching certain criteria
