@@ -2,7 +2,7 @@
 // PBI 25 - Task 25-11: Melhorar Interface do Dashboard de Metas
 
 import { useState, useCallback } from 'react';
-import { ApplyBudgetAdjustmentRequest, ApplyBudgetAdjustmentResponse } from '@/types/metaBudgetAdjustment';
+import { ApplyBudgetAdjustmentRequest, ApplyBudgetAdjustmentResponse } from '../types/metaBudgetAdjustment';
 
 interface AdsetActionResult {
   success: boolean;

@@ -1,7 +1,7 @@
 // Service: leadQualityService.ts
 // PBI 25 - Task 25-5: Lead Quality Scoring System
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import {
   LeadQualityScore,
   LeadQualityLog,
@@ -9,7 +9,7 @@ import {
   LeadQualityRecalculateRequest,
   LeadQualityRecalculateResponse,
   LeadQualityReport
-} from '@/types/leadQuality';
+} from '../types/leadQuality';
 
 const HIGH_QUALITY_THRESHOLD = 80;
 const LOW_QUALITY_THRESHOLD = 50;

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { AlertTriangle, AlertCircle, Info, Bell } from 'lucide-react';
-import { AlertSeverity } from '@/types/alertSystem';
+import { AlertSeverity } from '../../types/alertSystem';
 
 interface AlertIndicatorProps {
   count: number;

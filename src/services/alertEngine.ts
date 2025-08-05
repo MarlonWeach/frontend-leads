@@ -1,7 +1,7 @@
 // Service: alertEngine.ts
 // PBI 25 - Task 25-10: Sistema de Alertas Inteligentes
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import {
   AlertRule,
   AlertType,
@@ -14,7 +14,7 @@ import {
   AlertEngineRunResult,
   AlertEngineConfig,
   AlertThresholds
-} from '@/types/alertSystem';
+} from '../types/alertSystem';
 
 const DEFAULT_CONFIG: AlertEngineConfig = {
   monitoring_interval_minutes: 60,

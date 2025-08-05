@@ -6,12 +6,12 @@ import { ArrowUpDown, TrendingUp, Eye, MousePointer, DollarSign, Users, Clock } 
 import { formatInTimeZone } from 'date-fns-tz';
 import AnimatedBarChart from '../../src/components/ui/AnimatedBarChart';
 import AnimatedPieChart from '../../src/components/ui/AnimatedPieChart';
-import { AIPanel } from '@/components/ai/AIPanel';
-import { OpenAIBillingWidget } from '@/components/ai/OpenAIBillingWidget';
+import { AIPanel } from '../../src/components/ai/AIPanel';
+import { OpenAIBillingWidget } from '../../src/components/ai/OpenAIBillingWidget';
 import { motion } from 'framer-motion';
-import { InsightsPanel } from '@/components/insights/InsightsPanel';
-import { PerformanceHeatmap } from '@/components/insights/PerformanceHeatmap';
-import { PerformanceForecast } from '@/components/insights/PerformanceForecast';
+import { InsightsPanel } from '../../src/components/insights/InsightsPanel';
+import { PerformanceHeatmap } from '../../src/components/insights/PerformanceHeatmap';
+import { PerformanceForecast } from '../../src/components/insights/PerformanceForecast';
 
 // Função para abreviar números grandes (igual ao dashboard)
 function formatNumberShort(num) {

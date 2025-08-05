@@ -1,5 +1,5 @@
-import { MetaAdsService } from '@/services/meta/ads';
-import { MetaAd, MetaAdsResponse, MetaAPIError } from '@/types/meta';
+import { MetaAdsService } from '../../../../src/services/meta/ads';
+import { MetaAd, MetaAdsResponse, MetaAPIError } from '../../../../src/types/meta';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // Mock do fetch

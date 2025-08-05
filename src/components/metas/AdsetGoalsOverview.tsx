@@ -12,12 +12,12 @@ import {
   BarChart3,
   Calendar
 } from 'lucide-react';
-import { useAdsetGoals } from '@/hooks/useAdsetGoals';
-import { useGoalFilters } from '@/hooks/useGoalFilters';
+import { useAdsetGoals } from '../../hooks/useAdsetGoals';
+import { useGoalFilters } from '../../hooks/useGoalFilters';
 import AdsetGoalCard from './AdsetGoalCard';
 import GoalStatusBadge from './GoalStatusBadge';
 import { formatInTimeZone } from 'date-fns-tz';
-import { AdsetGoalFilters } from '@/types/adsetGoalsDashboard';
+import { AdsetGoalFilters } from '../../types/adsetGoalsDashboard';
 
 export default function AdsetGoalsOverview() {
   // Presets de data/timeframe

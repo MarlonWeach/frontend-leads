@@ -1,7 +1,7 @@
 // Service: audienceSuggestionService.ts
 // PBI 25 - Task 25-6: Audience Suggestions System
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import {
   AudienceSuggestion,
   AudienceSuggestionLog,
@@ -9,7 +9,7 @@ import {
   AudienceSuggestionStatus,
   UpdateAudienceSuggestionStatusRequest,
   UpdateAudienceSuggestionStatusResponse
-} from '@/types/audienceSuggestions';
+} from '../types/audienceSuggestions';
 
 // Função principal: analisar performance e gerar sugestões
 export async function generateAudienceSuggestions(adset_id?: string, campaign_id?: string): Promise<AudienceSuggestion[]> {

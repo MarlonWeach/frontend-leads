@@ -2,7 +2,7 @@
 // PBI 25 - Task 25-7: Dashboard de Acompanhamento de Metas
 
 import { useState, useCallback, useMemo } from 'react';
-import { AdsetGoalFilters, UseGoalFiltersReturn } from '@/types/adsetGoalsDashboard';
+import { AdsetGoalFilters, UseGoalFiltersReturn } from '../types/adsetGoalsDashboard';
 
 const DEFAULT_FILTERS: AdsetGoalFilters = {
   sort_by: 'progress_percentage',

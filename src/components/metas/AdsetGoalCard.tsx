@@ -15,11 +15,11 @@ import {
   Clock,
   RefreshCw
 } from 'lucide-react';
-import { AdsetGoalDashboardItem } from '@/types/adsetGoalsDashboard';
+import { AdsetGoalDashboardItem } from '../../types/adsetGoalsDashboard';
 import GoalStatusBadge from './GoalStatusBadge';
 import GoalProgressBar from './GoalProgressBar';
 import AlertIndicator, { useAlertSummary } from '../alerts/AlertIndicator';
-import { useAdsetActions } from '@/hooks/useAdsetActions';
+import { useAdsetActions } from '../../hooks/useAdsetActions';
 import { useState as useStateReact } from 'react';
 
 // Modal simples para ajuste de budget

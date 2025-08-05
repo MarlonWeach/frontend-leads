@@ -12,7 +12,7 @@ import {
   PlayCircle,
   PauseCircle 
 } from 'lucide-react';
-import { GoalStatusBadgeProps } from '@/types/adsetGoalsDashboard';
+import { GoalStatusBadgeProps } from '../../types/adsetGoalsDashboard';
 
 const STATUS_CONFIG = {
   no_prazo: {

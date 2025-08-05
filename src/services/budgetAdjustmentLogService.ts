@@ -1,7 +1,7 @@
 // Service: budgetAdjustmentLogService.ts
 // PBI 25 - Task 25-8: Sistema de Logs e Controle de Ajustes
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import {
   BudgetAdjustmentLog,
   BudgetAdjustmentStats,
@@ -14,7 +14,7 @@ import {
   UpdateBudgetAdjustmentLogRequest,
   UpdateBudgetAdjustmentLogResponse,
   BudgetAdjustmentContext
-} from '@/types/budgetAdjustmentLogs';
+} from '../types/budgetAdjustmentLogs';
 
 const MAX_ADJUSTMENTS_PER_HOUR = 4;
 

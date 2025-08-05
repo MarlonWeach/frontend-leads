@@ -4,7 +4,7 @@
 // PBI 25 - Task 25-7: Dashboard de Acompanhamento de Metas
 
 import React from 'react';
-import { GoalProgressBarProps } from '@/types/adsetGoalsDashboard';
+import { GoalProgressBarProps } from '../../types/adsetGoalsDashboard';
 
 const STATUS_COLORS = {
   no_prazo: 'bg-green-500',
