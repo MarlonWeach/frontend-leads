@@ -2,15 +2,17 @@
 // PBI 25 - Task 25-7: Dashboard de Acompanhamento de Metas
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import alertEngine from '@/services/alertEngine';
+
+export const dynamic = 'force-dynamic';
+import { supabaseServer as supabase } from '../../../src/lib/supabaseServer';
+import alertEngine from '../../../src/services/alertEngine';
 import {
   AlertsQuery,
   AlertsResponse,
   UpdateAlertStatusRequest,
   AlertActionRequest,
   AlertActionResponse
-} from '@/types/alertSystem';
+} from '../../../src/types/alertSystem';
 
 export async function GET(request: NextRequest) {
   try {

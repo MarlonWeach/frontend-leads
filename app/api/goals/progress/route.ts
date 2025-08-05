@@ -2,8 +2,10 @@
 // PBI 25 - Task 25-3: Monitoramento diário de volume vs meta
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import { ProgressBatchSummary, ProgressStatus } from '@/types/progress';
+
+export const dynamic = 'force-dynamic';
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
+import { ProgressBatchSummary, ProgressStatus } from '../../../../src/types/progress';
 
 // GET /api/goals/progress?date=YYYY-MM-DD - Tracking de todos os adsets em um dia
 export async function GET(request: NextRequest) {

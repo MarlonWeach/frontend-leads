@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdCreativeModal({ ad, isOpen, onClose }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -129,9 +130,11 @@ export default function AdCreativeModal({ ad, isOpen, onClose }) {
 
     return (
       <div className="relative">
-        <img
+        <Image
           src={currentImage.url}
           alt={currentImage.alt || 'Imagem do anúncio'}
+          width={500}
+          height={384}
           className="max-w-full max-h-96 object-contain rounded-lg"
           onError={(e) => {
             e.target.style.display = 'none';
@@ -248,9 +251,11 @@ export default function AdCreativeModal({ ad, isOpen, onClose }) {
 
     return (
       <div className="relative">
-        <img
+        <Image
           src={currentImage.url}
           alt={currentImage.alt || 'Slideshow'}
+          width={500}
+          height={384}
           className="max-w-full max-h-96 object-contain rounded-lg"
           onError={(e) => {
             e.target.style.display = 'none';

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Image as ImageIcon, Video, FileText, Play, ChevronRight, ChevronLeft } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdCreativePreview({ ad, onExpand }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -101,9 +102,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
       
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={image.url}
             alt={image.alt || creativeData.title || 'Preview do anúncio'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               // Fallback para imagem quebrada
@@ -153,9 +156,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
       
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={creativeData.video.thumbnail_url}
             alt={creativeData.title ? `Thumbnail do vídeo: ${creativeData.title}` : 'Video thumbnail'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               // Fallback para thumbnail quebrado
@@ -238,9 +243,11 @@ export default function AdCreativePreview({ ad, onExpand }) {
       
       return (
         <div className="relative group cursor-pointer" onClick={onExpand}>
-          <img
+          <Image
             src={image.url}
             alt={image.alt || creativeData.title || 'Slideshow preview'}
+            width={48}
+            height={48}
             className="w-12 h-12 object-cover rounded-lg border border-white/10"
             onError={(e) => {
               // Fallback para imagem quebrada

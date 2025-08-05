@@ -2,10 +2,12 @@
 // PBI 25 - Task 25-8: Sistema de Logs e Controle de Ajustes
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { DateTime } from 'luxon';
-import { supabaseServer as supabase } from '@/lib/supabaseServer';
-import { BudgetAdjustmentStatsQuery, BudgetAdjustmentStatsResponse } from '@/types/budgetAdjustmentLogs';
-import { getBudgetAdjustmentStats } from '@/services/budgetAdjustmentLogService';
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
+import { BudgetAdjustmentStatsQuery, BudgetAdjustmentStatsResponse } from '../../../../src/types/budgetAdjustmentLogs';
+import { getBudgetAdjustmentStats } from '../../../../src/services/budgetAdjustmentLogService';
 
 export async function GET(request: NextRequest) {
   try {
