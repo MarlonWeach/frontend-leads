@@ -2,7 +2,9 @@
 // PBI 25 - Task 25-6: Audience Suggestions System
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateAudienceSuggestionStatus } from '@/services/audienceSuggestionService';
+
+export const dynamic = 'force-dynamic';
+import { updateAudienceSuggestionStatus } from '../../../../../src/services/audienceSuggestionService';
 
 export async function POST(
   request: NextRequest,
