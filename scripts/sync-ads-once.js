@@ -237,6 +237,65 @@ async function syncAds() {
     
     console.log(`📊 Ads ativos: ${activeAds.length}/${allAds.length}`);
     
+    // 2.1 Garantir existência de adsets necessários (auto-stub) — Task 25-20
+    try {
+      const neededAdsetIds = Array.from(new Set(activeAds.map(a => a.adset_id).filter(Boolean)));
+      if (neededAdsetIds.length > 0) {
+        // Buscar existentes
+        const { data: existingAdsets, error: existingErr } = await supabase
+          .from('adsets')
+          .select('id')
+          .in('id', neededAdsetIds);
+        if (existingErr) {
+          console.warn('⚠️ Falha ao verificar adsets existentes:', existingErr.message);
+        } else {
+          const existingSet = new Set((existingAdsets || []).map(r => r.id));
+          const missing = neededAdsetIds.filter(id => !existingSet.has(id));
+          if (missing.length > 0) {
+            console.log(`🧩 Adsets ausentes detectados: ${missing.length}. Criando stubs...`);
+            for (const adsetId of missing) {
+              try {
+                const url = `https://graph.facebook.com/v23.0/${adsetId}?fields=id,name,status,effective_status,campaign_id,created_time,start_time,end_time&access_token=${META_ACCESS_TOKEN}`;
+                const adsetResp = await makeRateLimitedRequest(url);
+                if (!adsetResp || adsetResp.error) {
+                  console.log('⚠️ Não foi possível obter adset', adsetId, adsetResp?.error?.message || 'erro desconhecido');
+                  continue;
+                }
+                const payload = {
+                  id: adsetResp.id,
+                  name: adsetResp.name || 'unknown',
+                  status: adsetResp.status || null,
+                  effective_status: adsetResp.effective_status || null,
+                  campaign_id: adsetResp.campaign_id || null,
+                  created_time: adsetResp.created_time || null,
+                  start_time: adsetResp.start_time || null,
+                  end_time: adsetResp.end_time || null,
+                  last_synced: new Date().toISOString(),
+                  impressions: 0,
+                  clicks: 0,
+                  spend: 0,
+                };
+                const { error: upsertErr } = await supabase
+                  .from('adsets')
+                  .upsert(payload, { onConflict: 'id', ignoreDuplicates: false });
+                if (upsertErr) {
+                  console.log('⚠️ Falha ao upsert adset', adsetId, upsertErr.message);
+                } else {
+                  console.log('✅ Stub criado para adset', adsetId);
+                }
+                // Pequena pausa para não pressionar a API e o DB
+                await new Promise(r => setTimeout(r, 200));
+              } catch (e) {
+                console.log('⚠️ Erro ao criar stub para adset', adsetId, e?.message || e);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log('⚠️ Passo de auto-stub de adsets falhou:', e?.message || e);
+    }
+
     // 3. Buscar insights em lote para ads com tráfego (limitado aos primeiros 100)
     const adIds = activeAds.slice(0, 100).map(ad => ad.id); // Limitar a 100 ads para evitar rate limit
     const insights = await getAdsInsightsBatch(adIds);
