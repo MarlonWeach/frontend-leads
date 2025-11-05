@@ -2,6 +2,7 @@ import React from 'react';
 import '../styles/globals.css'
 import { Inter } from 'next/font/google'
 import { QueryProvider } from '../src/providers/query-provider'
+import { AuthProvider } from '../src/contexts/AuthContext'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`bg-gray-50 ${inter.className}`}>
-        <QueryProvider enableDevtools={process.env.NODE_ENV === 'development'}>
-          {children}
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider enableDevtools={process.env.NODE_ENV === 'development'}>
+            {children}
+          </QueryProvider>
+        </AuthProvider>
         <SpeedInsights />
         {/* Registrar Service Worker */}
         <script
