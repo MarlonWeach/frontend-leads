@@ -99,7 +99,7 @@ async function getAdsFromMeta() {
         break;
       }
       
-      let url = `https://graph.facebook.com/v23.0/${accountId}/ads?fields=id,name,status,adset_id,campaign_id,creative&limit=100&access_token=${META_ACCESS_TOKEN}`;
+      let url = `https://graph.facebook.com/v23.0/${accountId}/ads?fields=id,name,status,effective_status,adset_id,campaign_id,created_time,updated_time&limit=100&access_token=${META_ACCESS_TOKEN}`;
       
       if (after) {
         url += `&after=${after}`;
@@ -166,7 +166,7 @@ async function getAdsInsightsBatch(adIds) {
         if (adData && adData.insights && adData.insights.data && adData.insights.data.length > 0) {
           const insight = adData.insights.data[0];
           insights.push({
-            ad_id: adId,
+            id: adId,
             impressions: parseInt(insight.impressions) || 0,
             clicks: parseInt(insight.clicks) || 0,
             spend: parseFloat(insight.spend) || 0,
@@ -190,6 +190,37 @@ async function getAdsInsightsBatch(adIds) {
   return insights;
 }
 
+/** Colunas aceitas na tabela ads (evita PGRST204 por chave extra no JSON). */
+const ADS_UPSERT_KEYS = [
+  'id',
+  'ad_id',
+  'name',
+  'status',
+  'effective_status',
+  'adset_id',
+  'campaign_id',
+  'created_time',
+  'updated_time',
+  'impressions',
+  'clicks',
+  'spend',
+  'ctr',
+  'cpc',
+  'cpm',
+  'leads',
+  'frequency',
+  'created_at',
+  'updated_at',
+];
+
+function pickAdsUpsertRow(row) {
+  const out = {};
+  for (const k of ADS_UPSERT_KEYS) {
+    if (row[k] !== undefined) out[k] = row[k];
+  }
+  return out;
+}
+
 // Função para salvar ads no Supabase
 async function saveAdsToSupabase(ads) {
   if (ads.length === 0) {
@@ -200,9 +231,10 @@ async function saveAdsToSupabase(ads) {
   console.log(`💾 Salvando ${ads.length} ads no Supabase...`);
   
   try {
+    const payload = ads.map(pickAdsUpsertRow);
     const { data, error } = await supabase
       .from('ads')
-      .upsert(ads, { onConflict: 'ad_id' });
+      .upsert(payload, { onConflict: 'id' });
     
     if (error) {
       console.error('❌ Erro ao salvar ads:', error);
@@ -304,7 +336,7 @@ async function syncAds() {
     
     // 4. Preparar dados para salvar (usando apenas colunas que existem na tabela)
     const adsToSave = activeAds.map(ad => {
-      const insight = insights.find(i => i.ad_id === ad.id);
+      const insight = insights.find(i => i.id === ad.id);
       const impressions = insight?.impressions || 0;
       const clicks = insight?.clicks || 0;
       const spend = insight?.spend || 0;
@@ -315,19 +347,25 @@ async function syncAds() {
       const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
       
       return {
+        id: ad.id,
         ad_id: ad.id,
         name: ad.name,
         status: ad.status,
+        effective_status: ad.effective_status || null,
         adset_id: ad.adset_id,
         campaign_id: ad.campaign_id,
-        creative: ad.creative ? JSON.stringify(ad.creative) : null,
+        created_time: ad.created_time || null,
+        updated_time: ad.updated_time || null,
         impressions: impressions,
         clicks: clicks,
         spend: spend,
         ctr: ctr,
         cpc: cpc,
         cpm: cpm,
-        leads_count: 0 // Será atualizado pelo script de leads
+        leads: 0, // Será atualizado pelo script de leads
+        frequency: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
     });
     
