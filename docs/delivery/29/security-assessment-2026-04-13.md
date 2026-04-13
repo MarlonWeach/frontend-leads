@@ -12,11 +12,20 @@ Legenda: **C** crítico · **A** alto · **M** médio · **B** baixo
 
 | ID | Severidade | Achado | Evidência / risco | Ação recomendada |
 |----|------------|--------|-------------------|------------------|
-| S1 | **A** | Políticas `FOR SELECT USING (true)` em tabelas com RLS | `20250130_enable_rls_on_public_tables.sql`: `ad_creatives`, `meta_activity_logs`, `adset_goals` permitem leitura a qualquer papel que passe pelo PostgREST com RLS aplicável. Com chave **anon** no browser, leitura ampla se os GRANTs permitirem. | Revisar modelo de ameaça: restringir por `auth.uid()` / tenant ou remover leitura direta do client; preferir APIs server-side com service role + validação. |
-| S2 | **A** | `sync_status`: política "Permitir leitura para todos" (`USING (true)`) | `20250621_create_sync_status_table.sql` | Mesma linha: expõe estado de sync a qualquer cliente que use anon e tenha SELECT. Avaliar se tabela deve ser só server-side. |
-| S3 | **M** | Tabelas centrais (`campaigns`, `ads`, `meta_leads`, `adsets`, etc.) sem RLS nas migrations revisadas | Migrations de criação não habilitam RLS nessas tabelas. | Confirmar no SQL Editor (`relrowsecurity` em `pg_tables`) no projeto novo. Se RLS desligado, acesso depende só de GRANT — típico default expõe dados ao anon. |
+| S1 | **A** | **Confirmado (SQL):** `ad_creatives`, `meta_activity_logs`, `adset_goals` — SELECT com `qual = true` para role `public`. | Qualquer sessão que use PostgREST com RLS aplicável pode **ler todas as linhas** dessas tabelas (incl. `anon` se a política public permitir). INSERT em `meta_activity_logs` sem `qual` visível na view (revisar `with_check` no catálogo se necessário). | Restringir SELECT (ex.: só `service_role` / sem acesso anon) ou escopo por `auth.uid()`; evitar dados sensíveis só protegidos por essas políticas. |
+| S2 | **A** | **Confirmado:** `sync_status` — "Permitir leitura para todos", `qual = true`; UPDATE só `service_role` (nota: cliente com **service_role** ignora RLS de qualquer forma). | Estado de sincronização visível a quem tiver SELECT conforme GRANT+RLS. | Se não precisar no browser, revogar SELECT ao `anon` ou política mais restrita. |
+| S3 | **A** | **Confirmado (SQL 2026-04-13):** 27 tabelas com `relrowsecurity = false`, incluindo `meta_leads`, `campaigns`, `ads`, `adsets`, `ad_insights`, `adset_insights`, alertas, auditoria, etc. | Sem RLS, o controle de acesso no PostgREST depende só de **GRANT** às roles `anon`/`authenticated`. No Supabase isso costuma ser permissivo se nunca revogaram privilégios. **Risco alto** de leitura/escrita via chave **anon** no front, se alguém chamar o REST direto. | Auditar `information_schema.role_table_grants` ou Supabase “Table editor” → permissões; habilitar RLS + políticas por tabela sensível ou revogar acesso `anon` e obrigar só APIs server-side com service role. |
 | S4 | **M** | `budget_adjustment_logs`, sistema de alerts | RLS comentado / não habilitado nos SQLs | Habilitar RLS e políticas ao adotar essas features em produção. |
 | S5 | **B** | Nomenclatura `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` em scripts | Vários `scripts/*.js` | Garantir que **nunca** seja referenciada em código `use client` ou bundles. Preferir só `SUPABASE_SERVICE_ROLE_KEY` server-side. Auditar `next build` / bundle. |
+
+### Inventário SQL no projeto (2026-04-13)
+
+**`relrowsecurity = false` (27 tabelas):**  
+`ad_insights`, `ads`, `adset_budget_adjustments`, `adset_insights`, `adset_progress_alerts`, `adset_progress_tracking`, `adsets`, `ai_analysis_logs`, `ai_anomalies`, `alert_notifications`, `alert_rules`, `alert_stats`, `alerts`, `audience_suggestions_logs`, `audit_logs`, `budget_adjustment_logs`, `cache_stats`, `campaigns`, `lead_quality_logs`, `meta_leads`, `sync_logs`, `wp_Configuracao`, `wp_Cotacao`, `wp_HistoricoIA`, `wp_LogAlteracaoPreco`, `wp_PrecoBase`, `wp_Usuario`.
+
+**`relrowsecurity = true` (4 tabelas):** `ad_creatives`, `adset_goals`, `meta_activity_logs`, `sync_status`.
+
+**Obs.:** Tabelas `wp_*` — possível legado; avaliar segregação ou remoção.
 
 ---
 
@@ -40,13 +49,11 @@ Legenda: **C** crítico · **A** alto · **M** médio · **B** baixo
 
 ---
 
-## 4. Checklist manual (dashboard Supabase — projeto novo)
+## 4. Checklist manual (dashboard Supabase)
 
-- [ ] **Settings → API:** URLs e chaves; confirmar quem recebe service role (só backend/CI).
-- [ ] **Authentication:** providers necessários; política de senha / MFA se houver usuários reais.
-- [ ] **Database:** Extensions; conexões diretas desabilitadas se não usadas.
-- [ ] **Network:** restrições de IP (plano Pro+), se aplicável.
-- [ ] **Backups / PITR:** alinhado ao plano e RPO/RTO desejados.
+**Onde marcar:** não existe checklist dentro do site do Supabase. Use o arquivo **[`29-1.md`](./29-1.md)** neste repositório: edite o ficheiro e troque `[ ]` por `[x]` em cada linha quando validar no painel.
+
+Itens a cobrir: API (chaves), Authentication, Database/Extensions, Network (se o plano tiver), Backups/PITR.
 
 ---
 
@@ -54,7 +61,7 @@ Legenda: **C** crítico · **A** alto · **M** médio · **B** baixo
 
 | Task | Foco |
 |------|------|
-| 29-1 | Fechar itens S3–S5 e checklist §4 no painel; SQL ad-hoc de inventário RLS/GRANT |
+| 29-1 | ~~SQL inventário~~ Feito. Resta **checklist dashboard** em [`29-1.md`](./29-1.md); opcional: query de GRANTs para fechar risco anon. |
 | 29-2 | Mapear rotas API públicas e decisão service vs anon vs auth |
 | 29-3 | Checklist GitHub + Vercel |
 | 29-4 | Versão final deste documento + sign-off |
