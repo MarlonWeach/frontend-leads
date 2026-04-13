@@ -1,14 +1,16 @@
-# Tasks for PBI 29: Avaliação de segurança do projeto (ênfase Supabase)
+# Tasks for PBI 29: Avaliação de segurança (ênfase Supabase)
 
-**Parent PBI**: [PBI 29](./prd.md)
+**Parent PBI**: [PBI 29](./prd.md)  
+**Assessment (draft):** [security-assessment-2026-04-13.md](./security-assessment-2026-04-13.md)
 
 ## Task Summary
 
 | Task ID | Name | Status | Description |
 |---------|------|--------|-------------|
-| — | *(a criar após kickoff)* | Proposed | Ex.: 29-1 Inventário Supabase RLS; 29-2 Revisão secrets CI/CD; 29-3 Documento de achados |
+| 29-1 | Auditoria Supabase: RLS, GRANTs e painel | InProgress | Inventário SQL + checklist dashboard; confirmar achados S1–S5 no projeto novo |
+| 29-2 | Mapeamento de rotas API e chaves | Proposed | APIs `app/api`, service vs anon, superfície pública |
+| 29-3 | CI/CD, GitHub e Vercel | Proposed | Secrets, ambientes, logs |
+| 29-4 | Consolidação e sign-off | Proposed | Documento final + aprovação |
 
-## Próximos passos sugeridos
-1. Definir responsável e data para a auditoria.
-2. Quebrar em tarefas pequenas (uma por área: Supabase DB, Supabase Auth/API, app Next, GitHub/Vercel).
-3. E2E de segurança não cobre este PBI por si só; validação é revisão documentada + correções em tasks futuras.
+## Regra de WIP
+Apenas **29-1** em progresso até encerrar inventário Supabase ou explicitamente bloquear.
