@@ -8,7 +8,7 @@ This document lists all tasks associated with PBI 28.
 
 | Task ID | Name | Status | Description |
 |---------|------|--------|-------------|
-| 28-1 | Padronizar layout e componentes de UI | Proposed | Padronizar layout e componentes de UI em todas as páginas |
+| 28-1 | Padronizar layout e componentes de UI | InProgress | Estabilização inicial de runtime: corrigir erros de console/API e alinhar componentes críticos de UI |
 | 28-2 | Corrigir logs de atividade recente | Done | Corrigir exibição de logs de ALTERAÇÕES relevantes da Meta |
 | 28-3 | Corrigir formatação de valores de spend nos gráficos | Done | Padronizar formatação de valores monetários (R$) em todos os gráficos |
 | 28-4 | Remover gráfico de tendências de performance | Done | Remover gráfico de tendências de performance de /performance |
@@ -21,3 +21,4 @@ This document lists all tasks associated with PBI 28.
 | 28-11 | Mover resumo do período para o topo da página | Done | Mover o resumo do período selecionado para o topo da página |
 | 28-12 | Exibir detalhes do criativo (imagem, etc) em /ads | Done | Refatorar página /ads para focar apenas em métricas, removendo dependências de criativo/texto/imagem devido a bloqueios da Meta API |
 | 28-13 | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | Done | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | 
+| 28-14 | Fortalecer workflow de sync de leads no GitHub Actions | InProgress | Atualizar job de leads para usar sync-meta-leads.js com variáveis de estabilidade e alerta quando retorno for zero leads |

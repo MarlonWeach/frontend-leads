@@ -2,14 +2,29 @@ require('dotenv').config({ path: '.env.local' });
 
 const { createClient } = require('@supabase/supabase-js');
 
+function trimEnv(s) {
+  if (!s || typeof s !== 'string') return '';
+  return s.trim().replace(/^['"]+|['"]+$/g, '');
+}
+
 // Configurações de ambiente
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const META_ACCESS_TOKEN = process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN;
-const META_ACCOUNT_ID = process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID;
+const SUPABASE_URL = trimEnv(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
+const SUPABASE_KEY = trimEnv(
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+const META_ACCESS_TOKEN = trimEnv(
+  process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN
+);
+const META_ACCOUNT_ID = trimEnv(process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID);
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !META_ACCESS_TOKEN || !META_ACCOUNT_ID) {
   throw new Error('Variáveis de ambiente obrigatórias não configuradas.');
+}
+
+if (!/^https?:\/\//i.test(SUPABASE_URL)) {
+  throw new Error(
+    `SUPABASE_URL invalida (esperado URL com http/https): recebido "${SUPABASE_URL.substring(0, 24)}..."`
+  );
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -84,7 +99,7 @@ async function getCampaignsFromMeta() {
   try {
     do {
       pageCount++;
-      let url = `https://graph.facebook.com/v23.0/${accountId}/campaigns?fields=id,name,status,effective_status,created_time,start_time,end_time,daily_budget,lifetime_budget,objective&limit=100&access_token=${META_ACCESS_TOKEN}`;
+      let url = `https://graph.facebook.com/v23.0/${accountId}/campaigns?fields=id,name,status,effective_status,created_time,updated_time,start_time,end_time,daily_budget,lifetime_budget,objective&limit=100&access_token=${META_ACCESS_TOKEN}`;
       
       if (after) {
         url += `&after=${after}`;
@@ -176,30 +191,65 @@ async function getCampaignsInsightsBatch(campaignIds) {
 // Função para salvar campanhas no Supabase
 async function saveCampaignsToSupabase(campaigns) {
   if (campaigns.length === 0) {
-    console.log('ℹ️ Nenhuma campanha para salvar');
+    console.log('Nenhuma campanha para salvar');
     return;
   }
-  
-  console.log(`💾 Salvando ${campaigns.length} campanhas no Supabase...`);
-  
-  try {
-    // Upsert direto para evitar conflitos de PK
-    const { data, error } = await supabase
-      .from('campaigns')
-      .upsert(campaigns);
-    
-    if (error) {
-      console.error('❌ Erro ao salvar campanhas:', error);
-      throw error;
+
+  console.log(`Salvando ${campaigns.length} campanhas no Supabase...`);
+
+  const maxRetries = 5;
+  let lastErr = null;
+
+  const isTransientMsg = (m) => {
+    const s = (m || '').toLowerCase();
+    return (
+      s.includes('fetch failed') ||
+      s.includes('network') ||
+      s.includes('econnreset') ||
+      s.includes('etimedout') ||
+      s.includes('socket') ||
+      s.includes('undici')
+    );
+  };
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .upsert(campaigns, { onConflict: 'id' });
+
+      if (error) {
+        lastErr = error;
+        if (isTransientMsg(error.message) && attempt < maxRetries) {
+          const delay = Math.min(30000, 2000 * Math.pow(2, attempt - 1));
+          console.warn(
+            `Falha transiente ao salvar campanhas (tentativa ${attempt}/${maxRetries}). Aguardando ${delay}ms...`
+          );
+          await new Promise((r) => setTimeout(r, delay));
+          continue;
+        }
+        console.error('Erro ao salvar campanhas:', error);
+        throw error;
+      }
+
+      console.log(`${campaigns.length} campanhas salvas/atualizadas com sucesso`);
+      return data;
+    } catch (err) {
+      lastErr = err;
+      if (isTransientMsg(err?.message) && attempt < maxRetries) {
+        const delay = Math.min(30000, 2000 * Math.pow(2, attempt - 1));
+        console.warn(
+          `Excecao transiente ao salvar campanhas (tentativa ${attempt}/${maxRetries}). Aguardando ${delay}ms...`
+        );
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      console.error('Erro ao salvar campanhas:', err.message);
+      throw err;
     }
-    
-    console.log(`✅ ${campaigns.length} campanhas salvas/atualizadas com sucesso`);
-    return data;
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar campanhas:', error.message);
-    throw error;
   }
+
+  throw lastErr || new Error('Falha ao salvar campanhas apos retries');
 }
 
 // Função principal
@@ -228,25 +278,24 @@ async function syncCampaigns() {
     
     console.log(`📈 Campanhas com tráfego recente: ${insights.length}/${activeCampaigns.length}`);
     
-    // 4. Preparar dados para salvar
+    // 4. Preparar dados para salvar (usando apenas colunas que existem na tabela)
     const campaignsToSave = activeCampaigns.map(campaign => {
-      const insight = insights.find(i => i.campaign_id === campaign.id);
       return {
         id: campaign.id, // Usar o ID da Meta como ID primário
-        meta_campaign_id: campaign.id,
         name: campaign.name,
         status: campaign.status,
-        objective: campaign.objective,
-        created_at: campaign.created_time,
-        start_time: campaign.start_time,
-        end_time: campaign.end_time,
-        daily_budget: campaign.daily_budget ? parseFloat(campaign.daily_budget) : null,
-        budget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) : null,
-        impressions: insight?.impressions || 0,
-        clicks: insight?.clicks || 0,
-        spend: insight?.spend || 0,
-        updated_at: new Date().toISOString(),
-        last_meta_sync: new Date().toISOString()
+        effective_status: campaign.effective_status || null,
+        created_time: campaign.created_time || null,
+        updated_time: campaign.updated_time || null,
+        objective: campaign.objective || null,
+        start_time: campaign.start_time || null,
+        stop_time: campaign.end_time || null, // end_time na API = stop_time na tabela
+        daily_budget: campaign.daily_budget ? parseInt(campaign.daily_budget) : null,
+        lifetime_budget: campaign.lifetime_budget ? parseInt(campaign.lifetime_budget) : null,
+        budget_remaining: null, // Não disponível na API básica
+        spend_cap: null, // Não disponível na API básica
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
     });
     
