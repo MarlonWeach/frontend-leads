@@ -61,7 +61,7 @@ Itens a cobrir: API (chaves), Authentication, Database/Extensions, Network (se o
 
 | Task | Foco |
 |------|------|
-| 29-1 | ~~SQL inventário~~ Feito. Resta **checklist dashboard** em [`29-1.md`](./29-1.md); opcional: query de GRANTs para fechar risco anon. |
+| 29-1 | **Feito** — ver [`29-1.md`](./29-1.md): checklist, Vercel (apagar `NEXT_PUBLIC_META_ACCESS_TOKEN`), login dashboard por implementar, `wp_*`, Free tier. Opcional: GRANTs `anon`. |
 | 29-2 | Mapear rotas API públicas e decisão service vs anon vs auth |
 | 29-3 | Checklist GitHub + Vercel |
 | 29-4 | Versão final deste documento + sign-off |
