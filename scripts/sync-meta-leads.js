@@ -11,7 +11,7 @@
  * - SYNC_META_LEADS_INCLUDE_FIELD_DATA=1 — inclui field_data (pesado; pode gerar "reduce data")
  * - SYNC_META_LEADS_PAGE_LIMIT=25      — limite por pagina na edge leads (padrao 25)
  *
- * Permissoes: docs/META_LEADS_GRAPH_PERMISSIONS.md
+ * Permissoes: docs/operations/META_LEADS_GRAPH_PERMISSIONS.md
  * - leadgen_forms na PAGINA exige Page Access Token (erro #190 com User token).
  * - /{form-id}/leads costuma funcionar com User token + leads_retrieval.
  * - META_PAGE_ACCESS_TOKEN: so GET /{page-id}/leadgen_forms

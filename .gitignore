@@ -151,3 +151,7 @@ supabase-sync-cron/.DS_Store
 /blob-report/
 /playwright/.cache/
 .vercel
+
+# Cópias locais aninhadas do mesmo repositório (evitar clones duplicados no root)
+frontend-leads/
+frontend-leads-1/

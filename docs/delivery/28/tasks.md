@@ -22,3 +22,4 @@ This document lists all tasks associated with PBI 28.
 | 28-12 | Exibir detalhes do criativo (imagem, etc) em /ads | Done | Refatorar página /ads para focar apenas em métricas, removendo dependências de criativo/texto/imagem devido a bloqueios da Meta API |
 | 28-13 | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | Done | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | 
 | 28-14 | Fortalecer workflow de sync de leads no GitHub Actions | Done | Job usa sync-meta-leads.js, secrets META_FORM_ID/META_PAGE_ID, pipefail, avisos quando zero leads com fontes consultadas; CI validado em producao |
+| 28-15 | Consolidar docs recovery/sync, scripts operacionais e remover cópias locais | Done | docs/operations/ + README; scripts e supabase-recovery.sql versionados; removidos frontend-leads/ e frontend-leads-1/; gitignore |

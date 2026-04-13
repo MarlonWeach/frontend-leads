@@ -7,7 +7,7 @@
 | **Contagem de leads** (métricas, CPL, gráficos) | Insights `actions` / `results` | **`scripts/sync-ad-insights-account.js`** (recomendado) ou rotas `/api/performance/*` |
 | **Contatos** (cada envio de Instant Form, PII em `meta_leads`) | Graph `/{form-id}/leads` ou `/{ad-id}/leads` | **`scripts/sync-meta-leads.js`** |
 
-- Permissões da Graph para formulários/leads: **[META_LEADS_GRAPH_PERMISSIONS.md](../META_LEADS_GRAPH_PERMISSIONS.md)**.
+- Permissões da Graph para formulários/leads: **[META_LEADS_GRAPH_PERMISSIONS.md](../operations/META_LEADS_GRAPH_PERMISSIONS.md)**.
 - O script antigo por-ad **`scripts/sync-ad-insights.js`** ainda existe; o master **`sync-all-data.js`** usa **`sync-ad-insights-account.js`** (menos chamadas à Meta, mesma tabela `ad_insights`).
 
 ## Status Atual
