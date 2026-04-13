@@ -37,7 +37,7 @@ const PRIORITIES = {
     label: 'MÉDIA PRIORIDADE',
     scripts: [
       { name: 'Insights de Adsets', file: 'sync-adset-insights.js', critical: false },
-      { name: 'Insights de Ads', file: 'sync-ad-insights.js', critical: false }
+      { name: 'Insights de Ads', file: 'sync-ad-insights-account.js', critical: false }
     ]
   },
   LOW: {

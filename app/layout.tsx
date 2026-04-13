@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'Dashboard Lead Ads',
   description: 'Plataforma de gerenciamento de campanhas Lead Ads',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({

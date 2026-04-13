@@ -5,17 +5,19 @@ import { addDays, format, subDays } from 'date-fns';
 // Forçar rota dinâmica para evitar erro de renderização estática
 export const dynamic = 'force-dynamic';
 
-// Criar cliente Supabase para o servidor
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+const createSupabaseClient = () => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  return createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
-  }
-);
+  });
+};
 
 import { ForecastRequest, ForecastResponse, ForecastData, FORECAST_METRICS } from '../../../../src/types/forecast';
 import { serverCache } from '../../../../src/utils/server-cache';
@@ -162,6 +164,11 @@ const fetchHistoricalData = async (
   
   console.log(`🔍 Buscando dados completos: ${historicalStartDate} até ${finalEndDate} (7 dias completos, excluindo hoje que está incompleto)`);
   
+  const supabase = createSupabaseClient();
+  if (!supabase) {
+    throw new Error('Erro ao buscar dados históricos: Supabase indisponível');
+  }
+
   const { data, error } = await supabase
     .from('adset_insights')
     .select('date, leads, spend, impressions, clicks')
@@ -170,6 +177,9 @@ const fetchHistoricalData = async (
     .order('date', { ascending: true });
 
   if (error) {
+    if (error.message?.includes('fetch failed')) {
+      throw new Error('SUPABASE_FETCH_FAILED');
+    }
     throw new Error(`Erro ao buscar dados históricos: ${error.message}`);
   }
 
@@ -238,6 +248,101 @@ const fetchHistoricalData = async (
     const values = result[metric];
     const total = values.reduce((a, b) => a + b, 0);
     console.log(`  ${metric}: ${values.length} valores, total: ${total}`);
+  });
+
+  return result;
+};
+
+const fetchHistoricalDataFromMeta = async (
+  endDate: string,
+  metrics: string[]
+): Promise<{ [key: string]: number[] }> => {
+  const metaAccessToken =
+    process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || '';
+  const metaAccountId =
+    process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID || '';
+
+  const result: { [key: string]: number[] } = {};
+  metrics.forEach(metric => {
+    result[metric] = [];
+  });
+
+  if (!metaAccessToken || !metaAccountId) {
+    return result;
+  }
+
+  const endDateTime = new Date(endDate);
+  const yesterday = new Date(endDateTime);
+  yesterday.setDate(endDateTime.getDate() - 1);
+  const recentStartDate = new Date(yesterday);
+  recentStartDate.setDate(yesterday.getDate() - 6);
+  const historicalStartDate = recentStartDate.toISOString().split('T')[0];
+  const finalEndDate = yesterday.toISOString().split('T')[0];
+
+  const normalizedAccountId = metaAccountId.startsWith('act_')
+    ? metaAccountId
+    : `act_${metaAccountId}`;
+  const timeRange = encodeURIComponent(
+    JSON.stringify({ since: historicalStartDate, until: finalEndDate })
+  );
+  const dailyData: Record<string, { leads: number; spend: number; impressions: number; clicks: number }> = {};
+
+  let nextUrl: string | null =
+    `https://graph.facebook.com/v23.0/${normalizedAccountId}/insights?fields=date_start,spend,impressions,clicks,actions,results&time_range=${timeRange}&time_increment=1&limit=500`;
+
+  while (nextUrl) {
+    const insightsRes: Response = await fetch(nextUrl, {
+      headers: { Authorization: `Bearer ${metaAccessToken}` }
+    });
+    const payload = await insightsRes.json();
+    if (!insightsRes.ok) {
+      throw new Error(payload?.error?.message || 'Erro ao buscar insights da Meta');
+    }
+
+    const rows = Array.isArray(payload?.data) ? payload.data : [];
+    rows.forEach((insight: any) => {
+      const date = insight.date_start || insight.date || historicalStartDate;
+      if (!dailyData[date]) {
+        dailyData[date] = { leads: 0, spend: 0, impressions: 0, clicks: 0 };
+      }
+      dailyData[date].spend += Number(insight.spend) || 0;
+      dailyData[date].impressions += Number(insight.impressions) || 0;
+      dailyData[date].clicks += Number(insight.clicks) || 0;
+
+      const leadsFromResults = Array.isArray(insight.results)
+        ? insight.results.reduce((acc: number, row: { indicator?: string; values?: Array<{ value?: string }> }) => {
+            if (!row?.indicator?.toLowerCase().includes('lead')) return acc;
+            return acc + (Number(row?.values?.[0]?.value) || 0);
+          }, 0)
+        : 0;
+      const leadsFromActions = Array.isArray(insight.actions)
+        ? insight.actions.reduce((acc: number, row: { action_type?: string; value?: string }) => {
+            if (!row?.action_type?.toLowerCase().includes('lead')) return acc;
+            return acc + (Number(row?.value) || 0);
+          }, 0)
+        : 0;
+
+      dailyData[date].leads += Math.max(leadsFromResults, leadsFromActions);
+    });
+
+    nextUrl = payload?.paging?.next || null;
+  }
+
+  const sortedDates = Object.keys(dailyData).sort();
+  sortedDates.forEach(date => {
+    const dayData = dailyData[date];
+    if (metrics.includes('leads')) result.leads.push(dayData.leads);
+    if (metrics.includes('spend')) result.spend.push(dayData.spend);
+    if (metrics.includes('impressions')) result.impressions.push(dayData.impressions);
+    if (metrics.includes('clicks')) result.clicks.push(dayData.clicks);
+    if (metrics.includes('ctr')) {
+      const ctr = dayData.impressions > 0 ? (dayData.clicks / dayData.impressions) * 100 : 0;
+      result.ctr.push(ctr);
+    }
+    if (metrics.includes('cpl')) {
+      const cpl = dayData.leads > 0 ? dayData.spend / dayData.leads : 0;
+      result.cpl.push(cpl);
+    }
   });
 
   return result;
@@ -457,7 +562,17 @@ export async function POST(request: NextRequest) {
     console.log(`🔮 Forecast API: Gerando previsões para ${metrics.join(', ')}`);
 
     // Buscar dados históricos
-    const historicalData = await fetchHistoricalData(startDate, endDate, metrics);
+    let historicalData: { [key: string]: number[] };
+    try {
+      historicalData = await fetchHistoricalData(startDate, endDate, metrics);
+    } catch (fetchError) {
+      const message = fetchError instanceof Error ? fetchError.message : '';
+      if (message.includes('SUPABASE_FETCH_FAILED')) {
+        historicalData = await fetchHistoricalDataFromMeta(endDate, metrics);
+      } else {
+        throw fetchError;
+      }
+    }
     
     // Gerar previsões para cada métrica
     const forecast: { [key: string]: ForecastData[] } = {};

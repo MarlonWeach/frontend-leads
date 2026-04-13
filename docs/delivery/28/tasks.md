@@ -21,4 +21,4 @@ This document lists all tasks associated with PBI 28.
 | 28-11 | Mover resumo do período para o topo da página | Done | Mover o resumo do período selecionado para o topo da página |
 | 28-12 | Exibir detalhes do criativo (imagem, etc) em /ads | Done | Refatorar página /ads para focar apenas em métricas, removendo dependências de criativo/texto/imagem devido a bloqueios da Meta API |
 | 28-13 | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | Done | Apontar ausência de implementação em /leads e /configurações, e planejar desenvolvimento dessas páginas | 
-| 28-14 | Fortalecer workflow de sync de leads no GitHub Actions | InProgress | Atualizar job de leads para usar sync-meta-leads.js com variáveis de estabilidade e alerta quando retorno for zero leads |
+| 28-14 | Fortalecer workflow de sync de leads no GitHub Actions | Done | Job usa sync-meta-leads.js, secrets META_FORM_ID/META_PAGE_ID, pipefail, avisos quando zero leads com fontes consultadas; CI validado em producao |

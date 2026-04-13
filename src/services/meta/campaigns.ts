@@ -42,6 +42,11 @@ function normalizeAccountId(accountId: string): string {
   return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
 }
 
+function normalizeMetaPath(pathname: string): string {
+  if (!pathname) return '';
+  return pathname.replace(/^\/v\d+\.\d+\//, '').replace(/^\//, '');
+}
+
 export class MetaCampaignsService {
   private readonly baseUrl: string;
   private readonly accessToken: string;
@@ -121,7 +126,7 @@ export class MetaCampaignsService {
         if (nextUrl.startsWith('http')) {
           // É uma URL completa da Meta API, extrair path e parâmetros
           const url = new URL(nextUrl);
-          path = url.pathname.replace('/v18.0/', '').replace('/v22.0/', '');
+          path = normalizeMetaPath(url.pathname);
           // Manter os parâmetros existentes da URL
           url.searchParams.forEach((value, key) => {
             params[key] = value;

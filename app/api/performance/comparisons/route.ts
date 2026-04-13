@@ -4,22 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 // Forçar rota dinâmica para evitar erro de renderização estática
 export const dynamic = 'force-dynamic';
 
-// Criar cliente Supabase para o servidor
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 0
-      }
-    }
-  }
-);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 import { 
   calculateComparisons, 
@@ -34,6 +21,112 @@ import { serverCache } from '../../../../src/utils/server-cache';
 
 const CACHE_TTL = 5 * 60; // 5 minutos
 
+const createSupabaseClient = () => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  return createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 0
+      }
+    }
+  });
+};
+
+const aggregateMetaLeads = (insight: any): number => {
+  const leadsFromResults = Array.isArray(insight.results)
+    ? insight.results.reduce((acc: number, result: { indicator?: string; values?: Array<{ value?: string }> }) => {
+        if (!result?.indicator?.toLowerCase().includes('lead')) return acc;
+        return acc + (Number(result?.values?.[0]?.value) || 0);
+      }, 0)
+    : 0;
+
+  const leadsFromActions = Array.isArray(insight.actions)
+    ? insight.actions.reduce((acc: number, action: { action_type?: string; value?: string }) => {
+        if (!action?.action_type?.toLowerCase().includes('lead')) return acc;
+        return acc + (Number(action?.value) || 0);
+      }, 0)
+    : 0;
+
+  return Math.max(leadsFromResults, leadsFromActions);
+};
+
+const fetchPeriodDataFromMeta = async (
+  startDate: string,
+  endDate: string,
+  _campaignIds?: string[]
+): Promise<PeriodCalculationData> => {
+  const metaAccessToken =
+    process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || '';
+  const metaAccountId =
+    process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID || '';
+
+  if (!metaAccessToken || !metaAccountId) {
+    return { campaigns: [], metrics: calculateAggregatedMetrics([]) };
+  }
+
+  const normalizedAccountId = metaAccountId.startsWith('act_')
+    ? metaAccountId
+    : `act_${metaAccountId}`;
+  const timeRange = encodeURIComponent(JSON.stringify({ since: startDate, until: endDate }));
+
+  const dailyData: Record<string, { leads: number; spend: number; impressions: number; clicks: number }> = {};
+
+  let nextUrl: string | null =
+    `https://graph.facebook.com/v23.0/${normalizedAccountId}/insights?fields=date_start,spend,impressions,clicks,actions,results&time_range=${timeRange}&time_increment=1&limit=500`;
+
+  while (nextUrl) {
+    const insightsRes: Response = await fetch(nextUrl, {
+      headers: { Authorization: `Bearer ${metaAccessToken}` }
+    });
+    const payload = await insightsRes.json();
+    if (!insightsRes.ok) {
+      throw new Error(payload?.error?.message || 'Erro ao buscar insights da Meta');
+    }
+
+    const rows = Array.isArray(payload?.data) ? payload.data : [];
+    rows.forEach((insight: any) => {
+      const date = insight.date_start || insight.date || startDate;
+      if (!dailyData[date]) {
+        dailyData[date] = { leads: 0, spend: 0, impressions: 0, clicks: 0 };
+      }
+      dailyData[date].spend += Number(insight.spend) || 0;
+      dailyData[date].impressions += Number(insight.impressions) || 0;
+      dailyData[date].clicks += Number(insight.clicks) || 0;
+      dailyData[date].leads += aggregateMetaLeads(insight);
+    });
+
+    nextUrl = payload?.paging?.next || null;
+  }
+
+  const campaigns: CampaignData[] = Object.keys(dailyData)
+    .sort()
+    .map(date => {
+      const dayData = dailyData[date];
+      const ctr = dayData.impressions > 0 ? (dayData.clicks / dayData.impressions) * 100 : 0;
+      const cpl = dayData.leads > 0 ? dayData.spend / dayData.leads : 0;
+      return {
+        campaign_id: 'aggregated',
+        campaign_name: `Dados Agregados - ${date}`,
+        date,
+        leads: dayData.leads,
+        spend: dayData.spend,
+        impressions: dayData.impressions,
+        clicks: dayData.clicks,
+        ctr: Number(ctr.toFixed(2)),
+        cpl: Number(cpl.toFixed(2))
+      };
+    });
+
+  return {
+    campaigns,
+    metrics: calculateAggregatedMetrics(campaigns)
+  };
+};
+
 /**
  * Busca dados de performance para um período específico
  */
@@ -42,6 +135,10 @@ const fetchPeriodData = async (
   endDate: string,
   campaignIds?: string[]
 ): Promise<PeriodCalculationData> => {
+  const supabase = createSupabaseClient();
+  if (!supabase) {
+    return fetchPeriodDataFromMeta(startDate, endDate, campaignIds);
+  }
   // CORREÇÃO CRÍTICA: Usar adset_insights ao invés de campaign_insights
   // Esta é a mesma tabela que as APIs /api/performance e /api/performance/forecast usam
       const query = supabase
@@ -64,6 +161,9 @@ const fetchPeriodData = async (
   const { data: insights, error } = await query;
 
   if (error) {
+    if (error.message?.includes('fetch failed')) {
+      return fetchPeriodDataFromMeta(startDate, endDate, campaignIds);
+    }
     throw new Error(`Erro ao buscar dados do período: ${error.message}`);
   }
 

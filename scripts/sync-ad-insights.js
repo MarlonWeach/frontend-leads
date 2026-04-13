@@ -42,7 +42,7 @@ async function syncAdInsights() {
     // Buscar todos os ads ativos
     const { data: ads, error: adsError } = await supabase
       .from('ads')
-      .select('ad_id, name, status')
+      .select('id, name, status')
       .eq('status', 'ACTIVE');
 
     if (adsError) {
@@ -62,9 +62,9 @@ async function syncAdInsights() {
 
     for (const ad of ads) {
       try {
-        console.log(`🔄 Processando ad: ${ad.name} (${ad.ad_id})`);
+        console.log(`🔄 Processando ad: ${ad.name} (${ad.id})`);
         
-        const insights = await fetchAdInsights(ad.ad_id, startDate, endDate);
+        const insights = await fetchAdInsights(ad.id, startDate, endDate);
         
         if (insights.length > 0) {
           // Processar insights diários
@@ -84,7 +84,7 @@ async function syncAdInsights() {
 
             // Preparar dados para inserção
             const insightData = {
-              ad_id: ad.ad_id,
+              ad_id: ad.id,
               date: date,
               spend: parseFloat(insight.spend || 0),
               impressions: parseInt(insight.impressions || 0),
@@ -117,7 +117,7 @@ async function syncAdInsights() {
               });
 
             if (upsertError) {
-              console.error(`Erro ao inserir insight para ad ${ad.ad_id} em ${date}:`, upsertError.message);
+              console.error(`Erro ao inserir insight para ad ${ad.id} em ${date}:`, upsertError.message);
             } else {
               totalInsights++;
             }

@@ -8,7 +8,6 @@ import {
   PerformanceMetric 
 } from '../types/insights';
 import { processMetrics, calculateVariation } from '../utils/performanceAnalysis';
-import { supabase } from '../lib/supabaseClient';
 
 interface UsePerformanceInsightsProps {
   dateRange: DateRange;
@@ -77,99 +76,35 @@ export const usePerformanceInsights = ({
     endDate: toISODate(previous.end)
   }), [previous.start, previous.end]);
 
-  // Buscar dados de performance usando adset_insights (mesma estratégia da API /api/performance)
-  const { data: currentData, isLoading: currentLoading, error: currentError } = useQuery({
-    queryKey: ['performance-insights', 'current', currentFilters],
+  // Buscar dados comparativos via API server-side (evita acesso direto ao Supabase no browser)
+  const {
+    data: comparisonPayload,
+    isLoading: loading,
+    error: combinedError
+  } = useQuery({
+    queryKey: ['performance-insights-comparison', currentFilters],
     queryFn: async () => {
-      
-      const { data, error } = await supabase
-        .from('adset_insights')
-        .select(`
-          adset_id,
-          date,
-          leads,
-          spend,
-          impressions,
-          clicks
-        `)
-        .gte('date', currentFilters.startDate)
-        .lte('date', currentFilters.endDate);
-
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const totalLeads = data.reduce((sum, item) => sum + (Number(item.leads) || 0), 0);
+      const params = new URLSearchParams({
+        startDate: currentFilters.startDate,
+        endDate: currentFilters.endDate,
+        granularity: 'campaign'
+      });
+      const response = await fetch(`/api/performance/comparisons?${params.toString()}`);
+      const result = await response.json();
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Erro ao buscar comparativos de performance');
       }
-      
-      return data || [];
+      return result.data;
     },
     enabled: !!currentFilters.startDate && !!currentFilters.endDate,
-    staleTime: 0, // Sempre buscar dados frescos
-    gcTime: 0  // Não usar cache
+    staleTime: 0,
+    gcTime: 0
   });
-
-  const { data: previousData, isLoading: previousLoading, error: previousError } = useQuery({
-    queryKey: ['performance-insights', 'previous', previousFilters],
-    queryFn: async () => {
-      
-      const { data, error } = await supabase
-        .from('adset_insights')
-        .select(`
-          adset_id,
-          date,
-          leads,
-          spend,
-          impressions,
-          clicks
-        `)
-        .gte('date', previousFilters.startDate)
-        .lte('date', previousFilters.endDate);
-
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const totalLeads = data.reduce((sum, item) => sum + (Number(item.leads) || 0), 0);
-      }
-      
-      return data || [];
-    },
-    enabled: !!previousFilters.startDate && !!previousFilters.endDate,
-    staleTime: 0, // Sempre buscar dados frescos
-    gcTime: 0  // Não usar cache
-  });
-
-  const loading = currentLoading || previousLoading;
-  const combinedError = currentError || previousError;
-
-  // Função para buscar nomes das campanhas
-  const fetchCampaignNames = async (campaignIds: string[]): Promise<Record<string, string>> => {
-    if (campaignIds.length === 0) return {};
-    
-    try {
-      const { data: campaigns, error } = await supabase
-        .from('campaigns')
-        .select('id, name')
-        .in('id', campaignIds);
-
-      if (error) {
-        console.warn('Erro ao buscar nomes das campanhas:', error);
-        return {};
-      }
-
-      const campaignMap: Record<string, string> = {};
-      campaigns?.forEach(campaign => {
-        campaignMap[campaign.id] = campaign.name;
-      });
-
-      return campaignMap;
-    } catch (err) {
-      console.warn('Erro ao buscar nomes das campanhas:', err);
-      return {};
-    }
-  };
 
   useEffect(() => {
-    if (currentData && previousData && !loading) {
+    const currentData = comparisonPayload?.current?.campaigns || [];
+    const previousData = comparisonPayload?.previous?.campaigns || [];
+    if (!loading && comparisonPayload) {
       try {
         // Se não há dados suficientes, criar insights informativos
         if (currentData.length === 0 && previousData.length === 0) {
@@ -209,7 +144,7 @@ export const usePerformanceInsights = ({
         setError('Erro ao calcular insights');
       }
     }
-  }, [currentData, previousData, loading, current.start, current.end, previous.start, previous.end]);
+  }, [comparisonPayload, loading, current.start, current.end, previous.start, previous.end]);
 
   useEffect(() => {
     if (combinedError) {

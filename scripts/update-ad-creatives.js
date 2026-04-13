@@ -1,14 +1,28 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-// Inicializar cliente Supabase
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Configurações
-const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error(
+    'Defina NEXT_PUBLIC_SUPABASE_URL (ou SUPABASE_URL) e SUPABASE_SERVICE_ROLE_KEY no .env.local'
+  );
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const META_ACCESS_TOKEN =
+  process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN;
+
+if (!META_ACCESS_TOKEN) {
+  console.error(
+    'Defina META_ACCESS_TOKEN ou NEXT_PUBLIC_META_ACCESS_TOKEN no .env.local'
+  );
+  process.exit(1);
+}
 
 async function fetchAdCreative(adId) {
   const url = `https://graph.facebook.com/v19.0/${adId}`;
@@ -42,7 +56,7 @@ async function updateAdCreatives() {
     // Buscar todos os ads ativos
     const { data: ads, error: adsError } = await supabase
       .from('ads')
-      .select('ad_id, name, status, creative')
+      .select('id, name, status')
       .eq('status', 'ACTIVE');
 
     if (adsError) {
@@ -56,30 +70,53 @@ async function updateAdCreatives() {
 
     for (const ad of ads) {
       try {
-        console.log(`🔄 Processando ad: ${ad.name} (${ad.ad_id})`);
+        console.log(`🔄 Processando ad: ${ad.name} (${ad.id})`);
         
-        // Verificar se já tem creative completo
-        if (ad.creative && typeof ad.creative === 'object' && ad.creative.body) {
-          console.log(`✅ Ad ${ad.name} já tem creative completo, pulando...`);
+        // Verificar se já tem creative na tabela ad_creatives
+        const { data: existingCreative } = await supabase
+          .from('ad_creatives')
+          .select('id')
+          .eq('ad_id', ad.id)
+          .single();
+        
+        if (existingCreative) {
+          console.log(`✅ Ad ${ad.name} já tem creative, pulando...`);
           processedAds++;
           continue;
         }
         
-        const adData = await fetchAdCreative(ad.ad_id);
+        const adData = await fetchAdCreative(ad.id);
         
         if (adData && adData.adcreatives && adData.adcreatives.data && adData.adcreatives.data.length > 0) {
           const creative = adData.adcreatives.data[0]; // Pegar o primeiro criativo
           
-          // Atualizar o campo creative na tabela ads
-          const { error: updateError } = await supabase
-            .from('ads')
-            .update({ creative: creative })
-            .eq('ad_id', ad.ad_id);
+          // Extrair dados do criativo
+          const creativeData = {
+            ad_id: ad.id,
+            creative_id: creative.id || null,
+            title: creative.title || null,
+            body: creative.body || null,
+            image_url: creative.image_url || null,
+            image_hash: creative.image_hash || null,
+            thumbnail_url: creative.thumbnail_url || null,
+            video_url: creative.video_url || null,
+            slideshow_data: creative.slideshow_spec || null,
+            object_story_spec: creative.object_story_spec || null,
+            call_to_action_type: creative.call_to_action?.type || null,
+            instagram_permalink_url: creative.instagram_permalink_url || null,
+            effective_instagram_media_id: creative.effective_instagram_media_id || null,
+            raw_creative_data: creative
+          };
+          
+          // Salvar na tabela ad_creatives
+          const { error: insertError } = await supabase
+            .from('ad_creatives')
+            .upsert(creativeData, { onConflict: 'ad_id' });
 
-          if (updateError) {
-            console.error(`❌ Erro ao atualizar creative para ad ${ad.ad_id}:`, updateError.message);
+          if (insertError) {
+            console.error(`❌ Erro ao salvar creative para ad ${ad.id}:`, insertError.message);
           } else {
-            console.log(`✅ Creative atualizado para ad ${ad.name}:`, {
+            console.log(`✅ Creative salvo para ad ${ad.name}:`, {
               body: creative.body?.substring(0, 100) + '...',
               image_url: creative.image_url,
               link_url: creative.link_url
