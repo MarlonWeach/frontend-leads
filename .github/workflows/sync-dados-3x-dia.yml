@@ -2,7 +2,7 @@ name: Sync Dados Meta e Supabase 3x ao dia (Paralelizado)
 
 on:
   schedule:
-    - cron: '0 12,15,19 * * *'  # 9h, 12h, 16h horário de Brasília (UTC-3)
+    - cron: '0 12,16,20 * * *'  # 09h, 13h, 17h horário de Brasília (UTC-3)
   workflow_dispatch:
 
 env:

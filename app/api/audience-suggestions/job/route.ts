@@ -7,6 +7,13 @@ import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
+interface AudienceJobResult {
+  adset_id: string;
+  adset_name: string;
+  suggestions_count?: number;
+  error?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('[Audience Suggestions Job] Starting daily analysis...');
@@ -27,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     let totalSuggestions = 0;
-    const results = [];
+    const results: AudienceJobResult[] = [];
 
     // Processar cada adset
     for (const adset of adsets || []) {

@@ -1,7 +1,7 @@
 // Service: budgetAdjustmentService.ts
 // PBI 25 - Task 25-4: Sistema de ajuste de budget com regras de 20%
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import {
   BudgetAdjustmentRequest,
   BudgetAdjustmentResponse,

@@ -135,7 +135,7 @@ async function fetchRealOpenAIUsage(days: number): Promise<BillingResponse | nul
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     
-    const dailyUsage = [];
+    const dailyUsage: UsageData[] = [];
     let totalCost = 0;
     let totalTokens = 0;
     let totalRequests = 0;
@@ -211,7 +211,7 @@ async function fetchRealOpenAIUsage(days: number): Promise<BillingResponse | nul
       const hardLimit = 100;
       const usagePercentage = (totalCost / softLimit) * 100;
 
-      const alerts = [];
+      const alerts: BillingResponse['data']['alerts'] = [];
       if (usagePercentage > 80) {
         alerts.push({
           type: 'warning' as const,
@@ -371,7 +371,7 @@ async function fetchLocalEstimation(days: number): Promise<BillingResponse> {
   const usagePercentage = (totalCost / softLimit) * 100;
 
   // Gerar alertas
-  const alerts = [];
+  const alerts: BillingResponse['data']['alerts'] = [];
   if (usagePercentage > 80) {
     alerts.push({
       type: 'warning' as const,

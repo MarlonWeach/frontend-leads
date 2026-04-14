@@ -2,7 +2,7 @@
 // PBI 25 - Task 25-2: Sistema de cálculo de leads necessários por dia
 // Purpose: Core service for leads calculation algorithms
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import { AdsetGoal } from '../types/goals';
 import {
   CalculationResult,

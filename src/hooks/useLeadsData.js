@@ -18,21 +18,11 @@ export function useLeadsData(filters = {}) {
     try {
       setLoading(true);
       
-      // Buscar leads com joins
+      // Buscar leads da tabela existente no schema atual
       let query = supabase
-        .from('leads')
-        .select(`
-          *,
-          lead_interactions (
-            id,
-            interaction_type,
-            title,
-            description,
-            created_at,
-            completed_at
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .from('meta_leads')
+        .select('*')
+        .order('created_time', { ascending: false });
 
       // Aplicar filtros
       if (filters.status && filters.status !== 'all') {
@@ -52,15 +42,15 @@ export function useLeadsData(filters = {}) {
       // Filtros de data
       if (filters.date_range) {
         const dateLimit = getDateLimit(filters.date_range);
-        query = query.gte('created_at', dateLimit.toISOString());
+        query = query.gte('created_time', dateLimit.toISOString());
       }
 
       if (filters.date_from) {
-        query = query.gte('created_at', filters.date_from);
+        query = query.gte('created_time', filters.date_from);
       }
 
       if (filters.date_to) {
-        query = query.lte('created_at', filters.date_to);
+        query = query.lte('created_time', filters.date_to);
       }
 
       const { data: leads, error } = await query;
@@ -68,10 +58,16 @@ export function useLeadsData(filters = {}) {
       if (error) throw error;
 
       // Calcular métricas
-      const metrics = calculateMetrics(leads || []);
+      const normalizedLeads = (leads || []).map((lead) => ({
+        ...lead,
+        id: lead.id || lead.lead_id,
+        created_at: lead.created_at || lead.created_time,
+        status: lead.status || 'new'
+      }));
+      const metrics = calculateMetrics(normalizedLeads);
 
       // Buscar nomes das campanhas (se disponível)
-      const leadsWithCampaignNames = await enrichWithCampaignNames(leads || []);
+      const leadsWithCampaignNames = await enrichWithCampaignNames(normalizedLeads);
 
       setData({
         leads: leadsWithCampaignNames,

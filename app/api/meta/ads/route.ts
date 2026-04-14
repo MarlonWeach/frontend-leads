@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { logger } from '../../../../src/utils/logger';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,30 +79,47 @@ async function handleRequest(request: NextRequest, isPost: boolean) {
       metricsByAd[insight.ad_id].leads += parseInt(insight.leads || 0);
       metricsByAd[insight.ad_id].dates.push(insight.date);
     }
-    const adIds = Object.keys(metricsByAd).slice(0, limit);
+    let adIds = Object.keys(metricsByAd);
 
     // 3. Buscar identificação dos ads
     const { data: adsData, error: adsError } = await supabase
       .from('ads')
-      .select('ad_id, name, status, campaign_id, adset_id')
-      .in('ad_id', adIds);
+      .select('id, ad_id, name, status, campaign_id, adset_id');
     if (adsError) {
       logger.error({ error: adsError }, 'Erro ao buscar dados dos ads');
       throw new Error(`Erro ao buscar dados dos ads: ${adsError.message}`);
     }
     const adsMap = new Map();
-    adsData?.forEach(ad => adsMap.set(ad.ad_id, ad));
+    adsData?.forEach(ad => {
+      if (ad.ad_id) {
+        adsMap.set(String(ad.ad_id), ad);
+      }
+      if (ad.id) {
+        adsMap.set(String(ad.id), ad);
+      }
+    });
+
+    adIds = adIds
+      .filter(id => {
+        const ad = adsMap.get(String(id));
+        if (!ad) return true;
+        if (campaignId && String(ad.campaign_id) !== String(campaignId)) return false;
+        if (adsetId && String(ad.adset_id) !== String(adsetId)) return false;
+        if (status && status !== 'ALL' && String(ad.status || '').toUpperCase() !== String(status).toUpperCase()) return false;
+        return true;
+      })
+      .slice(0, limit);
 
     // 4. Montar resposta final
     const adsWithMetrics = adIds.map(ad_id => {
-      const ad = adsMap.get(ad_id) || { ad_id, name: '', status: '', campaign_id: null, adset_id: null };
+      const ad = adsMap.get(String(ad_id)) || { id: null, ad_id, name: '', status: '', campaign_id: null, adset_id: null };
       const m = metricsByAd[ad_id];
       const ctr = m.impressions > 0 ? (m.clicks / m.impressions) * 100 : 0;
       const cpc = m.clicks > 0 ? m.spend / m.clicks : 0;
       const cpm = m.impressions > 0 ? (m.spend / m.impressions) * 1000 : 0;
       const cpl = m.leads > 0 ? m.spend / m.leads : 0;
       return {
-        ad_id: ad.ad_id,
+        ad_id: ad.ad_id || ad_id,
         name: ad.name,
         status: ad.status,
         campaign_id: ad.campaign_id,

@@ -121,17 +121,23 @@ export const useAdsetsData = ({
   // Calcular métricas derivadas
   const metrics = {
     ...aggregatedMetrics,
-    ctr: aggregatedMetrics.impressions > 0 
-      ? (aggregatedMetrics.clicks / aggregatedMetrics.impressions) * 100 
+    averageCTR: aggregatedMetrics.totalImpressions > 0
+      ? (aggregatedMetrics.totalClicks / aggregatedMetrics.totalImpressions) * 100
       : 0,
-    cpc: aggregatedMetrics.clicks > 0 
-      ? aggregatedMetrics.spend / aggregatedMetrics.clicks 
+    averageCPL: aggregatedMetrics.totalLeads > 0
+      ? aggregatedMetrics.totalSpend / aggregatedMetrics.totalLeads
       : 0,
-    cpm: aggregatedMetrics.impressions > 0 
-      ? (aggregatedMetrics.spend / aggregatedMetrics.impressions) * 1000 
+    ctr: aggregatedMetrics.totalImpressions > 0 
+      ? (aggregatedMetrics.totalClicks / aggregatedMetrics.totalImpressions) * 100 
       : 0,
-    conversionRate: aggregatedMetrics.clicks > 0 
-      ? (aggregatedMetrics.totalLeads / aggregatedMetrics.clicks) * 100 
+    cpc: aggregatedMetrics.totalClicks > 0 
+      ? aggregatedMetrics.totalSpend / aggregatedMetrics.totalClicks 
+      : 0,
+    cpm: aggregatedMetrics.totalImpressions > 0 
+      ? (aggregatedMetrics.totalSpend / aggregatedMetrics.totalImpressions) * 1000 
+      : 0,
+    conversionRate: aggregatedMetrics.totalClicks > 0 
+      ? (aggregatedMetrics.totalLeads / aggregatedMetrics.totalClicks) * 100 
       : 0,
   };
 

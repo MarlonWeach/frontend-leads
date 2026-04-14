@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Gerar timeline se solicitado
-    let timeline = undefined;
+    let timeline: BudgetAdjustmentStatsResponse['timeline'] = undefined;
     if (query.group_by && logs && logs.length > 0) {
       const groupedData = new Map();
       

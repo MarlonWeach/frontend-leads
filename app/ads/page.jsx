@@ -16,8 +16,8 @@ export default function AdsPage() {
   
   const [filters, setFilters] = useState({
     status: 'ACTIVE',
-    startDate: '2025-07-24',
-    endDate: '2025-07-30',
+    startDate: '',
+    endDate: '',
     campaignId: '',
     adsetId: ''
   });
@@ -242,6 +242,17 @@ export default function AdsPage() {
   useEffect(() => {
     setSortConfig({ key: 'spend', direction: 'desc' });
   }, []);
+
+  // Aplicar preset padrão (últimos 7 dias) ao montar
+  useEffect(() => {
+    const range = datePresets[2].getRange();
+    setFilters(prev => ({
+      ...prev,
+      startDate: range.start,
+      endDate: range.end
+    }));
+    setSelectedPreset(2);
+  }, [datePresets]);
 
   if (error) {
     return (

@@ -1,7 +1,7 @@
 // Service: audienceSuggestionService.ts
 // PBI 25 - Task 25-6: Audience Suggestions System
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import {
   AudienceSuggestion,
   AudienceSuggestionLog,

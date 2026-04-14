@@ -4,9 +4,23 @@ import { supabase } from '../lib/supabaseClient';
 
 export function useCampaignsData(dateFrom, dateTo) {
   const [campaigns, setCampaigns] = useState([]);
+  const [summaryMetrics, setSummaryMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+
+  const withTimeout = async (promise, timeoutMs = 15000) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Tempo limite excedido ao buscar dados')), timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
 
   const fetchCampaigns = useCallback(async () => {
     if (!dateFrom || !dateTo) return;
@@ -20,71 +34,58 @@ export function useCampaignsData(dateFrom, dateTo) {
       const accountId = process.env.NEXT_PUBLIC_META_ACCOUNT_ID || process.env.META_ACCOUNT_ID;
       
       if (!accessToken || !accountId) {
-        console.error('Variáveis de ambiente:', {
-          accessToken: accessToken ? 'Configurado' : 'Não configurado',
-          accountId: accountId ? 'Configurado' : 'Não configurado'
-        });
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Variáveis de ambiente da Meta API:', {
+            accessToken: accessToken ? 'Configurado' : 'Não configurado',
+            accountId: accountId ? 'Configurado' : 'Não configurado'
+          });
+        }
         
-        // Em produção, buscar dados do Supabase em vez de retornar vazio
+        // Em produção, buscar do endpoint server-side para evitar travas no client.
         if (process.env.NODE_ENV === 'production') {
-          console.warn('Meta API não configurada em produção - buscando dados do Supabase');
-          
           try {
-            
-            // Buscar campanhas do Supabase
-            const { data: campaignsData, error: campaignsError } = await supabase
-              .from('campaigns')
-              .select('*')
-              .eq('status', 'ACTIVE')
-              .order('created_at', { ascending: false });
-            
-            if (campaignsError) {
-              console.error('Erro ao buscar campanhas do Supabase:', campaignsError);
-              setCampaigns([]);
-            } else {
-              // Buscar insights agregados para o período
-              const { data: insightsData, error: insightsError } = await supabase
-                .from('campaign_insights')
-                .select('*')
-                .gte('date_start', dateFrom.split('T')[0])
-                .lte('date_stop', dateTo.split('T')[0]);
-              
-              if (insightsError) {
-                console.error('Erro ao buscar insights do Supabase:', insightsError);
-              }
-              
-              // Combinar campanhas com insights
-              const campaignsWithInsights = campaignsData.map(campaign => {
-                const campaignInsights = insightsData?.filter(insight => insight.campaign_id === campaign.id) || [];
-                
-                // Agregar insights do período
-                const aggregatedInsights = campaignInsights.reduce((acc, insight) => {
-                  acc.spend += parseFloat(insight.spend || 0);
-                  acc.impressions += parseInt(insight.impressions || 0);
-                  acc.clicks += parseInt(insight.clicks || 0);
-                  acc.leads += parseInt(insight.leads || 0);
-                  return acc;
-                }, { spend: 0, impressions: 0, clicks: 0, leads: 0 });
-                
-                return {
-                  id: campaign.id,
-                  name: campaign.name,
-                  status: campaign.status,
-                  effective_status: campaign.effective_status,
-                  created_time: campaign.created_time,
-                  updated_time: campaign.updated_time,
-                  objective: campaign.objective,
-                  ...aggregatedInsights,
-                  ctr: aggregatedInsights.impressions > 0 ? (aggregatedInsights.clicks / aggregatedInsights.impressions) * 100 : 0,
-                  cpl: aggregatedInsights.leads > 0 ? aggregatedInsights.spend / aggregatedInsights.leads : 0,
-                  is_active: campaign.effective_status === 'ACTIVE' || campaign.status === 'ACTIVE'
-                };
-              });
-              
-              setCampaigns(campaignsWithInsights);
+            const startDate = dateFrom.split('T')[0];
+            const endDate = dateTo.split('T')[0];
+
+            const response = await withTimeout(
+              fetch(`/api/performance?startDate=${startDate}&endDate=${endDate}&page=1&limit=500&status=ALL`)
+            );
+            const payload = await response.json();
+
+            if (!response.ok || payload?.error) {
+              throw new Error(payload?.details || payload?.error || 'Falha ao buscar performance');
             }
+
+            const mappedCampaigns = (payload.campaigns || []).map((item) => ({
+              id: item.id,
+              name: item.campaign_name || item.name || item.id,
+              status: item.status || 'ACTIVE',
+              effective_status: item.status || 'ACTIVE',
+              spend: Number(item.spend || 0),
+              impressions: Number(item.impressions || 0),
+              clicks: Number(item.clicks || 0),
+              leads: Number(item.leads || 0),
+              ctr: Number(item.ctr || 0),
+              cpl: Number(item.cpl || 0),
+              is_active: (item.status || '').toUpperCase() === 'ACTIVE'
+            }));
+
+            const apiMetrics = payload.metrics || {};
+            setSummaryMetrics({
+              total: payload.pagination?.total || mappedCampaigns.length,
+              active: mappedCampaigns.filter(c => c.is_active).length,
+              spend: apiMetrics.totalSpend || 0,
+              impressions: apiMetrics.totalImpressions || 0,
+              clicks: apiMetrics.totalClicks || 0,
+              leads: apiMetrics.totalLeads || 0,
+              ctr: apiMetrics.averageCTR || 0,
+              cpl: apiMetrics.averageCPL || 0
+            });
+            setCampaigns(mappedCampaigns);
+            setLastUpdate(new Date());
           } catch (error) {
-            console.error('Erro ao buscar dados do Supabase:', error);
+            console.error('Erro ao buscar dados do dashboard no endpoint server:', error);
+            setSummaryMetrics(null);
             setCampaigns([]);
           }
           
@@ -172,6 +173,7 @@ export function useCampaignsData(dateFrom, dateTo) {
       );
 
       setCampaigns(campaignsWithInsights);
+      setSummaryMetrics(null);
       setLastUpdate(new Date());
     } catch (err) {
       setError(err.message);
@@ -191,6 +193,7 @@ export function useCampaignsData(dateFrom, dateTo) {
 
   return {
     campaigns,
+    summaryMetrics,
     loading,
     error,
     lastUpdate,

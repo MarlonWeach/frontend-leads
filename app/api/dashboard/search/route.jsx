@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { logger } from "../../../../src/utils/logger";
 import { serverCache, CacheType } from '../../../../src/utils/server-cache';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 
 export async function GET() {
   try {

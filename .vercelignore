@@ -26,7 +26,6 @@ README.md
 jest.config.js
 jest.setup.js
 playwright.config.ts
-tsconfig.json
 
 # Arquivos de log
 *.log

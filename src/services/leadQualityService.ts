@@ -1,7 +1,7 @@
 // Service: leadQualityService.ts
 // PBI 25 - Task 25-5: Lead Quality Scoring System
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import {
   LeadQualityScore,
   LeadQualityLog,

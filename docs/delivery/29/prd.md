@@ -43,7 +43,7 @@ Não aplicável neste PBI (avaliação e documentação técnica). Pode haver im
 - Plano Supabase (Free/Pro) afeta PITR e network restrictions?
 
 ## Related Tasks
-- [tasks.md](./tasks.md) — 29-1 (em andamento) a 29-4.
+- [tasks.md](./tasks.md) — 29-1 a 29-5 (endurecimento DB em [29-5.md](./29-5.md)).
 - Rascunho de achados: [security-assessment-2026-04-13.md](./security-assessment-2026-04-13.md).
 
 [Back to Backlog](../backlog.md)

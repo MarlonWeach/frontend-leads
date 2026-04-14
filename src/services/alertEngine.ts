@@ -1,7 +1,7 @@
 // Service: alertEngine.ts
 // PBI 25 - Task 25-10: Sistema de Alertas Inteligentes
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import {
   AlertRule,
   AlertType,

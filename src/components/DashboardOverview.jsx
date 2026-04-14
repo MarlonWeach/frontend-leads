@@ -142,10 +142,14 @@ export default function DashboardOverview() {
   }, [period]);
 
   const { startDate, endDate } = getDateRange();
-  const { campaigns, loading, error, refreshCampaigns } = useCampaignsData(startDate, endDate);
+  const { campaigns, summaryMetrics, loading, error, refreshCampaigns } = useCampaignsData(startDate, endDate);
 
   // Métricas agregadas
   const metrics = useMemo(() => {
+    if (summaryMetrics) {
+      return summaryMetrics;
+    }
+
     if (!campaigns || campaigns.length === 0) {
       return {
         total: 0,
@@ -167,7 +171,7 @@ export default function DashboardOverview() {
     const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
     const cpl = leads > 0 ? spend / leads : 0;
     return { total, active, spend, impressions, clicks, leads, ctr, cpl };
-  }, [campaigns]);
+  }, [campaigns, summaryMetrics]);
 
   // Dados para gráficos
   const pieData = useMemo(() => {

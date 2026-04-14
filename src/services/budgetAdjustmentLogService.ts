@@ -1,7 +1,7 @@
 // Service: budgetAdjustmentLogService.ts
 // PBI 25 - Task 25-8: Sistema de Logs e Controle de Ajustes
 
-import { supabase } from '../lib/supabaseClient';
+import { supabaseServer as supabase } from '../lib/supabaseServer';
 import {
   BudgetAdjustmentLog,
   BudgetAdjustmentStats,

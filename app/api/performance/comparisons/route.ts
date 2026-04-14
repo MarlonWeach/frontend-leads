@@ -244,10 +244,10 @@ const validateParams = (
     };
   }
 
-  if (start >= end) {
+  if (start > end) {
     return {
       isValid: false,
-      error: 'Data de início deve ser anterior à data de fim'
+      error: 'Data de início deve ser anterior ou igual à data de fim'
     };
   }
 
