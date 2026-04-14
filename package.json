@@ -19,6 +19,7 @@
     "lint:fix": "next lint --fix",
     "audit:daily": "node scripts/audit-daily.js",
     "audit:run": "node scripts/audit-daily.js",
+    "audit:comparisons": "node scripts/audit-comparisons-parity.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
