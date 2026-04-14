@@ -241,6 +241,7 @@ export async function GET(request: NextRequest) {
       .from('adset_insights')
       .select(`
         adset_id,
+        campaign_id,
         date,
         leads,
         spend,
@@ -259,7 +260,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar adsets para obter campaign_id
-    const adsetIds = Array.from(new Set((periodData || []).map(d => d.adset_id)));
+    const adsetIds = Array.from(new Set((periodData || []).map(d => d.adset_id).filter(Boolean)));
     const { data: adsets, error: adsetsError } = await supabase
       .from('adsets')
       .select('id, campaign_id')
@@ -280,17 +281,17 @@ export async function GET(request: NextRequest) {
     });
 
     // Buscar campanhas
-    const campaignIds = Array.from(new Set(adsetToCampaignMap.values())).filter(id => id);
-    let campaignsQuery = supabase
+    const campaignIdsFromInsights = Array.from(
+      new Set((periodData || []).map(d => d.campaign_id).filter(Boolean))
+    );
+    const campaignIdsFromAdsets = Array.from(new Set(adsetToCampaignMap.values())).filter(id => id);
+    const campaignIds = Array.from(new Set([...campaignIdsFromInsights, ...campaignIdsFromAdsets]));
+    const campaignsQuery = supabase
       .from('campaigns')
       .select('id, name, status');
 
-    if (status !== 'ALL') {
-      campaignsQuery = campaignsQuery.eq('status', status);
-    }
-
     if (campaignIds.length > 0) {
-      campaignsQuery = campaignsQuery.in('id', campaignIds);
+      campaignsQuery.in('id', campaignIds);
     }
 
     const { data: campaigns, error: campaignsError } = await campaignsQuery;
@@ -307,28 +308,32 @@ export async function GET(request: NextRequest) {
     const campaignDataMap = new Map();
     
     (periodData || []).forEach(insight => {
-      const campaignId = adsetToCampaignMap.get(insight.adset_id);
+      const campaignId = insight.campaign_id || adsetToCampaignMap.get(insight.adset_id);
       if (campaignId) {
         const campaign = campaigns?.find(c => c.id === campaignId);
-        if (campaign) {
-          if (!campaignDataMap.has(campaignId)) {
-            campaignDataMap.set(campaignId, {
-              campaign_id: campaignId,
-              campaign_name: campaign.name,
-              campaign_status: campaign.status,
-              total_leads: 0,
-              total_spend: 0,
-              total_impressions: 0,
-              total_clicks: 0
-            });
-          }
-          
-          const data = campaignDataMap.get(campaignId);
-          data.total_leads += Number(insight.leads) || 0;
-          data.total_spend += Number(insight.spend) || 0;
-          data.total_impressions += Number(insight.impressions) || 0;
-          data.total_clicks += Number(insight.clicks) || 0;
+        const campaignStatus = campaign?.status || 'UNKNOWN';
+
+        if (status !== 'ALL' && campaignStatus !== status) {
+          return;
         }
+
+        if (!campaignDataMap.has(campaignId)) {
+          campaignDataMap.set(campaignId, {
+            campaign_id: campaignId,
+            campaign_name: campaign?.name || campaignId,
+            campaign_status: campaignStatus,
+            total_leads: 0,
+            total_spend: 0,
+            total_impressions: 0,
+            total_clicks: 0
+          });
+        }
+
+        const data = campaignDataMap.get(campaignId);
+        data.total_leads += Number(insight.leads) || 0;
+        data.total_spend += Number(insight.spend) || 0;
+        data.total_impressions += Number(insight.impressions) || 0;
+        data.total_clicks += Number(insight.clicks) || 0;
       }
     });
 

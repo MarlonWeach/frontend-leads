@@ -45,7 +45,7 @@ export default function PerformancePageClient() {
     const today = new Date();
     const todayStr = formatInTimeZone(today, 'America/Sao_Paulo', 'yyyy-MM-dd');
     return {
-      status: 'ACTIVE',
+      status: 'ALL',
       startDate: todayStr,
       endDate: todayStr,
       page: 1,
