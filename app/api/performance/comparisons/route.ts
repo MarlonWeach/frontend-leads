@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabaseServer';
 
 // Forçar rota dinâmica para evitar erro de renderização estática
 export const dynamic = 'force-dynamic';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 import { 
   calculateComparisons, 
@@ -19,39 +15,29 @@ import {
 import { ComparisonResponse, CampaignData } from '../../../../src/types/comparisons';
 import { serverCache } from '../../../../src/utils/server-cache';
 
-const CACHE_TTL = 5 * 60; // 5 minutos
-
-const createSupabaseClient = () => {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-  return createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 0
-      }
-    }
-  });
-};
+const CACHE_TTL = 0; // Desabilitado temporariamente para evitar divergências por stale cache no heatmap
 
 const aggregateMetaLeads = (insight: any): number => {
-  const leadsFromResults = Array.isArray(insight.results)
-    ? insight.results.reduce((acc: number, result: { indicator?: string; values?: Array<{ value?: string }> }) => {
-        if (!result?.indicator?.toLowerCase().includes('lead')) return acc;
-        return acc + (Number(result?.values?.[0]?.value) || 0);
-      }, 0)
-    : 0;
+  const actionRows = Array.isArray(insight.actions) ? insight.actions : [];
+  const preferredAction = actionRows.find(
+    (action: { action_type?: string }) => action?.action_type === 'onsite_conversion.lead_grouped'
+  );
+  if (preferredAction) {
+    return Number(preferredAction.value) || 0;
+  }
 
-  const leadsFromActions = Array.isArray(insight.actions)
-    ? insight.actions.reduce((acc: number, action: { action_type?: string; value?: string }) => {
-        if (!action?.action_type?.toLowerCase().includes('lead')) return acc;
-        return acc + (Number(action?.value) || 0);
-      }, 0)
-    : 0;
+  const resultRows = Array.isArray(insight.results) ? insight.results : [];
+  const preferredResult = resultRows.find(
+    (result: { indicator?: string }) => String(result?.indicator || '').toLowerCase() === 'leads'
+  );
+  if (preferredResult) {
+    return Number(preferredResult?.values?.[0]?.value) || 0;
+  }
 
-  return Math.max(leadsFromResults, leadsFromActions);
+  const fallbackAction = actionRows.find(
+    (action: { action_type?: string }) => String(action?.action_type || '').toLowerCase().includes('lead')
+  );
+  return fallbackAction ? Number(fallbackAction.value) || 0 : 0;
 };
 
 const fetchPeriodDataFromMeta = async (
@@ -135,10 +121,6 @@ const fetchPeriodData = async (
   endDate: string,
   campaignIds?: string[]
 ): Promise<PeriodCalculationData> => {
-  const supabase = createSupabaseClient();
-  if (!supabase) {
-    return fetchPeriodDataFromMeta(startDate, endDate, campaignIds);
-  }
   // CORREÇÃO CRÍTICA: Usar adset_insights ao invés de campaign_insights
   // Esta é a mesma tabela que as APIs /api/performance e /api/performance/forecast usam
       const query = supabase
@@ -167,50 +149,103 @@ const fetchPeriodData = async (
     throw new Error(`Erro ao buscar dados do período: ${error.message}`);
   }
 
-  // Agrupar dados por data para ter métricas diárias agregadas
-  const dailyData: { [date: string]: any } = {};
-  
-  (insights || []).forEach(insight => {
-    const date = insight.date;
-    if (!dailyData[date]) {
-      dailyData[date] = {
+  const adsetIds = Array.from(
+    new Set((insights || []).map((insight: { adset_id?: string }) => insight.adset_id).filter(Boolean))
+  ) as string[];
+
+  const adsetToCampaignMap = new Map<string, string>();
+  const campaignNameMap = new Map<string, string>();
+
+  if (adsetIds.length > 0) {
+    const { data: adsets, error: adsetsError } = await supabase
+      .from('adsets')
+      .select('id,campaign_id')
+      .in('id', adsetIds);
+
+    if (adsetsError) {
+      throw new Error(`Erro ao mapear adsets para campanhas: ${adsetsError.message}`);
+    }
+
+    const mappedCampaignIds = Array.from(
+      new Set((adsets || []).map((adset: { campaign_id?: string }) => adset.campaign_id).filter(Boolean))
+    ) as string[];
+
+    (adsets || []).forEach((adset: { id: string; campaign_id?: string }) => {
+      if (adset.campaign_id) {
+        adsetToCampaignMap.set(adset.id, adset.campaign_id);
+      }
+    });
+
+    if (mappedCampaignIds.length > 0) {
+      const { data: campaigns, error: campaignsError } = await supabase
+        .from('campaigns')
+        .select('id,name')
+        .in('id', mappedCampaignIds);
+
+      if (campaignsError) {
+        throw new Error(`Erro ao mapear nomes de campanhas: ${campaignsError.message}`);
+      }
+
+      (campaigns || []).forEach((campaign: { id: string; name?: string }) => {
+        campaignNameMap.set(campaign.id, campaign.name || campaign.id);
+      });
+    }
+  }
+
+  const groupedByDateCampaign = new Map<string, {
+    campaign_id: string;
+    campaign_name: string;
+    date: string;
+    leads: number;
+    spend: number;
+    impressions: number;
+    clicks: number;
+  }>();
+
+  (insights || []).forEach((insight: {
+    adset_id?: string;
+    date: string;
+    leads?: number | string;
+    spend?: number | string;
+    impressions?: number | string;
+    clicks?: number | string;
+  }) => {
+    const campaignId = insight.adset_id ? adsetToCampaignMap.get(insight.adset_id) : undefined;
+    if (!campaignId) return;
+    if (campaignIds?.length && !campaignIds.includes(campaignId)) return;
+
+    const key = `${insight.date}::${campaignId}`;
+    if (!groupedByDateCampaign.has(key)) {
+      groupedByDateCampaign.set(key, {
+        campaign_id: campaignId,
+        campaign_name: campaignNameMap.get(campaignId) || campaignId,
+        date: insight.date,
         leads: 0,
         spend: 0,
         impressions: 0,
         clicks: 0
-      };
+      });
     }
-    
-    dailyData[date].leads += Number(insight.leads) || 0;
-    dailyData[date].spend += Number(insight.spend) || 0;
-    dailyData[date].impressions += Number(insight.impressions) || 0;
-    dailyData[date].clicks += Number(insight.clicks) || 0;
+
+    const entry = groupedByDateCampaign.get(key)!;
+    entry.leads += Number(insight.leads) || 0;
+    entry.spend += Number(insight.spend) || 0;
+    entry.impressions += Number(insight.impressions) || 0;
+    entry.clicks += Number(insight.clicks) || 0;
   });
 
-  // Converter para formato de campanhas (simulando uma campanha agregada)
-  const campaignData: CampaignData[] = Object.keys(dailyData).map(date => {
-    const dayData = dailyData[date];
-    const leads = dayData.leads;
-    const spend = dayData.spend;
-    const impressions = dayData.impressions;
-    const clicks = dayData.clicks;
-    
-    // Calcular métricas derivadas
-    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-    const cpl = leads > 0 ? spend / leads : 0;
-    
-    return {
-      campaign_id: 'aggregated',
-      campaign_name: `Dados Agregados - ${date}`,
-      date: date,
-      leads,
-      spend,
-      impressions,
-      clicks,
-      ctr: Number(ctr.toFixed(2)),
-      cpl: Number(cpl.toFixed(2))
-    };
-  });
+  const campaignData: CampaignData[] = Array.from(groupedByDateCampaign.values())
+    .map(entry => {
+      const ctr = entry.impressions > 0 ? (entry.clicks / entry.impressions) * 100 : 0;
+      const cpl = entry.leads > 0 ? entry.spend / entry.leads : 0;
+
+      return {
+        ...entry,
+        ctr: Number(ctr.toFixed(2)),
+        cpl: Number(cpl.toFixed(2))
+      };
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const metrics = calculateAggregatedMetrics(campaignData);
 
@@ -279,14 +314,8 @@ export async function GET(request: NextRequest) {
       ? campaignIdsParam.split(',').map(id => id.trim())
       : undefined;
 
-    // Verificar cache primeiro
+    // Cache desabilitado para garantir reconciliação fiel após backfills
     const cacheKey = generateCacheKey(startDate!, endDate!, granularity, campaignIds);
-    const cached = await serverCache.get(cacheKey);
-    
-    if (cached) {
-      console.log(`Cache hit para comparisons: ${cacheKey}`);
-      return NextResponse.json(cached);
-    }
 
     console.log(`🔍 Comparisons API: Buscando dados para ${startDate} até ${endDate}`);
 
@@ -331,9 +360,10 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Cachear resultado
-    await serverCache.set(cacheKey, response, CACHE_TTL);
-    console.log(`💾 Resultado cacheado: ${cacheKey}`);
+    if (CACHE_TTL > 0) {
+      await serverCache.set(cacheKey, response, CACHE_TTL);
+      console.log(`💾 Resultado cacheado: ${cacheKey}`);
+    }
 
     return NextResponse.json(response);
 

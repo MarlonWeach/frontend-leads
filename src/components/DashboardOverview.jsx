@@ -5,6 +5,7 @@ import { useCampaignsData } from '../hooks/useCampaignsData';
 import { useMetaActivities } from '../hooks/useMetaActivities';
 import { TrendingUp, Users, Target, DollarSign, Eye, MousePointer, CheckCircle, Clock, Layers, TrendingDown } from 'lucide-react';
 import { Card } from './ui/card';
+import { formatInTimeZone } from 'date-fns-tz';
 import LoadingState from './ui/LoadingState';
 import ErrorMessage from './ui/ErrorMessage';
 import ChartContainer from './ui/ChartContainer';
@@ -42,6 +43,7 @@ const PERIODS = [
   { key: '7d', label: '7 dias' },
   { key: '30d', label: '30 dias' }
 ];
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
 
 const ALL_EVENT_TYPES = [
   "ad_account_billing_charge",
@@ -123,20 +125,20 @@ export default function DashboardOverview() {
   const getDateRange = useCallback(() => {
     const now = new Date();
     let startDate, endDate;
-    endDate = now.toISOString().split('T')[0];
+    endDate = formatInTimeZone(now, SAO_PAULO_TZ, 'yyyy-MM-dd');
     if (period === 'ontem') {
       const y = new Date(now);
-      y.setDate(now.getDate() - 1);
-      startDate = y.toISOString().split('T')[0];
+      y.setDate(y.getDate() - 1);
+      startDate = formatInTimeZone(y, SAO_PAULO_TZ, 'yyyy-MM-dd');
       endDate = startDate;
     } else if (period === '7d') {
       const w = new Date(now);
-      w.setDate(now.getDate() - 6);
-      startDate = w.toISOString().split('T')[0];
+      w.setDate(w.getDate() - 6);
+      startDate = formatInTimeZone(w, SAO_PAULO_TZ, 'yyyy-MM-dd');
     } else {
       const m = new Date(now);
-      m.setDate(now.getDate() - 29);
-      startDate = m.toISOString().split('T')[0];
+      m.setDate(m.getDate() - 29);
+      startDate = formatInTimeZone(m, SAO_PAULO_TZ, 'yyyy-MM-dd');
     }
     return { startDate, endDate };
   }, [period]);

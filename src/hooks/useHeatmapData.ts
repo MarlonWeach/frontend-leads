@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, getDay } from 'date-fns';
+import { format, getDay } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import type { 
   HeatmapData, 
@@ -7,6 +8,21 @@ import type {
   ProcessedHeatmapData,
   HeatmapMetric
 } from '../types/heatmap';
+
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
+const toDateKey = (date: Date) => formatInTimeZone(date, SAO_PAULO_TZ, 'yyyy-MM-dd');
+const parseDateKey = (dateKey: string) => new Date(`${dateKey}T12:00:00Z`);
+const listDateKeys = (startKey: string, endKey: string): string[] => {
+  const keys: string[] = [];
+  const current = new Date(`${startKey}T00:00:00Z`);
+  const end = new Date(`${endKey}T00:00:00Z`);
+  while (current <= end) {
+    keys.push(current.toISOString().slice(0, 10));
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+  return keys;
+};
 
 export const HEATMAP_METRICS: HeatmapMetric[] = [
   {
@@ -99,20 +115,23 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
       setError(null);
 
       try {
-        const startDate = format(filters.startDate, 'yyyy-MM-dd');
-        const endDate = format(filters.endDate, 'yyyy-MM-dd');
+        const startDate = toDateKey(filters.startDate);
+        const endDate = toDateKey(filters.endDate);
 
         const params = new URLSearchParams({
           startDate,
           endDate,
-          granularity: 'campaign'
+          granularity: 'campaign',
+          _ts: String(Date.now())
         });
 
         if (filters.campaignIds?.length) {
           params.set('campaignIds', filters.campaignIds.join(','));
         }
 
-        const response = await fetch(`/api/performance/comparisons?${params.toString()}`);
+        const response = await fetch(`/api/performance/comparisons?${params.toString()}`, {
+          cache: 'no-store'
+        });
         const result = await response.json();
 
         if (!response.ok || !result?.success) {
@@ -144,11 +163,10 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
       };
     }
 
-    // Gerar todos os dias no período
-    const allDays = eachDayOfInterval({
-      start: filters.startDate,
-      end: filters.endDate
-    });
+    // Gerar todos os dias por chave estável (sem depender de timezone local do browser)
+    const startKey = toDateKey(filters.startDate);
+    const endKey = toDateKey(filters.endDate);
+    const allDateKeys = listDateKeys(startKey, endKey);
 
     // Agrupar dados por data
     const dataByDate = rawData.reduce((acc: Record<string, any[]>, item) => {
@@ -162,8 +180,7 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
     }, {});
 
     // Criar dados do heatmap
-    const heatmapData: HeatmapData[] = allDays.map(day => {
-      const dateStr = format(day, 'yyyy-MM-dd');
+    const heatmapData: HeatmapData[] = allDateKeys.map(dateStr => {
       const dayData = dataByDate[dateStr] || [];
 
       // Agregar métricas do dia
@@ -253,7 +270,7 @@ export const useHeatmapData = (filters: HeatmapFilters) => {
     let currentWeek: HeatmapData[] = [];
 
     heatmapData.forEach((day, index) => {
-      const dayOfWeek = getDay(new Date(day.date));
+      const dayOfWeek = getDay(parseDateKey(day.date));
       
       // Começar nova semana na segunda-feira (1)
       if (dayOfWeek === 1 && currentWeek.length > 0) {

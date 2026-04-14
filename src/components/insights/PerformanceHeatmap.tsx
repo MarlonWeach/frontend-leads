@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, getDay } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, TrendingUp, TrendingDown, Minus, Eye } from 'lucide-react';
 import { useHeatmapData, HEATMAP_METRICS } from '../../hooks/useHeatmapData';
@@ -21,6 +22,9 @@ const PERIOD_OPTIONS = [
   { label: 'Últimos 60 dias', days: 60 },
   { label: 'Últimos 90 dias', days: 90 },
 ];
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+const parseDateKey = (dateKey: string) => new Date(`${dateKey}T12:00:00Z`);
+const toDateKey = (date: Date) => formatInTimeZone(date, SAO_PAULO_TZ, 'yyyy-MM-dd');
 
 export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
   filters,
@@ -58,7 +62,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
 
   // Preparar dados do tooltip
   const getTooltipData = (day: HeatmapData): HeatmapTooltipData => {
-    const date = new Date(day.date);
+    const date = parseDateKey(day.date);
     const weekday = format(date, 'EEEE', { locale: ptBR });
     
     return {
@@ -74,10 +78,12 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
 
   // Renderizar célula do heatmap
   const renderHeatmapCell = (day: HeatmapData, index: number) => {
-    const date = new Date(day.date);
+    const date = parseDateKey(day.date);
     const dayOfMonth = format(date, 'd');
     const backgroundColor = getColor(day.value);
-    const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+    const isToday =
+      formatInTimeZone(date, SAO_PAULO_TZ, 'yyyy-MM-dd') ===
+      formatInTimeZone(new Date(), SAO_PAULO_TZ, 'yyyy-MM-dd');
     const isSelected = selectedDay === day.date;
     
     // Função para toggle do preview
@@ -226,6 +232,16 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
     );
   };
 
+  const gridCells = useMemo(() => {
+    if (!data.data.length) return [];
+    const firstDate = parseDateKey(data.data[0].date);
+    const leadingEmptyCells = getDay(firstDate);
+    return [
+      ...Array.from({ length: leadingEmptyCells }, (_, idx) => ({ type: 'empty' as const, key: `empty-${idx}` })),
+      ...data.data.map((day, idx) => ({ type: 'day' as const, day, key: `${day.date}-${idx}` }))
+    ];
+  }, [data.data]);
+
   // Renderizar estatísticas
   const renderStats = () => {
     if (!data.stats || data.data.length === 0) return null;
@@ -289,11 +305,13 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
             const end = new Date();
             const start = new Date();
             start.setDate(end.getDate() - days + 1);
+            const normalizedStart = parseDateKey(toDateKey(start));
+            const normalizedEnd = parseDateKey(toDateKey(end));
             
             onFiltersChange({ 
               period: days,
-              startDate: start,
-              endDate: end
+              startDate: normalizedStart,
+              endDate: normalizedEnd
             });
           }}
           className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -422,7 +440,12 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
 
         {/* Grid do heatmap com espaçamento extra para previews */}
         <div className={`grid grid-cols-7 ${layoutConfig.cellSpacing} auto-rows-min pb-20`}>
-          {data.data.map((day, index) => renderHeatmapCell(day, index))}
+          {gridCells.map((cell, index) => {
+            if (cell.type === 'empty') {
+              return <div key={cell.key} className={layoutConfig.cellSize} />;
+            }
+            return renderHeatmapCell(cell.day, index);
+          })}
         </div>
       </div>
 

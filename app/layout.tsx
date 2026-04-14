@@ -28,12 +28,25 @@ export default function RootLayout({
           {children}
         </QueryProvider>
         <SpeedInsights />
-        {/* Registrar Service Worker */}
+        {/* Service Worker apenas em produção; em localhost remove registros antigos */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
+                  var isLocalhost =
+                    location.hostname === 'localhost' ||
+                    location.hostname === '127.0.0.1';
+
+                  if (isLocalhost) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      registrations.forEach(function(registration) {
+                        registration.unregister();
+                      });
+                    });
+                    return;
+                  }
+
                   navigator.serviceWorker.register('/service-worker.js')
                     .then(function(registration) {
                       console.log('ServiceWorker registrado com sucesso:', registration.scope);

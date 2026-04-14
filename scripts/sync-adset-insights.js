@@ -18,11 +18,42 @@ if (!SUPABASE_URL || !SUPABASE_KEY || !META_ACCESS_TOKEN || !META_ACCOUNT_ID) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const DEFAULT_INSIGHTS_DAYS = Math.min(
+  90,
+  Math.max(1, parseInt(process.env.SYNC_INSIGHTS_DAYS || '30', 10) || 30)
+);
+const GRAPH_VERSION = 'v23.0';
+const PAGE_SLEEP_MS = 400;
+const UPSERT_CHUNK_SIZE = 200;
 
 // Função para obter o account ID com prefixo
 function getAccountId() {
   const accountId = META_ACCOUNT_ID;
   return accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+}
+
+// Regra alinhada ao relatório "Leads" da Meta (evita inflar com múltiplas ações de lead)
+function aggregateLeadsFromInsight(insight) {
+  const actionRows = Array.isArray(insight.actions) ? insight.actions : [];
+  const preferredAction = actionRows.find(
+    (action) => action?.action_type === 'onsite_conversion.lead_grouped'
+  );
+  if (preferredAction) {
+    return Number(preferredAction.value) || 0;
+  }
+
+  const resultRows = Array.isArray(insight.results) ? insight.results : [];
+  const preferredResult = resultRows.find(
+    (result) => String(result?.indicator || '').toLowerCase() === 'leads'
+  );
+  if (preferredResult) {
+    return Number(preferredResult?.values?.[0]?.value) || 0;
+  }
+
+  const fallbackAction = actionRows.find((action) =>
+    String(action?.action_type || '').toLowerCase().includes('lead')
+  );
+  return fallbackAction ? Number(fallbackAction.value) || 0 : 0;
 }
 
 // Função para fazer requisição à Meta API
@@ -42,42 +73,34 @@ async function makeMetaRequest(path, params = {}) {
   }
 }
 
-// Função para buscar insights de um adset
-async function getAdsetInsights(adsetId, startDate, endDate) {
-  console.log(`📊 Buscando insights do adset ${adsetId} de ${startDate} a ${endDate}`);
-  
-  const params = {
-    fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,unique_clicks,unique_ctr,actions',
-    time_range: JSON.stringify({
-      since: startDate,
-      until: endDate
-    }),
-    time_increment: '1', // Dados diários
-    limit: 1000
-  };
+// Busca insights em lote no nível adset para reduzir carga e evitar rate limit
+async function getAccountAdsetInsights(startDate, endDate) {
+  const accountId = getAccountId();
+  const timeRange = encodeURIComponent(JSON.stringify({ since: startDate, until: endDate }));
+  const fields = encodeURIComponent(
+    'adset_id,adset_name,date_start,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,unique_clicks,unique_ctr,actions,results'
+  );
+  let url = `https://graph.facebook.com/${GRAPH_VERSION}/${accountId}/insights?fields=${fields}&level=adset&time_increment=1&time_range=${timeRange}&limit=500&access_token=${META_ACCESS_TOKEN}`;
+  const allRows = [];
 
-  const response = await makeMetaRequest(`${adsetId}/insights`, params);
-  return response.data || [];
+  while (url) {
+    const response = await axios.get(url);
+    const payload = response?.data || {};
+    const rows = Array.isArray(payload.data) ? payload.data : [];
+    allRows.push(...rows);
+    url = payload?.paging?.next || null;
+    if (url) {
+      await new Promise((resolve) => setTimeout(resolve, PAGE_SLEEP_MS));
+    }
+  }
+
+  return allRows;
 }
 
 // Função para processar insights e extrair leads
 function processInsights(insights, adsetContext) {
   return insights.map(insight => {
-    // Logar insight bruto para debug
-    console.log('[DEBUG] Insight bruto:', JSON.stringify(insight, null, 2));
-    // Extrair leads das actions
-    let leads = 0;
-    if (insight.actions) {
-      // Usar apenas 'onsite_conversion.lead_grouped' para evitar duplicidade
-      const leadAction = insight.actions.find(a => a.action_type === 'onsite_conversion.lead_grouped');
-      if (leadAction && typeof leadAction.value !== 'undefined') {
-        leads = parseInt(leadAction.value) || 0;
-      }
-    }
-    // Logar insight bruto se leads for zero
-    if (leads === 0) {
-      console.log('[DEBUG] Insight sem leads:', JSON.stringify(insight, null, 2));
-    }
+    const leads = aggregateLeadsFromInsight(insight);
     return {
       date: insight.date_start,
       spend: parseFloat(insight.spend || 0),
@@ -138,22 +161,27 @@ async function upsertAdsetInsights(adsetId, adsetName, insights) {
   }
 }
 
-// Função para buscar adsets ativos
-async function getActiveAdsets() {
-  console.log('🔍 Buscando adsets ativos no Supabase...');
+// Função para buscar adsets elegíveis para sync histórico
+async function getSyncableAdsets() {
+  console.log('🔍 Buscando adsets elegíveis no Supabase...');
   
   const { data: adsets, error } = await supabase
     .from('adsets')
-    .select('id, name, effective_status')
-    .eq('effective_status', 'ACTIVE');
+    .select('id, name, status, effective_status, campaign_id')
+    .not('id', 'is', null);
 
   if (error) {
     console.error('❌ Erro ao buscar adsets:', error);
     throw error;
   }
 
-  console.log(`📋 Encontrados ${adsets.length} adsets ativos`);
-  return adsets;
+  const syncableAdsets = (adsets || []).filter(adset => {
+    const status = String(adset.status || adset.effective_status || '').toUpperCase();
+    return status !== 'DELETED';
+  });
+
+  console.log(`📋 Encontrados ${syncableAdsets.length} adsets elegíveis (excluindo DELETED)`);
+  return syncableAdsets;
 }
 
 // Função principal de sincronização
@@ -161,55 +189,58 @@ async function syncAdsetInsights(startDate, endDate) {
   console.log(`🚀 Iniciando sincronização de insights de adsets de ${startDate} a ${endDate}`);
   
   try {
-    // Buscar adsets ativos
-    const adsets = await getActiveAdsets();
+    // Buscar adsets elegíveis para enriquecer contexto e filtrar DELETED
+    const adsets = await getSyncableAdsets();
+    const adsetContextMap = new Map(
+      adsets.map((adset) => [
+        String(adset.id),
+        {
+          adset_id: adset.id,
+          adset_name: adset.name,
+          campaign_id: adset.campaign_id,
+          status: adset.effective_status || adset.status || null,
+        },
+      ])
+    );
     
     if (adsets.length === 0) {
-      console.log('⚠️  Nenhum adset ativo encontrado');
+      console.log('⚠️  Nenhum adset elegível encontrado');
       return;
     }
 
-    let successCount = 0;
-    let errorCount = 0;
+    const apiRows = await getAccountAdsetInsights(startDate, endDate);
+    console.log(`📥 Linhas recebidas da Meta API: ${apiRows.length}`);
 
-    // Processar cada adset
-    for (const adset of adsets) {
-      try {
-        console.log(`\n📊 Processando adset: ${adset.name} (${adset.id})`);
-        
-        // Buscar insights da Meta API
-        const insights = await getAdsetInsights(adset.id, startDate, endDate);
-        
-        if (insights.length === 0) {
-          console.log(`⚠️  Nenhum insight encontrado para o adset ${adset.name}`);
-          continue;
-        }
+    const rowsToUpsert = [];
+    for (const row of apiRows) {
+      const adsetId = String(row.adset_id || '');
+      if (!adsetId) continue;
+      const context = adsetContextMap.get(adsetId) || {
+        adset_id: adsetId,
+        adset_name: row.adset_name || adsetId,
+        campaign_id: null,
+        status: null,
+      };
+      rowsToUpsert.push(...processInsights([row], context));
+    }
 
-        // Processar insights
-        const processedInsights = processInsights(insights, { adset_id: adset.id, adset_name: adset.name, campaign_id: adset.campaign_id, account_id: adset.account_id, status: adset.effective_status });
-        
-        // Fazer upsert no Supabase
-        const success = await upsertAdsetInsights(adset.id, adset.name, processedInsights);
-        
-        if (success) {
-          successCount++;
-        } else {
-          errorCount++;
-        }
-
-        // Pequena pausa para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-      } catch (error) {
-        console.error(`❌ Erro ao processar adset ${adset.name}:`, error.message);
-        errorCount++;
+    let upserted = 0;
+    for (let index = 0; index < rowsToUpsert.length; index += UPSERT_CHUNK_SIZE) {
+      const chunk = rowsToUpsert.slice(index, index + UPSERT_CHUNK_SIZE);
+      const { error } = await supabase
+        .from('adset_insights')
+        .upsert(chunk, { onConflict: 'adset_id,date', ignoreDuplicates: false });
+      if (error) {
+        console.error('❌ Erro no upsert de lote:', error);
+        throw error;
       }
+      upserted += chunk.length;
     }
 
     console.log(`\n🎉 Sincronização concluída!`);
-    console.log(`✅ Sucessos: ${successCount}`);
-    console.log(`❌ Erros: ${errorCount}`);
-    console.log(`📊 Total de adsets processados: ${adsets.length}`);
+    console.log(`📊 Adsets elegíveis mapeados: ${adsets.length}`);
+    console.log(`📊 Registros processados: ${rowsToUpsert.length}`);
+    console.log(`✅ Upserts aplicados: ${upserted}`);
 
   } catch (error) {
     console.error('❌ Erro durante a sincronização:', error);
@@ -217,16 +248,11 @@ async function syncAdsetInsights(startDate, endDate) {
   }
 }
 
-// Função para obter datas padrão (últimos 7 dias)
+// Função para obter datas padrão (janela histórica configurável)
 function getDefaultDateRange() {
-  // Usar timezone de São Paulo (UTC-3)
-  const now = new Date();
-  const saoPauloOffset = -3 * 60; // UTC-3 em minutos
-  const localOffset = now.getTimezoneOffset(); // Offset local em minutos
-  const totalOffset = saoPauloOffset + localOffset;
-  
-  const endDate = new Date(now.getTime() + totalOffset * 60 * 1000);
-  const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - (DEFAULT_INSIGHTS_DAYS - 1));
   
   return {
     startDate: startDate.toISOString().split('T')[0],
@@ -339,6 +365,7 @@ if (require.main === module) {
 
 module.exports = {
   syncAdsetInsights,
-  getAdsetInsights,
-  processInsights
+  getAccountAdsetInsights,
+  processInsights,
+  aggregateLeadsFromInsight
 };

@@ -55,21 +55,26 @@ function normalizeAccountId(id) {
 }
 
 function aggregateLeadsFromInsight(insight) {
-  const leadsFromResults = Array.isArray(insight.results)
-    ? insight.results.reduce((acc, result) => {
-        if (!result?.indicator?.toLowerCase().includes('lead')) return acc;
-        return acc + (Number(result?.values?.[0]?.value) || 0);
-      }, 0)
-    : 0;
+  const actionRows = Array.isArray(insight.actions) ? insight.actions : [];
+  const preferredAction = actionRows.find(
+    (action) => action?.action_type === 'onsite_conversion.lead_grouped'
+  );
+  if (preferredAction) {
+    return Number(preferredAction.value) || 0;
+  }
 
-  const leadsFromActions = Array.isArray(insight.actions)
-    ? insight.actions.reduce((acc, action) => {
-        if (!action?.action_type?.toLowerCase().includes('lead')) return acc;
-        return acc + (Number(action?.value) || 0);
-      }, 0)
-    : 0;
+  const resultRows = Array.isArray(insight.results) ? insight.results : [];
+  const preferredResult = resultRows.find(
+    (result) => String(result?.indicator || '').toLowerCase() === 'leads'
+  );
+  if (preferredResult) {
+    return Number(preferredResult?.values?.[0]?.value) || 0;
+  }
 
-  return Math.max(leadsFromResults, leadsFromActions);
+  const fallbackAction = actionRows.find((action) =>
+    String(action?.action_type || '').toLowerCase().includes('lead')
+  );
+  return fallbackAction ? Number(fallbackAction.value) || 0 : 0;
 }
 
 function rowToAdInsight(row) {
