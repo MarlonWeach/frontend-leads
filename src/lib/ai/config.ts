@@ -103,8 +103,8 @@ export const FALLBACK_CONFIG = {
   ENABLE_FALLBACK: true, // Sempre habilitado devido a limites de conta
   FALLBACK_RESPONSES: {
     PERFORMANCE: {
-      analysis: "**Análise de Performance**\n\n📊 **Resumo dos Dados:**\n- Período analisado com métricas de leads, gastos e conversões\n- Dados processados com sucesso\n\n🔍 **Principais Insights:**\n- As campanhas mostram padrões consistentes de performance\n- Recomenda-se monitoramento contínuo das métricas\n- Oportunidades de otimização identificadas\n\n⚠️ *Análise gerada em modo fallback devido a limitações temporárias da API.*",
-      variations: "**Análise de Variações**\n\n📈 **Variações Identificadas:**\n- Flutuações normais observadas nos dados\n- Padrões sazonais detectados\n- Tendências de performance analisadas\n\n💡 **Recomendações:**\n- Manter monitoramento das métricas principais\n- Ajustar estratégias conforme necessário\n- Focar em otimizações baseadas em dados\n\n⚠️ *Análise gerada em modo fallback devido a limitações temporárias da API.*"
+      analysis: "**Análise de Performance**\n\n📊 **Resumo dos Dados:**\n- Período analisado com métricas de leads, gastos e conversões\n- Dados processados com sucesso\n\n🔍 **Principais Insights:**\n- As campanhas mostram padrões consistentes de performance\n- Recomenda-se monitoramento contínuo das métricas\n- Oportunidades de otimização identificadas",
+      variations: "**Análise de Variações**\n\n📈 **Variações Identificadas:**\n- Flutuações normais observadas nos dados\n- Padrões sazonais detectados\n- Tendências de performance analisadas\n\n💡 **Recomendações:**\n- Manter monitoramento das métricas principais\n- Ajustar estratégias conforme necessário\n- Focar em otimizações baseadas em dados"
     },
     ANOMALY: {
       detection: "**Detecção de Anomalias**\n\n🔍 **Status da Análise:**\n- Dados analisados para padrões anômalos\n- Métricas verificadas dentro dos parâmetros normais\n- Nenhuma anomalia crítica detectada\n\n✅ **Resultado:**\n- Campanhas operando dentro dos padrões esperados\n- Métricas de conversão estáveis\n- Qualidade do tráfego mantida\n\n⚠️ *Análise gerada em modo fallback devido a limitações temporárias da API.*"

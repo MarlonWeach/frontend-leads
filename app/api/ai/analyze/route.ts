@@ -64,17 +64,32 @@ async function analyzeWithAI(
   preferredModel: AIModel = AIModel._AUTO
 ): Promise<{ result: string; modelUsed: string; isFallback: boolean }> {
   try {
+    const basePeriod = data.period?.toString() || '7 dias';
+    const periodWithFocus =
+      analysisType === 'performance'
+        ? basePeriod
+        : `${basePeriod} (foco da análise: ${analysisType})`;
+    const fallbackByAnalysisType =
+      analysisType === 'variations'
+        ? FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations
+        : FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis;
+
     // Se o modelo preferido for especificamente Anthropic, usar diretamente
     if (preferredModel === AIModel._ANTHROPIC) {
       const aiService = AIService.getInstance();
       
       // Forçar o uso do Anthropic
-      const result = await aiService.analyzeWithAnthropicOnly(data, data.period?.toString() || '7 dias');
+      const result = await aiService.analyzeWithAnthropicOnly(data, periodWithFocus);
+      const isFallbackResult =
+        result.includes('modo fallback') ||
+        result.includes('limitações temporárias da API') ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations;
       
       return {
-        result: result || 'Não foi possível gerar análise com Anthropic.',
-        modelUsed: 'Claude 3.5 Haiku',
-        isFallback: false
+        result: isFallbackResult ? fallbackByAnalysisType : (result || 'Não foi possível gerar análise com Anthropic.'),
+        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'Claude 3.5 Haiku',
+        isFallback: isFallbackResult
       };
     }
     
@@ -83,29 +98,34 @@ async function analyzeWithAI(
       const aiService = AIService.getInstance();
       
       // Forçar o uso do OpenAI
-      const result = await aiService.analyzeWithOpenAIOnly(data, data.period?.toString() || '7 dias');
+      const result = await aiService.analyzeWithOpenAIOnly(data, periodWithFocus);
+      const isFallbackResult =
+        result.includes('modo fallback') ||
+        result.includes('limitações temporárias da API') ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations;
       
       return {
-        result: result || 'Não foi possível gerar análise com OpenAI.',
-        modelUsed: 'OpenAI GPT-4o-mini',
-        isFallback: false
+        result: isFallbackResult ? fallbackByAnalysisType : (result || 'Não foi possível gerar análise com OpenAI.'),
+        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'OpenAI GPT-4o-mini',
+        isFallback: isFallbackResult
       };
     }
     
     // Para análises textuais, usar pipeline real de IA (evita fallback estático indevido)
     if (['performance', 'trends', 'comparison', 'variations', 'efficiency', 'insights'].includes(analysisType)) {
       const aiService = AIService.getInstance();
-      const basePeriod = data.period?.toString() || '7 dias';
-      const periodWithFocus =
-        analysisType === 'performance'
-          ? basePeriod
-          : `${basePeriod} (foco da análise: ${analysisType})`;
       const result = await aiService.analyzePerformance(data, periodWithFocus);
+      const isFallbackResult =
+        result.includes('modo fallback') ||
+        result.includes('limitações temporárias da API') ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis ||
+        result === FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations;
       
       return {
-        result: result || 'Não foi possível gerar análise.',
-        modelUsed: 'OpenAI/Anthropic (auto)',
-        isFallback: false
+        result: isFallbackResult ? fallbackByAnalysisType : (result || 'Não foi possível gerar análise.'),
+        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'OpenAI/Anthropic (auto)',
+        isFallback: isFallbackResult
       };
     }
 
@@ -119,7 +139,10 @@ async function analyzeWithAI(
     console.error(`Erro na análise ${analysisType}:`, error);
     
     // Fallback para resposta estática
-    const fallbackResponse = FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis;
+    const fallbackResponse =
+      analysisType === 'variations'
+        ? FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations
+        : FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis;
     return {
       result: fallbackResponse,
       modelUsed: 'Sistema de Fallback',
