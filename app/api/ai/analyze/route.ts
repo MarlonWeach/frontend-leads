@@ -92,31 +92,28 @@ async function analyzeWithAI(
       };
     }
     
-    // Para análise de performance com modelo AUTO, usar o método existente do AIService (com fallback)
-    if (analysisType === 'performance') {
+    // Para análises textuais, usar pipeline real de IA (evita fallback estático indevido)
+    if (['performance', 'trends', 'comparison', 'variations', 'efficiency', 'insights'].includes(analysisType)) {
       const aiService = AIService.getInstance();
-      const result = await aiService.analyzePerformance(data, data.period?.toString() || '7 dias');
+      const basePeriod = data.period?.toString() || '7 dias';
+      const periodWithFocus =
+        analysisType === 'performance'
+          ? basePeriod
+          : `${basePeriod} (foco da análise: ${analysisType})`;
+      const result = await aiService.analyzePerformance(data, periodWithFocus);
       
       return {
         result: result || 'Não foi possível gerar análise.',
-        modelUsed: 'OpenAI GPT-4o-mini',
+        modelUsed: 'OpenAI/Anthropic (auto)',
         isFallback: false
       };
     }
-    
-    // Para outros tipos de análise, usar resposta genérica
-    const fallbackResponses: Record<string, string> = {
-      trends: 'Análise de tendências: Com base nos dados fornecidos, observamos padrões consistentes de performance. Recomendamos monitoramento contínuo para identificar oportunidades de otimização.',
-      comparison: 'Análise comparativa: Os dados mostram variações de performance entre diferentes elementos. Sugere-se focar nos elementos com melhor ROI.',
-      variations: 'Análise de variações: Identificamos flutuações normais na performance. Recomendamos ajustes pontuais para manter estabilidade.',
-      efficiency: 'Análise de eficiência: A eficiência atual está dentro dos parâmetros esperados. Há oportunidades de otimização de custos.',
-      insights: 'Insights gerais: Os dados indicam performance estável com potencial de crescimento através de otimizações direcionadas.'
-    };
 
+    // Segurança: se algum tipo novo textual escapar do switch, evita fallback falso.
     return {
-      result: fallbackResponses[analysisType] || fallbackResponses.insights,
-      modelUsed: 'Sistema de Fallback',
-      isFallback: true
+      result: 'Tipo de análise não suportado para resposta textual.',
+      modelUsed: 'Sistema',
+      isFallback: false
     };
   } catch (error) {
     console.error(`Erro na análise ${analysisType}:`, error);

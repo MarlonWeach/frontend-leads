@@ -190,6 +190,12 @@ export function OptimizationSuggestions({
         </CardHeader>
 
         <CardContent>
+          {(analysis as any)?.isFallback && (
+            <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+              {(analysis as any)?.message || 'Modo de contingência ativo para otimização de IA. Tente novamente em alguns minutos.'}
+            </div>
+          )}
+
           {/* Estatísticas */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">

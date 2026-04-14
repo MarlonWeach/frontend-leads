@@ -1,7 +1,91 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const successAnalyzeResponse = {
+  success: true,
+  analysis:
+    'Resumo de performance: campanhas estáveis, com oportunidade de otimização em conjuntos com CPL acima da média.',
+  modelUsed: 'mock-model',
+  isFallback: false
+};
+
+const successAnomaliesResponse = {
+  success: true,
+  anomalies: [],
+  summary: { total: 0 }
+};
+
+const successOptimizationResponse = {
+  success: true,
+  suggestions: [
+    {
+      id: 'opt-1',
+      title: 'Reduzir orçamento de adset com CPL alto',
+      description: 'Ajustar em 10% e reavaliar em 24h.',
+      priority: 'high'
+    }
+  ]
+};
+
+const successChatResponse = {
+  success: true,
+  response: 'Análise concluída. Priorize campanhas com maior CTR e menor CPL.'
+};
+
+const successBillingResponse = {
+  success: true,
+  data: {
+    monthlyCost: 12.34,
+    tokensUsed: 12000,
+    usagePercent: 21
+  }
+};
+
+async function registerDefaultAIMocks(page: Page) {
+  await page.route('**/api/ai/analyze**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(successAnalyzeResponse)
+    })
+  );
+
+  await page.route('**/api/ai/anomalies**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(successAnomaliesResponse)
+    })
+  );
+
+  await page.route('**/api/ai/optimization**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(successOptimizationResponse)
+    })
+  );
+
+  await page.route('**/api/ai/chat**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(successChatResponse)
+    })
+  );
+
+  await page.route('**/api/ai/billing**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(successBillingResponse)
+    })
+  );
+}
 
 test.describe('AI Integration Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await registerDefaultAIMocks(page);
+
     // Navigate to performance page where AI panel is located
     await page.goto('/performance');
     
@@ -108,8 +192,8 @@ test.describe('AI Integration Tests', () => {
   });
 
   test('should handle API errors gracefully', async ({ page }) => {
-    // Mock API error by temporarily disabling network
-    await page.route('**/api/ai/analyze', route => {
+    await page.unroute('**/api/ai/analyze**');
+    await page.route('**/api/ai/analyze**', route => {
       console.log('Intercepting analyze API call');
       route.fulfill({
         status: 500,
@@ -133,8 +217,8 @@ test.describe('AI Integration Tests', () => {
   });
 
   test('should respect rate limits and show appropriate feedback', async ({ page }) => {
-    // Mock rate limit response
-    await page.route('**/api/ai/analyze', route => {
+    await page.unroute('**/api/ai/analyze**');
+    await page.route('**/api/ai/analyze**', route => {
       console.log('Intercepting analyze API call for rate limit');
       route.fulfill({
         status: 429,

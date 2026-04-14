@@ -12,19 +12,67 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+function createFallbackOptimizationPayload(message: string, retryAfter?: number) {
+  return {
+    suggestions: [],
+    summary: {
+      totalSuggestions: 0,
+      highImpact: 0,
+      mediumImpact: 0,
+      lowImpact: 0,
+      averageConfidence: 0,
+      estimatedTotalROI: 0
+    },
+    benchmarks: {
+      avgCTR: 0,
+      avgCPL: 0,
+      avgConversionRate: 0,
+      automotiveBenchmarks: {
+        economic: { cplRange: [15, 35], conversionRate: [8, 15] },
+        premium: { cplRange: [45, 80], conversionRate: [15, 25] },
+        suv: { cplRange: [35, 60], conversionRate: [12, 20] },
+        commercial: { cplRange: [25, 50], conversionRate: [20, 35] },
+        luxury: { cplRange: [80, 150], conversionRate: [25, 40] }
+      }
+    },
+    message,
+    isFallback: true,
+    retryAfter: retryAfter || 60,
+    usage: {
+      tokens: 0,
+      estimatedCost: 0
+    }
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar rate limiting da OpenAI
     const rateLimitCheck = checkOpenAIRateLimit();
     if (rateLimitCheck.isLimited) {
       const waitTime = rateLimitCheck.resetTime ? Math.ceil((rateLimitCheck.resetTime - Date.now()) / 1000) : 60;
+      if (FALLBACK_CONFIG.ENABLE_FALLBACK) {
+        return NextResponse.json(
+          createFallbackOptimizationPayload(
+            `${rateLimitCheck.reason}. Exibindo resposta de contingência. Tente novamente em ${waitTime} segundos.`,
+            waitTime
+          ),
+          {
+            status: 200,
+            headers: {
+              'Retry-After': waitTime.toString()
+            }
+          }
+        );
+      }
+
       return NextResponse.json(
-        { 
+        {
           error: 'Rate limit excedido para OpenAI API',
           message: `${rateLimitCheck.reason}. Tente novamente em ${waitTime} segundos.`,
           retryAfter: waitTime
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': waitTime.toString()
@@ -198,26 +246,19 @@ export async function POST(request: NextRequest) {
       // Se fallback está habilitado, retornar resposta mock
       if (FALLBACK_CONFIG.ENABLE_FALLBACK) {
         console.log('🔄 Usando fallback para otimização devido a quota excedida');
-        
-        return NextResponse.json({
-          suggestions: [],
-          summary: {
-            totalSuggestions: 0,
-            highImpact: 0,
-            mediumImpact: 0,
-            lowImpact: 0,
-            averageConfidence: 0,
-            estimatedTotalROI: 0
-          },
-          benchmarks: {
-            avgCTR: 0,
-            avgCPL: 0,
-            avgConversionRate: 0
-          },
-          message: FALLBACK_CONFIG.FALLBACK_RESPONSES.OPTIMIZATION.suggestions,
-          isFallback: true,
-          reason: 'Quota da OpenAI excedida - usando resposta de fallback'
-        });
+
+        return NextResponse.json(
+          createFallbackOptimizationPayload(
+            FALLBACK_CONFIG.FALLBACK_RESPONSES.OPTIMIZATION.suggestions,
+            60
+          ),
+          {
+            status: 200,
+            headers: {
+              'Retry-After': '60'
+            }
+          }
+        );
       }
       
       return NextResponse.json(

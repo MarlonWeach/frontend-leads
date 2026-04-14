@@ -26,3 +26,8 @@ This document lists all tasks associated with PBI 28.
 | 28-16 | Corrigir defasagem e ordenação do heatmap de performance | Done | Ajustar timezone (America/Sao_Paulo) e ordenação diária do heatmap para eliminar deslocamento D-1 observado entre dashboard e Meta |
 | 28-17 | Investigar e corrigir divergência de dados históricos vs Meta | Done | Resolver discrepâncias de métricas em datas antigas (ex.: dia 10 para trás) entre Supabase/heatmap e Meta após sync |
 | 28-18 | Automatizar reconciliação diária do heatmap vs SQL | Done | Criar auditoria automatizada para comparar totais diários da API `/api/performance/comparisons` com agregação oficial de `adset_insights` e detectar regressões |
+| 28-19 | Estabilizar infraestrutura do Playwright no CI | InProgress | Ajustar execução E2E para ambiente determinístico (build/start, artefatos e base URL) e reduzir flakiness estrutural |
+| 28-20 | Corrigir suíte de acessibilidade E2E com critérios robustos | InProgress | Reescrever asserts frágeis em `accessibility.spec.ts` para critérios verificáveis e estáveis entre browsers |
+| 28-21 | Isolar testes de IA E2E de dependências externas | InProgress | Mockar endpoints de IA no Playwright para evitar falha por quota/rate-limit e validar UX de sucesso/erro de forma determinística |
+| 28-22 | Corrigir fallback indevido em Variações e Performance (IA) | InProgress | Investigar e corrigir motivo do aviso de fallback ativo nas análises de IA de `/performance` |
+| 28-23 | Tratar 429 em otimização de IA com resiliência e UX | InProgress | Implementar tratamento robusto para `429 Too Many Requests` em `/api/ai/optimization` com feedback claro e comportamento degradado |
