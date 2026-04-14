@@ -34,18 +34,17 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  var isLocalhost =
-                    location.hostname === 'localhost' ||
-                    location.hostname === '127.0.0.1';
+                  var shouldEnableServiceWorker = '${process.env.NEXT_PUBLIC_ENABLE_SERVICE_WORKER || ''}' === '1';
 
-                  if (isLocalhost) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                      registrations.forEach(function(registration) {
-                        registration.unregister();
-                      });
+                  // Segurança contra mismatch de chunks entre releases:
+                  // por padrão, remove SW existente em todos os ambientes.
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    registrations.forEach(function(registration) {
+                      registration.unregister();
                     });
-                    return;
-                  }
+                  });
+
+                  if (!shouldEnableServiceWorker) return;
 
                   navigator.serviceWorker.register('/service-worker.js')
                     .then(function(registration) {

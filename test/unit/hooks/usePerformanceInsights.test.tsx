@@ -39,6 +39,7 @@ jest.mock('../../../src/lib/supabaseClient', () => {
 
 describe('usePerformanceInsights', () => {
   let queryClient: QueryClient;
+  let fetchMock: jest.Mock;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -67,6 +68,41 @@ describe('usePerformanceInsights', () => {
       if (previous === 0) return current > 0 ? 100 : 0;
       return ((current - previous) / previous) * 100;
     });
+
+    // Mock padrão da API /api/performance/comparisons usada pelo hook
+    fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          current: {
+            campaigns: [],
+            metrics: {
+              totalLeads: 0,
+              totalSpend: 0,
+              averageCTR: 0,
+              averageCPL: 0,
+              averageROI: 0,
+              totalImpressions: 0,
+              totalClicks: 0,
+            },
+          },
+          previous: {
+            campaigns: [],
+            metrics: {
+              totalLeads: 0,
+              totalSpend: 0,
+              averageCTR: 0,
+              averageCPL: 0,
+              averageROI: 0,
+              totalImpressions: 0,
+              totalClicks: 0,
+            },
+          },
+        },
+      }),
+    });
+    (global as any).fetch = fetchMock;
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
