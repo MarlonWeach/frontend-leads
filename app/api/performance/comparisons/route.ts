@@ -127,6 +127,7 @@ const fetchPeriodData = async (
     .from('adset_insights')
     .select(`
       adset_id,
+      campaign_id,
       date,
       leads,
       spend,
@@ -204,13 +205,16 @@ const fetchPeriodData = async (
 
   (insights || []).forEach((insight: {
     adset_id?: string;
+    campaign_id?: string;
     date: string;
     leads?: number | string;
     spend?: number | string;
     impressions?: number | string;
     clicks?: number | string;
   }) => {
-    const campaignId = insight.adset_id ? adsetToCampaignMap.get(insight.adset_id) : undefined;
+    // Priorizar campaign_id histórico persistido no insight para evitar perda de dados
+    // quando adset/campaign estiver inativo ou ausente na tabela adsets.
+    const campaignId = insight.campaign_id || (insight.adset_id ? adsetToCampaignMap.get(insight.adset_id) : undefined);
     if (!campaignId) return;
     if (campaignIds?.length && !campaignIds.includes(campaignId)) return;
 
