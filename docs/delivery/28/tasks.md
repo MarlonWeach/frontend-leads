@@ -32,3 +32,4 @@ This document lists all tasks associated with PBI 28.
 | 28-22 | Corrigir fallback indevido em Variações e Performance (IA) | InProgress | Investigar e corrigir motivo do aviso de fallback ativo nas análises de IA de `/performance` |
 | 28-23 | Tratar 429 em otimização de IA com resiliência e UX | InProgress | Implementar tratamento robusto para `429 Too Many Requests` em `/api/ai/optimization` com feedback claro e comportamento degradado |
 | 28-24 | Atualizar modelo Claude e Meta API para versões vigentes | InProgress | Atualizar configuração Anthropic para novo modelo Haiku e padronizar chamadas Meta Graph API para `v25.0` |
+| 28-25 | Migrar OpenAI para gpt-5-nano | InProgress | Padronizar modelo OpenAI para `gpt-5-nano` em análise, otimização, anomalias e métricas de billing/custo |

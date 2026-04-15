@@ -117,11 +117,11 @@ export const FALLBACK_CONFIG = {
 
 // Configuração da integração com OpenAI
 export const AI_CONFIG = {
-  // Modelo padrão - usando GPT-4o mini (melhor custo-benefício)
-  DEFAULT_MODEL: 'gpt-4o-mini' as const,
+  // Modelo padrão - otimizado para baixo custo
+  DEFAULT_MODEL: 'gpt-5-nano' as const,
   
-  // Modelo alternativo para análises mais complexas
-  ADVANCED_MODEL: 'gpt-4o' as const,
+  // Modelo alternativo mantido igual para reduzir variabilidade de custo
+  ADVANCED_MODEL: 'gpt-5-nano' as const,
   
   // Configurações de temperatura (0 = mais determinístico, 1 = mais criativo)
   TEMPERATURE: {

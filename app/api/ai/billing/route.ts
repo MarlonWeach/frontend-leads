@@ -7,8 +7,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Preços da OpenAI (por 1K tokens) - Janeiro 2025
+const DEFAULT_OPENAI_MODEL = 'gpt-5-nano';
+
+// Preços estimados da OpenAI (por 1K tokens)
 const PRICING = {
+  'gpt-5-nano': {
+    input: 0.00005,
+    output: 0.0004
+  },
   'gpt-4': {
     input: 0.03,
     output: 0.06
@@ -172,7 +178,7 @@ async function fetchRealOpenAIUsage(days: number): Promise<BillingResponse | nul
             outputTokens: usageData.output_tokens || 0,
             requests: dayRequests,
             estimatedCost: dayCost,
-            model: 'gpt-4'
+            model: DEFAULT_OPENAI_MODEL
           });
 
           totalTokens += dayTokens;
@@ -187,7 +193,7 @@ async function fetchRealOpenAIUsage(days: number): Promise<BillingResponse | nul
             outputTokens: 0,
             requests: 0,
             estimatedCost: 0,
-            model: 'gpt-4'
+            model: DEFAULT_OPENAI_MODEL
           });
         }
       } catch (dayError) {
@@ -200,7 +206,7 @@ async function fetchRealOpenAIUsage(days: number): Promise<BillingResponse | nul
           outputTokens: 0,
           requests: 0,
           estimatedCost: 0,
-          model: 'gpt-4'
+            model: DEFAULT_OPENAI_MODEL
         });
       }
     }
@@ -292,7 +298,7 @@ async function fetchLocalEstimation(days: number): Promise<BillingResponse> {
         outputTokens: 0,
         requests: 0,
         estimatedCost: 0,
-        model: 'gpt-4'
+        model: DEFAULT_OPENAI_MODEL
       });
     }
 
@@ -329,9 +335,9 @@ async function fetchLocalEstimation(days: number): Promise<BillingResponse> {
     dayStats.totalTokens += estimatedInputTokens + estimatedOutputTokens;
     dayStats.requests += 1;
 
-    // Calcular custo estimado (assumindo GPT-4)
-    const inputCost = (estimatedInputTokens / 1000) * PRICING['gpt-4'].input;
-    const outputCost = (estimatedOutputTokens / 1000) * PRICING['gpt-4'].output;
+    // Calcular custo estimado usando modelo padrão atual
+    const inputCost = (estimatedInputTokens / 1000) * PRICING[DEFAULT_OPENAI_MODEL].input;
+    const outputCost = (estimatedOutputTokens / 1000) * PRICING[DEFAULT_OPENAI_MODEL].output;
     dayStats.estimatedCost += inputCost + outputCost;
   }
 
@@ -357,7 +363,7 @@ async function fetchLocalEstimation(days: number): Promise<BillingResponse> {
         outputTokens: 0,
         requests: 0,
         estimatedCost: 0,
-        model: 'gpt-4'
+        model: DEFAULT_OPENAI_MODEL
       });
     }
   }

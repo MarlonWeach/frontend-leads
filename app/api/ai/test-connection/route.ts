@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { openai, logOpenAIRequest, logOpenAIResponse } from '../../../../src/lib/ai/config';
+import { AI_CONFIG, openai, logOpenAIRequest, logOpenAIResponse } from '../../../../src/lib/ai/config';
 import { AIService } from '../../../../src/lib/ai/aiService';
 import { anthropic, logAnthropicRequest, logAnthropicResponse } from '../../../../src/lib/ai/config';
 import { ANTHROPIC_CONFIG } from '../../../../src/lib/ai/config';
@@ -24,7 +24,7 @@ export async function GET() {
     });
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: AI_CONFIG.DEFAULT_MODEL,
       messages: [{ role: 'user', content: 'Responda apenas "OK" se você está funcionando.' }],
       max_tokens: 10,
       temperature: 0,
@@ -180,13 +180,13 @@ export async function POST(request: NextRequest) {
 
     // Log da requisição
     logOpenAIRequest({
-      model: 'gpt-4o-mini',
+      model: AI_CONFIG.DEFAULT_MODEL,
       messages,
       requestId
     });
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: AI_CONFIG.DEFAULT_MODEL,
       messages,
       max_tokens: 100,
       temperature: 0.3

@@ -1,6 +1,8 @@
 import { logger } from '../../utils/logger';
 import { supabaseServer as supabase } from '../supabaseServer';
 
+const DEFAULT_AI_MODEL = 'gpt-5-nano';
+
 export interface AIUsageLog {
   analysis_type: 'performance' | 'anomalies' | 'optimization' | 'chat' | 'insights';
   campaign_ids?: string[];
@@ -29,7 +31,7 @@ export async function logAIUsage(log: AIUsageLog): Promise<void> {
         date_range: log.date_range || null,
         tokens_used: log.tokens_used || null,
         cost_estimated: log.cost_estimated || null,
-        model_used: log.model_used || 'gpt-4',
+        model_used: log.model_used || DEFAULT_AI_MODEL,
         status: log.status || 'completed',
         error_message: log.error_message || null,
         metadata: log.metadata || null,
@@ -77,15 +79,16 @@ export function estimateTokens(content: string): number {
 export function calculateEstimatedCost(
   inputTokens: number, 
   outputTokens: number, 
-  model: string = 'gpt-4'
+  model: string = DEFAULT_AI_MODEL
 ): number {
   const pricing = {
+    'gpt-5-nano': { input: 0.00005, output: 0.0004 },
     'gpt-4': { input: 0.03, output: 0.06 },
     'gpt-3.5-turbo': { input: 0.0015, output: 0.002 },
     'gpt-4-turbo': { input: 0.01, output: 0.03 }
   };
 
-  const modelPricing = pricing[model as keyof typeof pricing] || pricing['gpt-4'];
+  const modelPricing = pricing[model as keyof typeof pricing] || pricing[DEFAULT_AI_MODEL];
   
   const inputCost = (inputTokens / 1000) * modelPricing.input;
   const outputCost = (outputTokens / 1000) * modelPricing.output;

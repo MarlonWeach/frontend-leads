@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       date_range: dateRange,
       tokens_used: totalTokens,
       cost_estimated: estimatedCost,
-      model_used: 'gpt-4',
+      model_used: 'gpt-5-nano',
       status: 'completed',
       metadata: {
         sensitivity,

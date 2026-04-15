@@ -1,4 +1,4 @@
-import { openai } from './config';
+import { AI_CONFIG, openai } from './config';
 
 export interface OptimizationSuggestion {
   id: string;
@@ -318,7 +318,7 @@ export class OptimizationEngine {
       const prompt = this.buildPrompt(type, campaignAnalysis);
 
       const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: AI_CONFIG.DEFAULT_MODEL,
         messages: [
           {
             role: 'system',

@@ -1,4 +1,4 @@
-import { openai } from './config';
+import { AI_CONFIG, openai } from './config';
 
 // Tipos de anomalias detectáveis
 export enum AnomalyType {
@@ -514,7 +514,7 @@ Retorne APENAS um JSON válido no formato:
 IMPORTANTE: Responda APENAS o JSON, sem texto adicional antes ou depois.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: AI_CONFIG.DEFAULT_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 1500

@@ -89,12 +89,8 @@ export async function POST(request: NextRequest) {
       .from('campaigns')
       .select('id, name, status');
 
-    // Filtrar campanhas por período se fornecido
-    if (dateRange?.startDate && dateRange?.endDate) {
-      campaignQuery = campaignQuery
-        .gte('created_at', dateRange.startDate)
-        .lte('created_at', dateRange.endDate);
-    }
+    // IMPORTANTE: não filtrar campanhas por created_at.
+    // O período selecionado deve filtrar métricas (meta_leads), não data de criação da campanha.
 
     // Filtrar por campanhas específicas se fornecido
     if (campaignIds && campaignIds.length > 0) {
@@ -215,7 +211,7 @@ export async function POST(request: NextRequest) {
       date_range: dateRange,
       tokens_used: totalTokens,
       cost_estimated: estimatedCost,
-      model_used: 'gpt-4',
+      model_used: 'gpt-5-nano',
       status: 'completed',
       metadata: {
         optimization_type: type,

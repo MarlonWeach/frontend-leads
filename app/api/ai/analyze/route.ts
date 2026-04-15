@@ -107,7 +107,7 @@ async function analyzeWithAI(
       
       return {
         result: isFallbackResult ? fallbackByAnalysisType : (result || 'Não foi possível gerar análise com OpenAI.'),
-        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'OpenAI GPT-4o-mini',
+        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'OpenAI GPT-5 nano',
         isFallback: isFallbackResult
       };
     }
@@ -163,7 +163,7 @@ async function detectAnomalies(data: PerformanceData, preferredModel: AIModel = 
 
     return {
       result: Array.isArray(result) ? result : [],
-      modelUsed: 'OpenAI GPT-4o-mini',
+      modelUsed: 'OpenAI GPT-5 nano',
       isFallback: false
     };
   } catch (error) {
@@ -188,7 +188,7 @@ async function generateOptimizationSuggestions(data: PerformanceData, preferredM
 
     return {
       result: Array.isArray(result) ? result : [],
-      modelUsed: 'OpenAI GPT-4o-mini',
+      modelUsed: 'OpenAI GPT-5 nano',
       isFallback: false
     };
   } catch (error) {

@@ -267,6 +267,8 @@ export class AIService {
           content: `Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo.
           Analise os dados fornecidos e forneça insights úteis em português brasileiro.
           Seja específico, acionável e use linguagem clara e natural.
+          NUNCA invente números. Se citar uma métrica, use exatamente os valores fornecidos no prompt.
+          Não recalcule CPL/leads com aproximações. Se não conseguir concluir um cálculo, escreva "não disponível".
           
           IMPORTANTE: Formate a resposta com markdown para melhor legibilidade:
           - Use **texto** para negrito
@@ -523,10 +525,45 @@ export class AIService {
       dataSection = `AD ANALISADO:\n${ads.map((a: any) => `- ${a.ad_name || a.name}: ${a.leads || 0} leads, R$ ${a.spend || 0} gasto, ${a.ctr || 0}% CTR, R$ ${a.cpl || 0} CPL, ${a.impressions || 0} impressões, ${a.clicks || 0} cliques`).join('\n')}`;
     }
 
+    const officialData = {
+      campaigns: campaigns.map((c: any) => ({
+        name: c.campaign_name || c.name || 'Sem nome',
+        leads: Number(c.leads) || 0,
+        spend: Number(c.spend) || 0,
+        ctr: Number(c.ctr) || 0,
+        cpl: Number(c.cpl) || 0,
+        impressions: Number(c.impressions) || 0,
+        clicks: Number(c.clicks) || 0
+      })),
+      adsets: adsets.map((a: any) => ({
+        name: a.adset_name || a.name || 'Sem nome',
+        leads: Number(a.leads) || 0,
+        spend: Number(a.spend) || 0,
+        ctr: Number(a.ctr) || 0,
+        cpl: Number(a.cpl) || 0,
+        impressions: Number(a.impressions) || 0,
+        clicks: Number(a.clicks) || 0
+      })),
+      ads: ads.map((a: any) => ({
+        name: a.ad_name || a.name || 'Sem nome',
+        leads: Number(a.leads) || 0,
+        spend: Number(a.spend) || 0,
+        ctr: Number(a.ctr) || 0,
+        cpl: Number(a.cpl) || 0,
+        impressions: Number(a.impressions) || 0,
+        clicks: Number(a.clicks) || 0
+      }))
+    };
+
     return `
 🚗 **ANÁLISE DE PERFORMANCE AUTOMOTIVA**
 
 ${dataSection}
+
+📌 **DADOS OFICIAIS (NÃO ALTERAR):**
+\`\`\`json
+${JSON.stringify(officialData, null, 2)}
+\`\`\`
 
 📅 **PERÍODO ANALISADO:** ${period}
 
@@ -568,6 +605,7 @@ ${dataSection}
 - Estruture bem os parágrafos
 - Seja específico e acionável
 - Use linguagem clara e natural
+- Se mencionar uma campanha nominalmente, preserve exatamente os números de leads/spend/CPL/CTR dessa campanha
 `;
   }
 
@@ -705,7 +743,8 @@ Responda de forma clara e útil, usando o contexto fornecido quando relevante.
             role: 'system',
             content: `Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo. 
             Analise os dados fornecidos e forneça insights úteis em português brasileiro. 
-            Seja específico, acionável e use linguagem clara e natural.`,
+            Seja específico, acionável e use linguagem clara e natural.
+            NUNCA invente números. Se citar métrica, use estritamente os dados fornecidos no prompt.`,
           },
           {
             role: 'user',
@@ -740,6 +779,8 @@ Responda de forma clara e útil, usando o contexto fornecido quando relevante.
             content: `Você é um especialista em marketing digital focado em campanhas de Lead Ads para o setor automotivo. 
             Analise os dados fornecidos e forneça insights úteis em português brasileiro. 
             Seja específico, acionável e use linguagem clara e natural.
+            NUNCA invente números. Se citar uma métrica, use exatamente os valores do prompt.
+            Não recalcule CPL/leads com aproximações.
             
             ${prompt}`,
           },
