@@ -6,10 +6,10 @@ const MAX_REQUESTS_PER_WINDOW = 100;
 
 // Configurações específicas para OpenAI API
 const OPENAI_RATE_LIMIT = {
-  REQUESTS_PER_MINUTE: 5,
-  REQUESTS_PER_HOUR: 100,
-  REQUESTS_PER_DAY: 500,
-  COOLDOWN_PERIOD: 60000, // 1 minuto após erro 429
+  REQUESTS_PER_MINUTE: 30,
+  REQUESTS_PER_HOUR: 600,
+  REQUESTS_PER_DAY: 5000,
+  COOLDOWN_PERIOD: 15000, // 15s após erro 429 para reduzir bloqueio excessivo
 };
 
 // Mapa para armazenar contadores de requisições por IP

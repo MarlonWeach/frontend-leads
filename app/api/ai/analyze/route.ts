@@ -330,10 +330,31 @@ export async function POST(request: NextRequest) {
   let analysisType = 'performance'; // Valor padrão
   
   try {
+    const body = await request.json();
+    const { data, analysisType: requestedAnalysisType, model } = body;
+    analysisType = requestedAnalysisType || 'performance';
+
     // Verificar rate limiting da OpenAI
     const rateLimitCheck = checkOpenAIRateLimit();
     if (rateLimitCheck.isLimited) {
       const waitTime = rateLimitCheck.resetTime ? Math.ceil((rateLimitCheck.resetTime - Date.now()) / 1000) : 60;
+
+      if (FALLBACK_CONFIG.ENABLE_FALLBACK) {
+        const fallbackResponse =
+          analysisType === 'variations'
+            ? FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.variations
+            : FALLBACK_CONFIG.FALLBACK_RESPONSES.PERFORMANCE.analysis;
+
+        return NextResponse.json({
+          success: true,
+          data: fallbackResponse,
+          modelUsed: 'Sistema de Fallback',
+          isFallback: true,
+          reason: `${rateLimitCheck.reason || 'Limite temporário atingido'} - resposta de contingência`,
+          retryAfter: waitTime
+        });
+      }
+
       return NextResponse.json(
         { 
           error: 'Rate limit excedido para OpenAI API',
@@ -348,10 +369,6 @@ export async function POST(request: NextRequest) {
         }
       );
     }
-
-    const body = await request.json();
-    const { data, analysisType: requestedAnalysisType, model } = body;
-    analysisType = requestedAnalysisType || 'performance';
 
     console.log('🔍 [ANÁLISE] Recebida requisição:', {
       analysisType,
