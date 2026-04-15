@@ -27,4 +27,4 @@ This document lists all tasks associated with PBI 25.
 | 25-17   | [Ajustar cálculo de progresso e status de adsets com meta](./25-17.md) | Done | Corrigir cálculo de progresso, leads/dia, status e exibição de alertas conforme dados reais do período da meta |
 | 25-18   | [Adicionar botão 'Configurar Meta' e modal de cadastro/edição](./25-18.md) | Done | Permitir cadastro/edição de meta (budget, cpl_target, volume, datas) | 
 | 25-19   | [Corrigir filtro de data/timeframe do dashboard de metas](./25-19.md) | Done | Corrigir para que a seleção do período seja mantida corretamente no estado e refletida no label do botão, mesmo após navegação, reload ou troca de filtros. Garantir comportamento idêntico ao dashboard de /ads. | 
-| 25-20   | [Auto-stub de adsets ausentes no sync de ADS](./25-20.md) | InProgress | No job de ADS, antes de salvar, buscar e upsertar adsets inexistentes no Supabase para evitar erro de FK. |
+| 25-20   | [Auto-stub de adsets ausentes no sync de ADS](./25-20.md) | Done | No job de ADS, antes de salvar, buscar e upsertar adsets inexistentes no Supabase para evitar erro de FK. |

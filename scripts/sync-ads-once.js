@@ -269,6 +269,8 @@ async function syncAds() {
     
     console.log(`📊 Ads ativos: ${activeAds.length}/${allAds.length}`);
     
+    let adsetStubStats = { missing: 0, created: 0, failed: 0 };
+
     // 2.1 Garantir existência de adsets necessários (auto-stub) — Task 25-20
     try {
       const neededAdsetIds = Array.from(new Set(activeAds.map(a => a.adset_id).filter(Boolean)));
@@ -283,6 +285,7 @@ async function syncAds() {
         } else {
           const existingSet = new Set((existingAdsets || []).map(r => r.id));
           const missing = neededAdsetIds.filter(id => !existingSet.has(id));
+          adsetStubStats.missing = missing.length;
           if (missing.length > 0) {
             console.log(`🧩 Adsets ausentes detectados: ${missing.length}. Criando stubs...`);
             for (const adsetId of missing) {
@@ -312,13 +315,16 @@ async function syncAds() {
                   .upsert(payload, { onConflict: 'id', ignoreDuplicates: false });
                 if (upsertErr) {
                   console.log('⚠️ Falha ao upsert adset', adsetId, upsertErr.message);
+                  adsetStubStats.failed += 1;
                 } else {
                   console.log('✅ Stub criado para adset', adsetId);
+                  adsetStubStats.created += 1;
                 }
                 // Pequena pausa para não pressionar a API e o DB
                 await new Promise(r => setTimeout(r, 200));
               } catch (e) {
                 console.log('⚠️ Erro ao criar stub para adset', adsetId, e?.message || e);
+                adsetStubStats.failed += 1;
               }
             }
           }
@@ -380,6 +386,9 @@ async function syncAds() {
     console.log(`📊 Resumo:`);
     console.log(`   - Total de ads: ${allAds.length}`);
     console.log(`   - Ads ativos: ${activeAds.length}`);
+    console.log(`   - Adsets ausentes detectados: ${adsetStubStats.missing}`);
+    console.log(`   - Stubs de adset criados: ${adsetStubStats.created}`);
+    console.log(`   - Falhas no auto-stub de adset: ${adsetStubStats.failed}`);
     console.log(`   - Com tráfego recente: ${insights.length}`);
     console.log(`   - Salvos no banco: ${adsToSave.length}`);
     
