@@ -25,7 +25,7 @@ if (!META_ACCESS_TOKEN) {
 }
 
 async function fetchAdCreative(adId) {
-  const url = `https://graph.facebook.com/v19.0/${adId}`;
+  const url = `https://graph.facebook.com/v25.0/${adId}`;
   const params = new URLSearchParams({
     access_token: META_ACCESS_TOKEN,
     fields: 'id,name,adcreatives{id,object_story_spec,body,link_url,image_url,thumbnail_url,call_to_action_type,title,description,message,link_og_id,link_deep_link_url,instagram_story_id,instagram_actor_id,instagram_permalink_url,facebook_page_id,image_hash,url_tags,link_destination_display_url,link_destination_url,platform_customizations,product_set_id,multi_share_end_card,multi_share_optimized,recommender_settings,story_metadata,effective_instagram_story_id,effective_instagram_media_id,effective_facebook_media_id}'

@@ -19,7 +19,7 @@ class MetaBudgetAdjustmentService {
     this.config = {
       access_token: process.env.META_ACCESS_TOKEN || '',
       account_id: process.env.META_ACCOUNT_ID || '',
-      api_version: process.env.META_API_VERSION || 'v18.0',
+      api_version: process.env.META_API_VERSION || 'v25.0',
       base_url: 'https://graph.facebook.com',
       timeout_ms: 30000,
       max_retries: 3,

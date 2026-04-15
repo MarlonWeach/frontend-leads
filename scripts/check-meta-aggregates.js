@@ -24,7 +24,7 @@ async function fetchAggregates(level) {
     'date_start',
     'date_stop'
   ];
-  const url = `https://graph.facebook.com/v19.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&filtering=[{\"field\":\"ad.effective_status\",\"operator\":\"IN\",\"value\":[\"ACTIVE\"]}]&access_token=${accessToken}`;
+  const url = `https://graph.facebook.com/v25.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&filtering=[{\"field\":\"ad.effective_status\",\"operator\":\"IN\",\"value\":[\"ACTIVE\"]}]&access_token=${accessToken}`;
   const res = await fetch(url);
   const json = await res.json();
   if (!json.data) {

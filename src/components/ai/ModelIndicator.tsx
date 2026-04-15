@@ -37,7 +37,7 @@ export function ModelIndicator({
         icon: Zap,
         color: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
         label: 'Anthropic',
-        fullName: 'Claude 3.5 Haiku'
+        fullName: 'Claude Haiku 4.5'
       };
     }
     

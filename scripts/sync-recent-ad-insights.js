@@ -14,7 +14,7 @@ const DAYS_TO_SYNC = 7; // Sincronizar últimos 7 dias
 const SPECIFIC_AD_IDS = ['6530118350088']; // Ads específicos para sincronizar
 
 async function fetchAdInsights(adId, startDate, endDate) {
-  const url = `https://graph.facebook.com/v19.0/${adId}/insights`;
+  const url = `https://graph.facebook.com/v25.0/${adId}/insights`;
   const params = new URLSearchParams({
     access_token: META_ACCESS_TOKEN,
     fields: 'spend,impressions,clicks,ctr,cpc,cpm,actions,reach,frequency',

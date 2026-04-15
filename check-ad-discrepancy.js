@@ -18,7 +18,7 @@ async function checkAdDiscrepancy() {
     const accessToken = process.env.META_ACCESS_TOKEN;
     
     const response = await axios.get(
-      `https://graph.facebook.com/v19.0/${accountId}/insights`,
+      `https://graph.facebook.com/v25.0/${accountId}/insights`,
       {
         params: {
           access_token: accessToken,
@@ -98,7 +98,7 @@ async function checkAdDiscrepancy() {
     // 4. Verificar se o anúncio está ativo
     console.log('\n🔍 Verificando status do anúncio...');
     const adResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${adId}`,
+      `https://graph.facebook.com/v25.0/${adId}`,
       {
         params: {
           access_token: accessToken,

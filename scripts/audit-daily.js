@@ -65,7 +65,7 @@ function getAuditDateRange() {
  * Busca dados agregados da Meta API
  */
 async function fetchMetaApiData(dateFrom, dateTo) {
-  const url = `https://graph.facebook.com/v19.0/act_${META_ACCOUNT_ID}/insights`;
+  const url = `https://graph.facebook.com/v25.0/act_${META_ACCOUNT_ID}/insights`;
   
   const params = {
     access_token: META_ACCESS_TOKEN,

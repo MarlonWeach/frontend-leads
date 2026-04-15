@@ -28,7 +28,7 @@ async function checkMetaAPIDates() {
   for (const period of periods) {
     console.log(`📅 Testando: ${period.name}`);
     
-    const url = `https://graph.facebook.com/v23.0/${accountId}/insights?level=campaign&fields=campaign_name,actions,spend,impressions,clicks&time_range={\"since\":\"${period.start}\",\"until\":\"${period.end}\"}&time_increment=1&access_token=${accessToken}`;
+    const url = `https://graph.facebook.com/v25.0/${accountId}/insights?level=campaign&fields=campaign_name,actions,spend,impressions,clicks&time_range={\"since\":\"${period.start}\",\"until\":\"${period.end}\"}&time_increment=1&access_token=${accessToken}`;
     
     try {
       const res = await fetch(url);

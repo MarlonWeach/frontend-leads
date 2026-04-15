@@ -1,7 +1,7 @@
 // src/services/meta/activityLog.ts
 import { logger } from '../../utils/logger';
 
-const DEFAULT_BASE_URL = 'https://graph.facebook.com/v18.0';
+const DEFAULT_BASE_URL = 'https://graph.facebook.com/v25.0';
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY = 1000;
 

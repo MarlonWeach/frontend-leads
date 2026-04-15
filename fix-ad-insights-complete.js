@@ -18,7 +18,7 @@ async function fixAdInsightsComplete() {
     console.log('1️⃣ Buscando insights dos últimos 7 dias da Meta API...');
     
     const insightsResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${adId}/insights`,
+      `https://graph.facebook.com/v25.0/${adId}/insights`,
       {
         params: {
           access_token: accessToken,
@@ -45,7 +45,7 @@ async function fixAdInsightsComplete() {
       const endDate = new Date().toISOString().split('T')[0];
       
       const specificResponse = await axios.get(
-        `https://graph.facebook.com/v19.0/${adId}/insights`,
+        `https://graph.facebook.com/v25.0/${adId}/insights`,
         {
           params: {
             access_token: accessToken,

@@ -99,7 +99,7 @@ async function getCampaignsFromMeta() {
   try {
     do {
       pageCount++;
-      let url = `https://graph.facebook.com/v23.0/${accountId}/campaigns?fields=id,name,status,effective_status,created_time,updated_time,start_time,end_time,daily_budget,lifetime_budget,objective&limit=100&access_token=${META_ACCESS_TOKEN}`;
+      let url = `https://graph.facebook.com/v25.0/${accountId}/campaigns?fields=id,name,status,effective_status,created_time,updated_time,start_time,end_time,daily_budget,lifetime_budget,objective&limit=100&access_token=${META_ACCESS_TOKEN}`;
       
       if (after) {
         url += `&after=${after}`;
@@ -148,7 +148,7 @@ async function getCampaignsInsightsBatch(campaignIds) {
     const batch = campaignIds.slice(i, i + BATCH_SIZE);
     const idsParam = batch.join(',');
     
-    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
+    const url = `https://graph.facebook.com/v25.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
     
     try {
       console.log(`📊 Buscando insights para lote ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} campanhas)...`);

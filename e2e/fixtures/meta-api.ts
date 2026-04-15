@@ -64,7 +64,7 @@ export const test = base.extend<MetaApiFixtures>({
     };
 
     // Intercepta chamadas à Meta API
-    await page.route('**/graph.facebook.com/v18.0/**', async (route) => {
+    await page.route('**/graph.facebook.com/v25.0/**', async (route) => {
       mockApi.ads.requestCount++;
 
       // Simula diferentes tipos de erro
@@ -118,7 +118,7 @@ export const test = base.extend<MetaApiFixtures>({
                 before: 'MAZDZD',
                 after: 'MjQZD'
               },
-              next: 'https://graph.facebook.com/v18.0/act_123/ads?access_token=...&after=MjQZD'
+              next: 'https://graph.facebook.com/v25.0/act_123/ads?access_token=...&after=MjQZD'
             }
           })
         });

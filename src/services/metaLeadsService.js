@@ -5,7 +5,7 @@ import { logger } from '../utils/logger';
 class MetaLeadsService {
   constructor(accessToken) {
     this.accessToken = accessToken;
-    this.baseUrl = 'https://graph.facebook.com/v23.0';
+    this.baseUrl = 'https://graph.facebook.com/v25.0';
   }
 
   async getLeadForms(pageId) {

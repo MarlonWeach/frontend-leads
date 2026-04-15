@@ -28,7 +28,7 @@ const INSIGHTS_DAYS = Math.min(
   90,
   Math.max(1, parseInt(process.env.SYNC_INSIGHTS_DAYS || '30', 10) || 30)
 );
-const GRAPH_VERSION = 'v23.0';
+const GRAPH_VERSION = 'v25.0';
 const PAGE_SLEEP_MS = 600;
 const UPSERT_CHUNK = 80;
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { openai, logOpenAIRequest, logOpenAIResponse } from '../../../../src/lib/ai/config';
 import { AIService } from '../../../../src/lib/ai/aiService';
 import { anthropic, logAnthropicRequest, logAnthropicResponse } from '../../../../src/lib/ai/config';
+import { ANTHROPIC_CONFIG } from '../../../../src/lib/ai/config';
 
 export async function GET() {
   const results = {
@@ -62,13 +63,13 @@ export async function GET() {
     const messages = [{ role: 'user' as const, content: 'Responda apenas "OK" se você está funcionando.' }];
     
     logAnthropicRequest({
-      model: 'claude-3-5-haiku-20241022',
+      model: ANTHROPIC_CONFIG.DEFAULT_MODEL,
       messages,
       requestId,
     });
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: ANTHROPIC_CONFIG.DEFAULT_MODEL,
       max_tokens: 10,
       temperature: 0,
       messages,

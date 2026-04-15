@@ -16,7 +16,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !META_ACCOUNT_ID || !META_ACC
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function fetchMetaActivities({ since, until, after }) {
-  let url = `https://graph.facebook.com/v18.0/act_${META_ACCOUNT_ID}/activities?access_token=${META_ACCESS_TOKEN}&limit=100&since=${since}&until=${until}`;
+  let url = `https://graph.facebook.com/v25.0/act_${META_ACCOUNT_ID}/activities?access_token=${META_ACCESS_TOKEN}&limit=100&since=${since}&until=${until}`;
   if (after) url += `&after=${after}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Meta API error: ${res.status}`);

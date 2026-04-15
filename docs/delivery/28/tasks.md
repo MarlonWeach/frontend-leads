@@ -31,3 +31,4 @@ This document lists all tasks associated with PBI 28.
 | 28-21 | Isolar testes de IA E2E de dependências externas | InProgress | Mockar endpoints de IA no Playwright para evitar falha por quota/rate-limit e validar UX de sucesso/erro de forma determinística |
 | 28-22 | Corrigir fallback indevido em Variações e Performance (IA) | InProgress | Investigar e corrigir motivo do aviso de fallback ativo nas análises de IA de `/performance` |
 | 28-23 | Tratar 429 em otimização de IA com resiliência e UX | InProgress | Implementar tratamento robusto para `429 Too Many Requests` em `/api/ai/optimization` com feedback claro e comportamento degradado |
+| 28-24 | Atualizar modelo Claude e Meta API para versões vigentes | InProgress | Atualizar configuração Anthropic para novo modelo Haiku e padronizar chamadas Meta Graph API para `v25.0` |

@@ -57,7 +57,7 @@ export class MetaLeadsSyncService {
 
       const timeRange = encodeURIComponent(JSON.stringify({ since: startDate, until: endDate }));
       const adIdsFilter = encodeURIComponent(JSON.stringify(activeAdIds));
-      const url = `https://graph.facebook.com/v23.0/${this.accountId}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range=${timeRange}&ad_ids=${adIdsFilter}&access_token=${this.accessToken}`;
+      const url = `https://graph.facebook.com/v25.0/${this.accountId}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range=${timeRange}&ad_ids=${adIdsFilter}&access_token=${this.accessToken}`;
       
       logger.debug({ 
         msg: 'Fazendo requisição para Meta API', 
@@ -150,7 +150,7 @@ export class MetaLeadsSyncService {
   private async verifyToken(): Promise<boolean> {
     try {
       // Tenta fazer uma requisição simples para verificar o token
-      const url = `https://graph.facebook.com/v23.0/me/adaccounts?access_token=${this.accessToken}`;
+      const url = `https://graph.facebook.com/v25.0/me/adaccounts?access_token=${this.accessToken}`;
       const response = await fetch(url);
       const data = await response.json();
 

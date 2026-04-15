@@ -30,7 +30,7 @@ async function fetchMetaAggregates(level) {
     'date_stop'
   ];
   
-  const url = `https://graph.facebook.com/v23.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&time_increment=1&access_token=${accessToken}`;
+  const url = `https://graph.facebook.com/v25.0/${accountId}/insights?level=${level}&fields=${fields.join(',')}&time_range={\"since\":\"${formatDate(dateFrom)}\",\"until\":\"${formatDate(dateTo)}\"}&time_increment=1&access_token=${accessToken}`;
   
   console.log(`🔍 Buscando dados de ${level} da Meta API...`);
   const res = await fetch(url);

@@ -15,7 +15,7 @@ async function testMetaAPI() {
   }
 
   try {
-    const url = `https://graph.facebook.com/v18.0/${accountId}/adsets?fields=id,name,status&limit=5&access_token=${accessToken}`;
+    const url = `https://graph.facebook.com/v25.0/${accountId}/adsets?fields=id,name,status&limit=5&access_token=${accessToken}`;
     
     console.log('Fazendo requisição para:', url);
     

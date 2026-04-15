@@ -26,7 +26,7 @@ async function fetchMetaLeads() {
 
   console.log(`🔄 Buscando dados do Meta para os últimos 30 dias: ${formattedStartDate} a ${formattedEndDate}...`);
   
-  const url = `https://graph.facebook.com/v22.0/act_${ACCOUNT_ID}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range={"since":"${formattedStartDate}","until":"${formattedEndDate}"}&access_token=${ACCESS_TOKEN}`;
+  const url = `https://graph.facebook.com/v25.0/act_${ACCOUNT_ID}/insights?fields=ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,cpc,cpm,ctr,results,actions,action_values&level=ad&time_increment=1&time_range={"since":"${formattedStartDate}","until":"${formattedEndDate}"}&access_token=${ACCESS_TOKEN}`;
 
   try {
     const res = await fetch(url);

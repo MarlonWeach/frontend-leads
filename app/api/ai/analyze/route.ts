@@ -88,7 +88,7 @@ async function analyzeWithAI(
       
       return {
         result: isFallbackResult ? fallbackByAnalysisType : (result || 'Não foi possível gerar análise com Anthropic.'),
-        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'Claude 3.5 Haiku',
+        modelUsed: isFallbackResult ? 'Sistema de Fallback' : 'Claude Haiku 4.5',
         isFallback: isFallbackResult
       };
     }

@@ -62,7 +62,7 @@ const fetchPeriodDataFromMeta = async (
   const dailyData: Record<string, { leads: number; spend: number; impressions: number; clicks: number }> = {};
 
   let nextUrl: string | null =
-    `https://graph.facebook.com/v23.0/${normalizedAccountId}/insights?fields=date_start,spend,impressions,clicks,actions,results&time_range=${timeRange}&time_increment=1&limit=500`;
+    `https://graph.facebook.com/v25.0/${normalizedAccountId}/insights?fields=date_start,spend,impressions,clicks,actions,results&time_range=${timeRange}&time_increment=1&limit=500`;
 
   while (nextUrl) {
     const insightsRes: Response = await fetch(nextUrl, {

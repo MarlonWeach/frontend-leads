@@ -18,7 +18,7 @@ async function debugAdSync() {
     const accessToken = process.env.META_ACCESS_TOKEN;
     
     const adResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${adId}`,
+      `https://graph.facebook.com/v25.0/${adId}`,
       {
         params: {
           access_token: accessToken,
@@ -38,7 +38,7 @@ async function debugAdSync() {
     console.log('\n2️⃣ Buscando insights usando endpoint do script de sync...');
     
     const insightsResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/?ids=${adId}`,
+      `https://graph.facebook.com/v25.0/?ids=${adId}`,
       {
         params: {
           access_token: accessToken,

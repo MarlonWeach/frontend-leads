@@ -9,7 +9,7 @@ import {
 import { logger } from '../../utils/logger';
 
 export class MetaAdsetsService {
-  private readonly baseUrl = 'https://graph.facebook.com/v18.0';
+  private readonly baseUrl = 'https://graph.facebook.com/v25.0';
   private readonly accessToken: string;
   private readonly accountId: string;
   private readonly retryAttempts: number;

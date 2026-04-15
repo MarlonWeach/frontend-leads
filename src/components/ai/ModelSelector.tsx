@@ -31,7 +31,7 @@ const modelOptions = [
   },
   {
     value: 'anthropic' as AIModelType,
-    label: 'Claude 3.5 Haiku',
+    label: 'Claude Haiku 4.5',
     description: 'Modelo da Anthropic como alternativa',
     icon: Zap,
     badge: 'Fallback',

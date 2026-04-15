@@ -168,10 +168,10 @@ export const AI_CONFIG = {
 
 // Configuração específica para Anthropic
 export const ANTHROPIC_CONFIG = {
-  // Modelo padrão - Claude 3.5 Haiku (rápido e econômico)
-  DEFAULT_MODEL: 'claude-3-5-haiku-20241022' as const,
+  // Modelo padrão solicitado para Claude Haiku 4.5
+  DEFAULT_MODEL: 'claude-hauiku-4-5-20251001' as const,
   
-  // Modelo avançado - Claude 3.5 Sonnet (mais capaz)
+  // Modelo avançado mantido para análises mais robustas
   ADVANCED_MODEL: 'claude-3-5-sonnet-20241022' as const,
   
   // Configurações de temperatura (0 = mais determinístico, 1 = mais criativo)

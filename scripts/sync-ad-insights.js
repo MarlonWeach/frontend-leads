@@ -13,7 +13,7 @@ const META_ACCOUNT_ID = process.env.META_ACCOUNT_ID;
 const DAYS_TO_SYNC = 30; // Sincronizar últimos 30 dias
 
 async function fetchAdInsights(adId, startDate, endDate) {
-  const url = `https://graph.facebook.com/v19.0/${adId}/insights`;
+  const url = `https://graph.facebook.com/v25.0/${adId}/insights`;
   const params = new URLSearchParams({
     access_token: META_ACCESS_TOKEN,
     fields: 'spend,impressions,clicks,ctr,cpc,cpm,actions,reach,frequency',

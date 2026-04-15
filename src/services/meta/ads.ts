@@ -2,7 +2,7 @@ import { MetaAd, MetaAdsResponse, MetaAPIError, MetaAdsServiceConfig } from '../
 import { logger } from '../../utils/logger';
 import { SyncError } from '../../types/sync';
 
-const DEFAULT_BASE_URL = 'https://graph.facebook.com/v18.0';
+const DEFAULT_BASE_URL = 'https://graph.facebook.com/v25.0';
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY = 1000; // 1 segundo
 

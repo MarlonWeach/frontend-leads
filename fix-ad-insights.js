@@ -23,7 +23,7 @@ async function fixAdInsights() {
     const endDate = new Date().toISOString().split('T')[0];
     
     const insightsResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${adId}/insights`,
+      `https://graph.facebook.com/v25.0/${adId}/insights`,
       {
         params: {
           access_token: accessToken,

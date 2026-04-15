@@ -279,7 +279,7 @@ export async function checkExternalAPIHealth(): Promise<HealthCheck> {
   
   try {
     // Verificar Meta API
-    const response = await fetch('https://graph.facebook.com/v23.0/me', {
+    const response = await fetch('https://graph.facebook.com/v25.0/me', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.META_ACCESS_TOKEN}`

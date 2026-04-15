@@ -22,7 +22,7 @@ const DEFAULT_INSIGHTS_DAYS = Math.min(
   90,
   Math.max(1, parseInt(process.env.SYNC_INSIGHTS_DAYS || '30', 10) || 30)
 );
-const GRAPH_VERSION = 'v23.0';
+const GRAPH_VERSION = 'v25.0';
 const PAGE_SLEEP_MS = 400;
 const UPSERT_CHUNK_SIZE = 200;
 
@@ -58,7 +58,7 @@ function aggregateLeadsFromInsight(insight) {
 
 // Função para fazer requisição à Meta API
 async function makeMetaRequest(path, params = {}) {
-  const url = `https://graph.facebook.com/v19.0/${path}`;
+  const url = `https://graph.facebook.com/v25.0/${path}`;
   const queryParams = new URLSearchParams({
     access_token: META_ACCESS_TOKEN,
     ...params

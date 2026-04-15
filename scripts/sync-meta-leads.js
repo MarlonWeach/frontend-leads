@@ -22,7 +22,7 @@
  * - SYNC_META_LEADS_SKIP_PROBE=1 — nao chama GET form + /leads de teste antes do lote (economiza 2+ reqs; use se o token ja e valido)
  * - SYNC_META_LEADS_INITIAL_DELAY_MS=0 — espera N ms antes da primeira chamada Graph (ex.: 120000 apos outro script ou #4)
  * - SYNC_META_LEADS_DEBUG_TOKEN=1 — loga resultado de GET /me para o token da edge /leads (diagnostico)
- * - META_GRAPH_API_VERSION=v23.0 — versao da Graph (alinhe ao Explorador se necessario)
+ * - META_GRAPH_API_VERSION=v25.0 — versao da Graph (alinhe ao Explorador se necessario)
  * - SYNC_META_LEADS_USE_LEGACY_SINCE_UNTIL=1 — usa since/until na edge /leads (legado); padrao e filtering time_created (doc Meta)
  */
 require('dotenv').config({ path: '.env.local' });
@@ -130,7 +130,7 @@ const LEAD_CAMPAIGN_OBJECTIVES = [
 ];
 
 /** Versao da Graph API — nunca coloque access_token na query string (caracteres &/+ quebram o token). */
-const GRAPH_VERSION_RAW = (process.env.META_GRAPH_API_VERSION || 'v23.0').trim();
+const GRAPH_VERSION_RAW = (process.env.META_GRAPH_API_VERSION || 'v25.0').trim();
 const GRAPH_VERSION = GRAPH_VERSION_RAW.startsWith('v')
   ? GRAPH_VERSION_RAW
   : `v${GRAPH_VERSION_RAW}`;

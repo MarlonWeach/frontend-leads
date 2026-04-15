@@ -20,7 +20,7 @@ const BATCH_SIZE = 100; // Tamanho do lote para Supabase
 const INSIGHTS_BATCH = 25; // Reduzido para menos adsets por chamada
 const RATE_LIMIT_DELAY = 2000; // Delay de 2 segundos entre requisições
 const TRAFFIC_DAYS = 60; // Período de tráfego para verificar
-const META_API_VERSION = 'v23.0';
+const META_API_VERSION = 'v25.0';
 
 // Certifique-se de que o accountId sempre tenha o prefixo 'act_'
 const getAccountId = () => {
@@ -299,7 +299,7 @@ async function syncAdsets() {
 }
 
 async function main() {
-  console.log('🔄 Iniciando sincronização otimizada de adsets (API v23.0, insights em lote)...');
+  console.log('🔄 Iniciando sincronização otimizada de adsets (API v25.0, insights em lote)...');
   console.log(`⚙️  Configurações: ${CONCURRENT_REQUESTS} requisições simultâneas, lotes de ${BATCH_SIZE}, ${TRAFFIC_DAYS} dias de tráfego, ${INSIGHTS_BATCH} adsets por chamada de insights`);
   try {
     const result = await syncAdsets();

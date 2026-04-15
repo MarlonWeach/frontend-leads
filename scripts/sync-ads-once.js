@@ -99,7 +99,7 @@ async function getAdsFromMeta() {
         break;
       }
       
-      let url = `https://graph.facebook.com/v23.0/${accountId}/ads?fields=id,name,status,effective_status,adset_id,campaign_id,created_time,updated_time&limit=100&access_token=${META_ACCESS_TOKEN}`;
+      let url = `https://graph.facebook.com/v25.0/${accountId}/ads?fields=id,name,status,effective_status,adset_id,campaign_id,created_time,updated_time&limit=100&access_token=${META_ACCESS_TOKEN}`;
       
       if (after) {
         url += `&after=${after}`;
@@ -149,7 +149,7 @@ async function getAdsInsightsBatch(adIds) {
     const batch = adIds.slice(i, i + BATCH_SIZE);
     const idsParam = batch.join(',');
     
-    const url = `https://graph.facebook.com/v23.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
+    const url = `https://graph.facebook.com/v25.0/?ids=${idsParam}&fields=insights{impressions,clicks,spend,actions}&date_preset=last_90d&access_token=${META_ACCESS_TOKEN}`;
     
     try {
       console.log(`📊 Buscando insights para lote ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} ads)...`);
@@ -287,7 +287,7 @@ async function syncAds() {
             console.log(`🧩 Adsets ausentes detectados: ${missing.length}. Criando stubs...`);
             for (const adsetId of missing) {
               try {
-                const url = `https://graph.facebook.com/v23.0/${adsetId}?fields=id,name,status,effective_status,campaign_id,created_time,start_time,end_time&access_token=${META_ACCESS_TOKEN}`;
+                const url = `https://graph.facebook.com/v25.0/${adsetId}?fields=id,name,status,effective_status,campaign_id,created_time,start_time,end_time&access_token=${META_ACCESS_TOKEN}`;
                 const adsetResp = await makeRateLimitedRequest(url);
                 if (!adsetResp || adsetResp.error) {
                   console.log('⚠️ Não foi possível obter adset', adsetId, adsetResp?.error?.message || 'erro desconhecido');
