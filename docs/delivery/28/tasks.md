@@ -34,4 +34,4 @@ This document lists all tasks associated with PBI 28.
 | 28-24 | Atualizar modelo Claude e Meta API para versões vigentes | Done | Atualizar configuração Anthropic para novo modelo Haiku e padronizar chamadas Meta Graph API para `v25.0` |
 | 28-25 | Migrar OpenAI para gpt-5-nano | Done | Padronizar modelo OpenAI para `gpt-5-nano` em análise, otimização, anomalias e métricas de billing/custo |
 | 28-26 | Sincronizar status de PBIs/tasks com entregas concluídas | Done | Atualizar backlog e documentação de tasks para refletir status reais já fechados |
-| 28-27 | Corrigir divergência Vercel em performance e warning zustand | InProgress | Forçar fonte única Supabase em `/api/performance` e remover aviso deprecado do bundle instrumentado |
+| 28-27 | Corrigir divergência Vercel em performance e warning zustand | Done | Forçar fonte única Supabase em `/api/performance` e remover aviso deprecado do bundle instrumentado |
