@@ -8,7 +8,7 @@ This document lists all tasks associated with PBI 28.
 
 | Task ID | Name | Status | Description |
 |---------|------|--------|-------------|
-| 28-1 | Padronizar layout e componentes de UI | InProgress | Estabilização inicial de runtime: corrigir erros de console/API e alinhar componentes críticos de UI |
+| 28-1 | Padronizar layout e componentes de UI | Done | Estabilização inicial de runtime: corrigir erros de console/API e alinhar componentes críticos de UI |
 | 28-2 | Corrigir logs de atividade recente | Done | Corrigir exibição de logs de ALTERAÇÕES relevantes da Meta |
 | 28-3 | Corrigir formatação de valores de spend nos gráficos | Done | Padronizar formatação de valores monetários (R$) em todos os gráficos |
 | 28-4 | Remover gráfico de tendências de performance | Done | Remover gráfico de tendências de performance de /performance |
@@ -26,10 +26,12 @@ This document lists all tasks associated with PBI 28.
 | 28-16 | Corrigir defasagem e ordenação do heatmap de performance | Done | Ajustar timezone (America/Sao_Paulo) e ordenação diária do heatmap para eliminar deslocamento D-1 observado entre dashboard e Meta |
 | 28-17 | Investigar e corrigir divergência de dados históricos vs Meta | Done | Resolver discrepâncias de métricas em datas antigas (ex.: dia 10 para trás) entre Supabase/heatmap e Meta após sync |
 | 28-18 | Automatizar reconciliação diária do heatmap vs SQL | Done | Criar auditoria automatizada para comparar totais diários da API `/api/performance/comparisons` com agregação oficial de `adset_insights` e detectar regressões |
-| 28-19 | Estabilizar infraestrutura do Playwright no CI | InProgress | Ajustar execução E2E para ambiente determinístico (build/start, artefatos e base URL) e reduzir flakiness estrutural |
-| 28-20 | Corrigir suíte de acessibilidade E2E com critérios robustos | InProgress | Reescrever asserts frágeis em `accessibility.spec.ts` para critérios verificáveis e estáveis entre browsers |
-| 28-21 | Isolar testes de IA E2E de dependências externas | InProgress | Mockar endpoints de IA no Playwright para evitar falha por quota/rate-limit e validar UX de sucesso/erro de forma determinística |
-| 28-22 | Corrigir fallback indevido em Variações e Performance (IA) | InProgress | Investigar e corrigir motivo do aviso de fallback ativo nas análises de IA de `/performance` |
-| 28-23 | Tratar 429 em otimização de IA com resiliência e UX | InProgress | Implementar tratamento robusto para `429 Too Many Requests` em `/api/ai/optimization` com feedback claro e comportamento degradado |
-| 28-24 | Atualizar modelo Claude e Meta API para versões vigentes | InProgress | Atualizar configuração Anthropic para novo modelo Haiku e padronizar chamadas Meta Graph API para `v25.0` |
-| 28-25 | Migrar OpenAI para gpt-5-nano | InProgress | Padronizar modelo OpenAI para `gpt-5-nano` em análise, otimização, anomalias e métricas de billing/custo |
+| 28-19 | Estabilizar infraestrutura do Playwright no CI | Done | Ajustar execução E2E para ambiente determinístico (build/start, artefatos e base URL) e reduzir flakiness estrutural |
+| 28-20 | Corrigir suíte de acessibilidade E2E com critérios robustos | Done | Reescrever asserts frágeis em `accessibility.spec.ts` para critérios verificáveis e estáveis entre browsers |
+| 28-21 | Isolar testes de IA E2E de dependências externas | Done | Mockar endpoints de IA no Playwright para evitar falha por quota/rate-limit e validar UX de sucesso/erro de forma determinística |
+| 28-22 | Corrigir fallback indevido em Variações e Performance (IA) | Done | Investigar e corrigir motivo do aviso de fallback ativo nas análises de IA de `/performance` |
+| 28-23 | Tratar 429 em otimização de IA com resiliência e UX | Done | Implementar tratamento robusto para `429 Too Many Requests` em `/api/ai/optimization` com feedback claro e comportamento degradado |
+| 28-24 | Atualizar modelo Claude e Meta API para versões vigentes | Done | Atualizar configuração Anthropic para novo modelo Haiku e padronizar chamadas Meta Graph API para `v25.0` |
+| 28-25 | Migrar OpenAI para gpt-5-nano | Done | Padronizar modelo OpenAI para `gpt-5-nano` em análise, otimização, anomalias e métricas de billing/custo |
+| 28-26 | Sincronizar status de PBIs/tasks com entregas concluídas | Done | Atualizar backlog e documentação de tasks para refletir status reais já fechados |
+| 28-27 | Corrigir divergência Vercel em performance e warning zustand | InProgress | Forçar fonte única Supabase em `/api/performance` e remover aviso deprecado do bundle instrumentado |
