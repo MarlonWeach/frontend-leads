@@ -18,6 +18,7 @@ export default defineConfig({
     '**/ai-integration.spec.ts',
     '**/usability-simple.spec.ts',
     '**/accessibility.spec.ts',
+    '**/auth.spec.ts',
   ],
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -79,7 +80,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: process.env.CI ? 'npm run start' : 'npm run dev',
+    command: process.env.CI
+      ? 'PLAYWRIGHT_AUTH_E2E=1 npm run start'
+      : 'PLAYWRIGHT_AUTH_E2E=1 npm run dev',
     url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

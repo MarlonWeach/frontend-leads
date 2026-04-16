@@ -4,7 +4,10 @@ import { Inter } from 'next/font/google'
 import { QueryProvider } from '../src/providers/query-provider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  preload: false,
+})
 
 export const metadata = {
   title: 'Dashboard Lead Ads',
@@ -27,7 +30,7 @@ export default function RootLayout({
         <QueryProvider enableDevtools={process.env.NODE_ENV === 'development'}>
           {children}
         </QueryProvider>
-        <SpeedInsights />
+        {process.env.NODE_ENV === 'production' ? <SpeedInsights /> : null}
         {/* Service Worker apenas em produção; em localhost remove registros antigos */}
         <script
           dangerouslySetInnerHTML={{

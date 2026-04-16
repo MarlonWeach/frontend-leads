@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   BarChart3, TrendingUp, Target, Layers, Settings, Menu, X,
@@ -77,6 +77,7 @@ const secondaryNavigation = [
 export default function MainLayout({ children, title, breadcrumbs = [] }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -94,6 +95,17 @@ export default function MainLayout({ children, title, breadcrumbs = [] }: MainLa
   };
 
   const pageInfo = getPageInfo();
+
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } finally {
+      router.replace('/login');
+    }
+  }
 
   const NavItem = ({ item, isSecondary = false }: { item: any; isSecondary?: boolean }) => {
     const active = isActive(item.href);
@@ -176,8 +188,12 @@ export default function MainLayout({ children, title, breadcrumbs = [] }: MainLa
               admin@leadads.com
             </p>
           </div>
-          <button className="ml-2 p-1 rounded-full text-white/60 hover:text-white transition-colors">
-            <Settings className="h-4 w-4" />
+          <button
+            className="ml-2 p-1 rounded-full text-white/60 hover:text-white transition-colors"
+            onClick={handleLogout}
+            title="Sair"
+          >
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>
