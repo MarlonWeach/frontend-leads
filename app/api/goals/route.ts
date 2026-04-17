@@ -13,7 +13,8 @@ import {
   GoalValidation,
   GoalApiResponse,
   GoalsListResponse,
-  GOAL_CONSTANTS 
+  GOAL_CONSTANTS,
+  deriveVolumeContracted
 } from '../../../src/types/goals';
 
 // GET /api/goals - List all goals or filter by adset_id
@@ -71,7 +72,15 @@ export async function GET(request: NextRequest) {
 // POST /api/goals - Create or update goal
 export async function POST(request: NextRequest) {
   try {
-    const body: AdsetGoalInput = await request.json();
+    const bodyRaw: AdsetGoalInput = await request.json();
+    const body: AdsetGoalInput = {
+      ...bodyRaw,
+      volume_contracted: deriveVolumeContracted(
+        bodyRaw.budget_total,
+        bodyRaw.cpl_target,
+        bodyRaw.volume_captured
+      )
+    };
 
     // Validate input
     const validation = validateGoalInput(body);

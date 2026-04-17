@@ -21,6 +21,7 @@ export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   // Buscar dados sempre que filters mudar
   useEffect(() => {
@@ -63,23 +64,11 @@ export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
         setError(err.message || 'Erro desconhecido');
         setLoading(false);
       });
-  }, [filters]); // Usar filters diretamente ao invés de JSON.stringify
+  }, [filters, reloadToken]); // Usar filters diretamente ao invés de JSON.stringify
 
   // Função manual para refresh (mantida para interface)
   const refresh = () => {
-    // Apenas força o efeito a rodar novamente
-    setData([]);
-    setSummary({
-      total_adsets: 0,
-      no_prazo: 0,
-      atencao: 0,
-      atrasado: 0,
-      critico: 0,
-      atingido: 0,
-      pausado: 0
-    });
-    setLoading(true);
-    setError(null);
+    setReloadToken(prev => prev + 1);
   };
 
   return { data, summary, loading, error, refresh };

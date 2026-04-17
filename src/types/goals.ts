@@ -122,6 +122,33 @@ export interface GoalsListResponse {
   total?: number;
 }
 
+export interface GoalOptimizationContextItem {
+  meta_account_id: string;
+  adset_id: string;
+  adset_name?: string;
+  competence_month: string;
+  contract_start_date: string;
+  competence_end_date: string;
+  volume_contracted: number;
+  delivered_reference: number;
+  delivered_source: 'manual_client' | 'historical_fallback';
+  volume_remaining: number;
+  days_remaining: number;
+  leads_needed_daily: number;
+  cpl_target: number;
+  current_cpl: number | null;
+  budget_total: number;
+  spend_to_date: number;
+  has_manual_delivery: boolean;
+}
+
+export interface GoalOptimizationContextResponse {
+  success: boolean;
+  data?: GoalOptimizationContextItem[];
+  error?: string;
+  total?: number;
+}
+
 // Utility types
 export type GoalMetric = 'budget' | 'volume' | 'cpl' | 'timeline';
 
@@ -148,6 +175,24 @@ export const GOAL_CONSTANTS = {
   WARNING_THRESHOLD_DAYS: 7,
   CRITICAL_THRESHOLD_DAYS: 3
 } as const;
+
+/**
+ * Volume contratado = Budget Total / CPL Revenue (arredondado), alinhado ao card de Metas.
+ * Garante volume_contracted >= volume_captured para passar na validação.
+ */
+export function deriveVolumeContracted(
+  budgetTotal: number,
+  cplRevenue: number,
+  volumeCaptured: number
+): number {
+  if (!Number.isFinite(budgetTotal) || budgetTotal <= 0) return 0;
+  if (!Number.isFinite(cplRevenue) || cplRevenue <= 0) return 0;
+  const captured = Number.isFinite(volumeCaptured)
+    ? Math.max(0, Math.floor(volumeCaptured))
+    : 0;
+  const derived = Math.round(budgetTotal / cplRevenue);
+  return Math.max(derived, captured);
+}
 
 // Helper type for form validation rules
 export interface ValidationRules {

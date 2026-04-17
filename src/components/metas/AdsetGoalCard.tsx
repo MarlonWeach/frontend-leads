@@ -120,7 +120,7 @@ function BudgetAdjustModal({ isOpen, onClose, onConfirm, currentBudget, loading 
 interface MetaConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (meta: any) => void;
+  onSave: () => void;
 }
 
 // Função utilitária para salvar meta via API
@@ -154,7 +154,7 @@ async function saveAdsetGoal(adset_id: string, meta: any, isEdit: boolean): Prom
 function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: MetaConfigModalProps & { adsetId: string, isEdit: boolean, goal?: any }) {
   const [budget, setBudget] = useState<number | ''>('');
   const [cpl, setCpl] = useState<number | ''>('');
-  const [volume, setVolume] = useState<number | ''>('');
+  const [capturedVolume, setCapturedVolume] = useState<number | ''>(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useStateReact(false);
@@ -166,17 +166,24 @@ function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: Met
     if (isOpen && isEdit && goal) {
       setBudget(goal.budget_total || '');
       setCpl(goal.cpl_target || '');
-      setVolume(goal.volume_contracted || '');
-      setStartDate(goal.contract_start_date || '');
-      setEndDate(goal.contract_end_date || '');
+      setCapturedVolume(goal.volume_captured ?? 0);
+      setStartDate(goal.contract_start_date ? goal.contract_start_date.slice(0, 10) : '');
+      setEndDate(goal.contract_end_date ? goal.contract_end_date.slice(0, 10) : '');
     } else if (isOpen && !isEdit) {
       setBudget('');
       setCpl('');
-      setVolume('');
+      setCapturedVolume(0);
       setStartDate('');
       setEndDate('');
     }
   }, [isOpen, isEdit, goal]);
+
+  const derivedVolumeContracted =
+    typeof budget === 'number' &&
+    typeof cpl === 'number' &&
+    cpl > 0
+      ? Math.round(budget / cpl)
+      : 0;
 
   if (!isOpen) return null;
 
@@ -184,12 +191,14 @@ function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: Met
     e.preventDefault();
     setError(null);
     setSuccess(false);
-    if (budget && cpl && volume && startDate && endDate) {
+    if (budget && cpl && startDate && endDate && capturedVolume !== '') {
       setLoading(true);
+      const safeVolumeContracted = Math.max(derivedVolumeContracted, Number(capturedVolume));
       const meta = {
         budget_total: Number(budget),
         cpl_target: Number(cpl),
-        volume_contracted: Number(volume),
+        volume_contracted: safeVolumeContracted,
+        volume_captured: Number(capturedVolume),
         contract_start_date: startDate,
         contract_end_date: endDate
       };
@@ -199,7 +208,7 @@ function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: Met
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
-          onSave(meta);
+          onSave();
         }, 800);
       } else {
         setError(result.error || 'Erro ao salvar meta');
@@ -217,12 +226,22 @@ function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: Met
             <input type="number" min="1" step="0.01" value={budget} onChange={e => setBudget(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-1">CPL Alvo (R$)</label>
+            <label className="block text-sm font-medium text-white/80 mb-1">CPL Revenue (R$)</label>
             <input type="number" min="1" step="0.01" value={cpl} onChange={e => setCpl(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-1">Volume Contratado (leads)</label>
-            <input type="number" min="1" step="1" value={volume} onChange={e => setVolume(e.target.value ? Number(e.target.value) : '')} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
+            <label className="block text-sm font-medium text-white/80 mb-1">Volume Contratado (automático)</label>
+            <input
+              type="text"
+              value={derivedVolumeContracted > 0 ? `${derivedVolumeContracted} leads` : '--'}
+              className="w-full px-3 py-2 glass-light text-white/80 rounded-lg border border-white/10 focus:outline-none"
+              readOnly
+            />
+            <p className="text-xs text-white/50 mt-1">Calculado por Budget Total / CPL Revenue</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-1">Volume Captado (manual)</label>
+            <input type="number" min="0" step="1" value={capturedVolume} onChange={e => setCapturedVolume(e.target.value ? Number(e.target.value) : 0)} className="w-full px-3 py-2 glass-light text-white rounded-lg border border-white/10 focus:border-primary focus:outline-none" required />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -238,7 +257,7 @@ function MetaConfigModal({ isOpen, onClose, onSave, adsetId, isEdit, goal }: Met
           {success && <div className="text-green-400 text-xs font-semibold mt-2">Meta salva com sucesso!</div>}
           <div className="flex gap-3 pt-4">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 glass-medium text-white/80 rounded-lg hover:text-white transition-colors" disabled={loading}>Cancelar</button>
-            <button type="submit" className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50" disabled={!budget || !cpl || !volume || !startDate || !endDate || loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
+            <button type="submit" className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50" disabled={!budget || !cpl || derivedVolumeContracted <= 0 || capturedVolume === '' || !startDate || !endDate || loading}>{loading ? 'Salvando...' : 'Salvar'}</button>
           </div>
         </form>
       </div>
@@ -268,12 +287,15 @@ export default function AdsetGoalCard({
   const totalLeads = item.goal?.volume_captured ?? (item.metrics as any)?.total_leads ?? null;
   const totalLeadsTarget = item.goal?.volume_contracted ?? null;
   const totalSpend = (item.metrics as any)?.total_spend ?? null;
+  const spendInGoalPeriod = item.metrics?.spend_in_goal_period ?? totalSpend;
   const totalImpressions = (item.metrics as any)?.total_impressions ?? null;
-  const cplCurrent = item.metrics?.current_cpl ?? (totalSpend && totalLeads ? totalSpend / totalLeads : null);
+  const cplCurrent = item.metrics?.current_cpl ?? (spendInGoalPeriod && totalLeads ? spendInGoalPeriod / totalLeads : null);
   const cplTarget = item.goal?.cpl_target ?? null;
   const budgetTotal = item.goal?.budget_total ?? null;
-  const budgetUtilization = budgetTotal && totalSpend ? (totalSpend / budgetTotal) * 100 : null;
+  const budgetUtilization = budgetTotal && spendInGoalPeriod ? (spendInGoalPeriod / budgetTotal) * 100 : null;
   const progressPercentage = item.metrics?.progress_percentage ?? (totalLeads && totalLeadsTarget ? (totalLeads / totalLeadsTarget) * 100 : null);
+  const roiPercentage = item.metrics?.roi_percentage ?? null;
+  const marginPercentage = item.metrics?.margin_percentage ?? null;
 
   // Checar se há informações essenciais faltando
   const missingFields = [budgetTotal, cplTarget, totalLeadsTarget, item.goal?.contract_start_date, item.goal?.contract_end_date].some(v => v === null || v === undefined || isNaN(Number(v)));
@@ -307,9 +329,23 @@ export default function AdsetGoalCard({
     return new Intl.NumberFormat('pt-BR').format(value);
   };
 
+  const formatDecimal = (value?: number | null, fractionDigits = 1) => {
+    if (value === null || value === undefined || isNaN(value)) return '--';
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    }).format(value);
+  };
+
+  const formatPercent = (value?: number | null) => {
+    if (value === null || value === undefined || isNaN(value)) return '--';
+    return `${value.toFixed(1)}%`;
+  };
+
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return '--';
-    const d = new Date(dateString);
+    const [year, month, day] = dateString.split('-').map(Number);
+    const d = new Date(year, (month || 1) - 1, day || 1);
     if (isNaN(d.getTime())) return '--';
     return d.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -377,7 +413,7 @@ export default function AdsetGoalCard({
           />
           {/* Progress section: mostrar leads acumulados (leads_in_goal_period) e meta */}
           <div className="flex justify-between mt-1 text-xs text-white/60">
-            <span>{formatNumber(item.metrics?.leads_in_goal_period)} leads acumulados</span>
+            <span>{formatNumber(item.metrics?.delivered_reference)} leads referência</span>
             <span>Meta: {formatNumber(totalLeadsTarget)}</span>
           </div>
         </div>
@@ -388,13 +424,13 @@ export default function AdsetGoalCard({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <DollarSign className="w-4 h-4 text-white/60" />
-                <span className="text-xs text-white/60">CPL Atual</span>
+                <span className="text-xs text-white/60">CPL Cost</span>
               </div>
               <div className="text-sm font-semibold text-white">
                 {formatCurrency(cplCurrent)}
               </div>
               <div className="text-xs text-white/50">
-                Meta: {formatCurrency(cplTarget)}
+                CPL Revenue: {formatCurrency(cplTarget)}
               </div>
             </div>
 
@@ -405,10 +441,10 @@ export default function AdsetGoalCard({
                 <span className="text-xs text-white/60">Leads/Dia</span>
               </div>
               <div className="text-sm font-semibold text-white">
-                {formatNumber(item.metrics?.leads_needed_daily)}
+                {formatDecimal(item.metrics?.leads_needed_daily, 1)}
               </div>
               <div className="text-xs text-white/50">
-                Ontem: {formatNumber(item.metrics?.leads_ontem)} | Média: {formatNumber(item.metrics?.daily_average_leads)}
+                Ontem: {formatNumber(item.metrics?.leads_ontem)} | Restante: {formatNumber(item.metrics?.volume_remaining)}
               </div>
             </div>
           </div>
@@ -420,10 +456,10 @@ export default function AdsetGoalCard({
                 <span className="text-xs text-white/60">Custo</span>
               </div>
               <div className="text-sm font-semibold text-white">
-                {formatNumber(budgetUtilization)}%
+                {formatDecimal(budgetUtilization, 1)}%
               </div>
               <div className="text-xs text-white/50">
-                {formatCurrency(totalSpend)} / {formatCurrency(budgetTotal)}
+                {formatCurrency(spendInGoalPeriod)} / {formatCurrency(budgetTotal)}
               </div>
             </div>
 
@@ -436,7 +472,7 @@ export default function AdsetGoalCard({
                 {formatNumber(item.metrics?.days_remaining)}
               </div>
               <div className="text-xs text-white/50">
-                de {formatNumber(item.metrics?.days_total)} dias
+                ROI: {formatPercent(roiPercentage)} | Margem: {formatPercent(marginPercentage)}
               </div>
             </div>
           </div>
@@ -506,13 +542,10 @@ export default function AdsetGoalCard({
       <MetaConfigModal
         isOpen={showMetaModal}
         onClose={() => setShowMetaModal(false)}
-        onSave={Object.assign(
-          (meta: any) => {
-            setShowMetaModal(false);
-            if (onEdit) onEdit(item); // Trigger refresh
-          },
-          { adsetId: item.adset_id, isEdit: !!item.goal }
-        )}
+        onSave={() => {
+          setShowMetaModal(false);
+          if (onEdit) onEdit(item);
+        }}
         adsetId={item.adset_id}
         isEdit={!!item.goal}
         goal={item.goal}

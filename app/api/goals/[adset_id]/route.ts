@@ -7,7 +7,8 @@ import { supabaseServer as supabase } from '../../../../src/lib/supabaseServer';
 import { 
   AdsetGoalInput, 
   GoalApiResponse,
-  GOAL_CONSTANTS 
+  GOAL_CONSTANTS,
+  deriveVolumeContracted
 } from '../../../../src/types/goals';
 
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,11 @@ export async function PUT(
       adset_id, // Ensure adset_id is preserved
       updated_at: new Date().toISOString()
     };
+    updatedData.volume_contracted = deriveVolumeContracted(
+      updatedData.budget_total,
+      updatedData.cpl_target,
+      updatedData.volume_captured
+    );
 
     // Validate merged data
     const validation = validateGoalInput(updatedData);

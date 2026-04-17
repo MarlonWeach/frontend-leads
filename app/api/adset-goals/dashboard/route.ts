@@ -102,41 +102,89 @@ export async function GET(request: NextRequest) {
         total_leads: i.total_leads,
         total_spend: i.total_spend,
         leads_in_goal_period: null,
-        leads_ontem: null
+        leads_ontem: null,
+        delivered_reference: null,
+        volume_remaining: null,
+        spend_in_goal_period: null,
+        revenue_generated: null,
+        cost_investment: null,
+        roi_percentage: null,
+        margin_percentage: null
       };
       let status: AdsetGoalStatus = 'critico';
       const alerts: any[] = [];
       if (goal) {
         // Buscar soma de leads do adset no período da meta
+        const today = new Date();
+        const goalStart = goal.contract_start_date ? new Date(goal.contract_start_date) : today;
+        const competenceEnd = endOfMonth(goalStart);
+        const goalStartStr = goalStart.toISOString().slice(0, 10);
+        const competenceEndStr = competenceEnd.toISOString().slice(0, 10);
+
         const { data: leadsRows, error: leadsError } = await supabase
           .from('adset_insights')
-          .select('leads, date')
+          .select('leads, spend, date')
           .eq('adset_id', i.adset_id)
-          .gte('date', goal.contract_start_date)
-          .lte('date', goal.contract_end_date);
+          .gte('date', goalStartStr)
+          .lte('date', competenceEndStr);
         let leadsInGoalPeriod = 0;
         let leadsOntem = 0;
+        let spendInGoalPeriod = 0;
         if (!leadsError && Array.isArray(leadsRows)) {
           leadsInGoalPeriod = leadsRows.reduce((sum, row) => sum + (Number(row.leads) || 0), 0);
+          spendInGoalPeriod = leadsRows.reduce((sum, row) => sum + (Number(row.spend) || 0), 0);
           // Buscar leads de ontem
           const ontem = new Date();
           ontem.setDate(ontem.getDate() - 1);
           const ontemStr = ontem.toISOString().slice(0, 10);
           leadsOntem = leadsRows.filter(row => row.date === ontemStr).reduce((sum, row) => sum + (Number(row.leads) || 0), 0);
         }
-        const today = new Date();
-        const start = new Date(goal.contract_start_date);
-        const end = new Date(goal.contract_end_date);
-        const daysTotal = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-        const daysElapsed = Math.max(0, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-        const daysRemaining = Math.max(0, Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-        const leadsNeededTotal = goal.volume_contracted - leadsInGoalPeriod;
+
+        const deliveredReference = Number.isFinite(Number(goal.volume_captured))
+          ? Number(goal.volume_captured)
+          : leadsInGoalPeriod;
+
+        const daysTotal = Math.max(
+          1,
+          Math.ceil((competenceEnd.getTime() - goalStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        );
+        const daysElapsed = Math.max(
+          0,
+          Math.min(
+            daysTotal,
+            Math.ceil((today.getTime() - goalStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+          )
+        );
+        const daysRemaining = Math.max(
+          0,
+          Math.ceil((competenceEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        );
+
+        const leadsNeededTotal = Math.max(0, goal.volume_contracted - deliveredReference);
         const leadsNeededDaily = daysRemaining > 0 ? leadsNeededTotal / daysRemaining : 0;
-        const dailyAverageLeads = daysElapsed > 0 ? leadsInGoalPeriod / daysElapsed : 0;
-        const progressPercentage = goal.volume_contracted > 0 ? (leadsInGoalPeriod / goal.volume_contracted) * 100 : null;
-        const budgetUtilization = goal.budget_total > 0 ? (i.total_spend / goal.budget_total) * 100 : null;
-        const projectedFinalLeads = daysRemaining > 0 ? leadsInGoalPeriod + (dailyAverageLeads * daysRemaining) : leadsInGoalPeriod;
-        const projectedFinalCpl = projectedFinalLeads > 0 ? i.total_spend / projectedFinalLeads : null;
+        const dailyAverageLeads = daysElapsed > 0 ? deliveredReference / daysElapsed : 0;
+        const progressPercentage = goal.volume_contracted > 0 ? (deliveredReference / goal.volume_contracted) * 100 : null;
+        const budgetUtilization = goal.budget_total > 0 ? (spendInGoalPeriod / goal.budget_total) * 100 : null;
+        const projectedFinalLeads = daysRemaining > 0 ? deliveredReference + (dailyAverageLeads * daysRemaining) : deliveredReference;
+        const projectedFinalCpl = projectedFinalLeads > 0 ? spendInGoalPeriod / projectedFinalLeads : null;
+        const currentCpl = deliveredReference > 0 ? spendInGoalPeriod / deliveredReference : null;
+        const revenueGeneratedRaw = Number((goal as any).revenue_generated);
+        const averageTicketRaw = Number((goal as any).average_ticket);
+        const cplRevenueRaw = Number(goal.cpl_target);
+        const revenueGenerated = Number.isFinite(revenueGeneratedRaw)
+          ? revenueGeneratedRaw
+          : Number.isFinite(averageTicketRaw)
+            ? averageTicketRaw * deliveredReference
+            : Number.isFinite(cplRevenueRaw)
+              ? cplRevenueRaw * deliveredReference
+              : null;
+        const costInvestment = Number.isFinite(spendInGoalPeriod) ? spendInGoalPeriod : null;
+        const roiPercentage = (revenueGenerated !== null && costInvestment !== null && costInvestment > 0)
+          ? ((revenueGenerated - costInvestment) / costInvestment) * 100
+          : null;
+        const marginPercentage = (revenueGenerated !== null && revenueGenerated > 0 && costInvestment !== null)
+          ? ((revenueGenerated - costInvestment) / revenueGenerated) * 100
+          : null;
         metrics = {
           ...metrics,
           days_total: daysTotal,
@@ -146,26 +194,35 @@ export async function GET(request: NextRequest) {
           daily_average_leads: dailyAverageLeads,
           leads_needed_daily: leadsNeededDaily,
           budget_utilization_percentage: budgetUtilization,
+          current_cpl: currentCpl,
           projected_final_leads: projectedFinalLeads,
           projected_final_cpl: projectedFinalCpl,
           leads_in_goal_period: leadsInGoalPeriod,
-          leads_ontem: leadsOntem
+          leads_ontem: leadsOntem,
+          delivered_reference: deliveredReference,
+          volume_remaining: leadsNeededTotal,
+          spend_in_goal_period: spendInGoalPeriod,
+          revenue_generated: revenueGenerated,
+          cost_investment: costInvestment,
+          roi_percentage: roiPercentage,
+          margin_percentage: marginPercentage
         };
-        // Status inteligente
-        if (
-          typeof leadsNeededDaily === 'number' &&
-          typeof leadsOntem === 'number' &&
-          leadsNeededDaily > 0
-        ) {
-          if (leadsOntem < leadsNeededDaily * 0.9) {
+        // Status baseado em ritmo mensal da competência e entrega de referência.
+        if (goal.volume_contracted > 0 && deliveredReference >= goal.volume_contracted) {
+          status = 'atingido';
+        } else {
+          const expectedToDate = goal.volume_contracted > 0 ? (goal.volume_contracted * daysElapsed) / daysTotal : 0;
+          const ratio = expectedToDate > 0 ? deliveredReference / expectedToDate : 1;
+
+          if (ratio < 0.8) {
+            status = 'critico';
+          } else if (ratio < 0.95) {
             status = 'atrasado';
-          } else if (leadsOntem < leadsNeededDaily) {
+          } else if (ratio < 1) {
             status = 'atencao';
           } else {
             status = 'no_prazo';
           }
-        } else {
-          status = 'no_prazo';
         }
         // Alerta só se faltar campo essencial
         const missingFields = [goal.budget_total, goal.cpl_target, goal.volume_contracted, goal.contract_start_date, goal.contract_end_date].some(v => v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)));

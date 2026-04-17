@@ -464,12 +464,11 @@ export default function AdsetGoalsOverview() {
             <AdsetGoalCard
               key={item.adset_id}
               item={item}
-              onEdit={(adset_id) => {
-                // TODO: Implementar modal de edição
-                console.log('Edit goal for adset:', adset_id);
+              onEdit={() => {
+                // Recarrega métricas após salvar meta.
+                refresh();
               }}
               onViewDetails={(adset_id) => {
-                // TODO: Implementar navegação para detalhes
                 console.log('View details for adset:', adset_id);
               }}
             />

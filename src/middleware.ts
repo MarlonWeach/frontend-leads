@@ -6,6 +6,7 @@ import { logAuthAudit } from './lib/auth/audit';
 
 const PRIVATE_PAGE_PREFIXES = [
   '/dashboard',
+  '/metas',
   '/performance',
   '/campaigns',
   '/ads',
@@ -94,6 +95,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/metas',
     '/performance/:path*',
     '/campaigns/:path*',
     '/ads/:path*',

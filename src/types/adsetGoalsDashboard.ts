@@ -33,6 +33,13 @@ export interface AdsetGoalDashboardItem {
     total_spend: number | null;
     leads_in_goal_period: number | null;
     leads_ontem: number | null;
+    delivered_reference: number | null;
+    volume_remaining: number | null;
+    spend_in_goal_period: number | null;
+    revenue_generated: number | null;
+    cost_investment: number | null;
+    roi_percentage: number | null;
+    margin_percentage: number | null;
   } | null;
   
   // Status visual

@@ -14,6 +14,6 @@ This document lists all tasks associated with PBI 21.
 | 21-4 | [Implementar cards coloridos na página /adsets](./21-4.md) | Done | Aplicar o padrão de cards coloridos na página de adsets |
 | 21-5 | [Implementar cards coloridos na página /ads](./21-5.md) | Done | Aplicar o padrão de cards coloridos na página de ads |
 | 21-6 | [Implementar cards coloridos na página /leads](./21-6.md) | Done | Aplicar o padrão de cards coloridos na página de leads |
-| 21-7 | [Implementar cards coloridos na página /charts](./21-7.md) | Blocked | Página charts está mockada, sem dados reais e sem atalho no menu. Implementação dos cards coloridos será feita quando a página for ativada e integrada a dados reais |
+| 21-7 | [Implementar cards coloridos na página /charts](./21-7.md) | Blocked | Página `/charts` não existe atualmente no produto; task permanece bloqueada até eventual reintrodução da página |
 | 21-8 | [Testes de responsividade e consistência visual](./21-8.md) | Done | Validar layout, cores, animações e espaçamentos em diferentes tamanhos de tela |
 | 21-9 | [Teste E2E de todas as páginas com novo padrão visual](./21-9.md) | Done | Validar que todas as funcionalidades continuam funcionando com o novo padrão visual | 

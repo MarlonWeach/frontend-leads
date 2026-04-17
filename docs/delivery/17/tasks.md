@@ -23,7 +23,7 @@ This document lists all tasks associated with PBI 17.
 | 17-13 | Padronizar cards de alerta com glassmorphism | Done | Alertas com mesmo padrão visual dos cards superiores |
 | 17-14 | Refinar tipografia com headers e sublabels | Done | Headers com Satoshi bold 28-32px, sublabels com brilho sutil |
 | 17-15 | Ajustar espaçamento e layout para mais respiro | Done | Aumentar gaps, paddings e espaçamento vertical |
-| 17-16 | Implementar projeção futura no gráfico de tendências | Proposed | Adicionar projeção de 3-5 dias futuros com dados simulados baseados em tendência histórica |
+| 17-16 | Implementar projeção futura no gráfico de tendências | Proposed | Baixa prioridade no momento; adiar execução até nova definição de roadmap |
 
 ---
 

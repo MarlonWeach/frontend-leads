@@ -20,4 +20,4 @@ This document lists all tasks associated with PBI 22.
 | 22-10 | [Implementar otimização de prompts para melhor performance](./22-10.md) | Done | Melhorar eficiência e qualidade das análises |
 | 22-11 | [Implementar análise individual de campanhas, adsets e ads](./22-11.md) | Done | Análise detalhada de cada elemento |
 | 22-12 | [Corrigir problemas identificados na análise individual](./22-12.md) | Done | Resolver bugs na análise individual |
-| 22-13 | [Implementar otimizações baseadas em dados reais da Meta API](./22-13.md) | Proposed | Criar sistema de otimizações baseadas em evidências reais | 
+| 22-13 | [Implementar otimizações baseadas em dados reais da Meta API](./22-13.md) | Blocked | Escopo migrado para PBI dedicado ([PBI 32](../32/prd.md)); manter aqui apenas como referência histórica |

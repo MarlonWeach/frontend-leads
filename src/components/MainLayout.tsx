@@ -35,7 +35,7 @@ const navigation = [
   },
   {
     name: 'Metas',
-    href: '/dashboard/metas',
+    href: '/metas',
     icon: Target,
     description: 'Acompanhamento de metas'
   },
