@@ -155,3 +155,6 @@ supabase-sync-cron/.DS_Store
 # Cópias locais aninhadas do mesmo repositório (evitar clones duplicados no root)
 frontend-leads/
 frontend-leads-1/
+
+# Supabase CLI — pasta criada por `supabase link` (não versionar)
+.supabase/
