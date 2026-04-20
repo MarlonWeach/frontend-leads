@@ -109,5 +109,10 @@ Criar um PBI dedicado para planejar e implementar otimizações orientadas por e
 
 ## Related Tasks
 - [tasks.md](./tasks.md)
+- [32-3 — contrato API e persistência](./32-3.md) (fechado para implementação na 32-6/32-7)
+- [32-4 — UX e fluxo de decisão](./32-4.md) (fechado para implementação na 32-7)
+- [32-5 — validação offline e piloto](./32-5.md) (fechado; execução na 32-8)
+- [32-6 — base técnica MVP](./32-6.md) (migration + agregação 7d; wire nas APIs na 32-7)
+- [32-7 — motor assistido + APIs + UI](./32-7.md) (entregue; build global do repo pode falhar por rotas legadas)
 
 [Back to Backlog](../backlog.md)

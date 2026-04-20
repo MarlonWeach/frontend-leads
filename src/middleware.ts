@@ -7,6 +7,7 @@ import { logAuthAudit } from './lib/auth/audit';
 const PRIVATE_PAGE_PREFIXES = [
   '/dashboard',
   '/metas',
+  '/recomendacoes',
   '/performance',
   '/campaigns',
   '/ads',
@@ -24,6 +25,7 @@ const PROTECTED_API_PREFIXES = [
   '/api/debug-env',
   '/api/test-ads-structure',
   '/api/test-meta-leads-ads',
+  '/api/optimization',
 ];
 
 function isPrivatePage(pathname: string): boolean {
@@ -111,6 +113,7 @@ export const config = {
     '/api/cache/:path*',
     '/api/debug-env/:path*',
     '/api/test-ads-structure/:path*',
-    '/api/test-meta-leads-ads/:path*'
+    '/api/test-meta-leads-ads/:path*',
+    '/api/optimization/:path*'
   ],
 }; 

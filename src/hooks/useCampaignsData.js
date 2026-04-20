@@ -7,7 +7,7 @@ export function useCampaignsData(dateFrom, dateTo) {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  const withTimeout = async (promise, timeoutMs = 15000) => {
+  const withTimeout = async (promise, timeoutMs = 45000) => {
     let timeoutId;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error('Tempo limite excedido ao buscar dados')), timeoutMs);
@@ -68,7 +68,11 @@ export function useCampaignsData(dateFrom, dateTo) {
       setLastUpdate(new Date());
     } catch (err) {
       setError(err.message);
-      console.error('Erro ao carregar campanhas:', err);
+      if (String(err?.message || '').includes('Tempo limite')) {
+        console.warn('Performance / campanhas: tempo limite ao buscar dados (tente recarregar).', err.message);
+      } else {
+        console.error('Erro ao carregar campanhas:', err);
+      }
     } finally {
       setLoading(false);
     }

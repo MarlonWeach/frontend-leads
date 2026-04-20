@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   BarChart3, TrendingUp, Target, Layers, Settings, Menu, X,
-  Home, Users, Building2, FileText, Download, User, LogOut, HelpCircle, Image
+  Home, Users, Building2, FileText, Download, User, LogOut, HelpCircle, Image, Sparkles
 } from 'lucide-react';
 import SyncStatus from './SyncStatus';
 
@@ -38,6 +38,12 @@ const navigation = [
     href: '/metas',
     icon: Target,
     description: 'Acompanhamento de metas'
+  },
+  {
+    name: 'Recomendações',
+    href: '/recomendacoes',
+    icon: Sparkles,
+    description: 'Sugestões assistidas por evidência'
   },
   {
     name: 'Campanhas',
@@ -83,6 +89,9 @@ export default function MainLayout({ children, title, breadcrumbs = [] }: MainLa
     if (href === '/dashboard') {
       return pathname === '/' || pathname === '/dashboard';
     }
+    if (href === '/recomendacoes') {
+      return pathname.startsWith('/recomendacoes') || pathname.startsWith('/dashboard/recomendacoes');
+    }
     return pathname.startsWith(href);
   };
 
@@ -114,6 +123,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }: MainLa
     return (
       <Link
         href={item.href}
+        prefetch={false}
         className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 glass-hover ${
           active
             ? 'glass-medium text-white shadow-primary-glow'
