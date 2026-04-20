@@ -1,8 +1,7 @@
 -- Migration: Create adset_progress_tracking table for PBI 25 - Task 25-3
--- Created: 2025-01-22
--- Purpose: Store daily progress tracking for adset goals
+-- Idempotente para remoto com schema já aplicado.
 
-CREATE TABLE adset_progress_tracking (
+CREATE TABLE IF NOT EXISTS public.adset_progress_tracking (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adset_id VARCHAR NOT NULL,
   date DATE NOT NULL,
@@ -15,8 +14,8 @@ CREATE TABLE adset_progress_tracking (
   UNIQUE (adset_id, date)
 );
 
-CREATE INDEX idx_adset_progress_tracking_adset_id ON adset_progress_tracking(adset_id);
-CREATE INDEX idx_adset_progress_tracking_date ON adset_progress_tracking(date);
+CREATE INDEX IF NOT EXISTS idx_adset_progress_tracking_adset_id ON public.adset_progress_tracking(adset_id);
+CREATE INDEX IF NOT EXISTS idx_adset_progress_tracking_date ON public.adset_progress_tracking(date);
 
-COMMENT ON TABLE adset_progress_tracking IS 'Daily progress tracking for adset goals';
-COMMENT ON COLUMN adset_progress_tracking.status IS 'on_track, behind, ahead, at_risk, completed'; 
+COMMENT ON TABLE public.adset_progress_tracking IS 'Daily progress tracking for adset goals';
+COMMENT ON COLUMN public.adset_progress_tracking.status IS 'on_track, behind, ahead, at_risk, completed';

@@ -1,11 +1,12 @@
 -- PBI 32 / Task 32-6: tabelas de recomendações assistidas e decisões (contrato 32-3).
+-- Idempotente: remoto pode já ter tabelas sem linha correspondente em schema_migrations.
 -- Acesso previsto: APIs Next.js com service_role; RLS habilitado sem políticas permissivas (PBI 29).
 
 -- =============================================================================
 -- optimization_recommendations
 -- =============================================================================
 
-CREATE TABLE public.optimization_recommendations (
+CREATE TABLE IF NOT EXISTS public.optimization_recommendations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   meta_account_id TEXT NOT NULL,
   scope TEXT NOT NULL,
@@ -39,13 +40,13 @@ CREATE TABLE public.optimization_recommendations (
     ))
 );
 
-CREATE INDEX idx_optimization_recommendations_account_status_expires
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_account_status_expires
   ON public.optimization_recommendations (meta_account_id, status, expires_at);
 
-CREATE INDEX idx_optimization_recommendations_entity_generated
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_entity_generated
   ON public.optimization_recommendations (entity_id, generated_at DESC);
 
-CREATE INDEX idx_optimization_recommendations_batch
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_batch
   ON public.optimization_recommendations (batch_id);
 
 COMMENT ON TABLE public.optimization_recommendations IS
@@ -55,7 +56,7 @@ COMMENT ON TABLE public.optimization_recommendations IS
 -- optimization_recommendation_decisions
 -- =============================================================================
 
-CREATE TABLE public.optimization_recommendation_decisions (
+CREATE TABLE IF NOT EXISTS public.optimization_recommendation_decisions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   recommendation_id UUID NOT NULL
     REFERENCES public.optimization_recommendations (id) ON DELETE CASCADE,
@@ -68,10 +69,10 @@ CREATE TABLE public.optimization_recommendation_decisions (
     CHECK (action IN ('apply', 'discard', 'defer'))
 );
 
-CREATE INDEX idx_optimization_decisions_recommendation
+CREATE INDEX IF NOT EXISTS idx_optimization_decisions_recommendation
   ON public.optimization_recommendation_decisions (recommendation_id);
 
-CREATE INDEX idx_optimization_decisions_decided_at
+CREATE INDEX IF NOT EXISTS idx_optimization_decisions_decided_at
   ON public.optimization_recommendation_decisions (decided_at DESC);
 
 COMMENT ON TABLE public.optimization_recommendation_decisions IS
@@ -81,6 +82,7 @@ COMMENT ON TABLE public.optimization_recommendation_decisions IS
 -- updated_at (função já existente em migrações anteriores)
 -- =============================================================================
 
+DROP TRIGGER IF EXISTS tr_optimization_recommendations_updated_at ON public.optimization_recommendations;
 CREATE TRIGGER tr_optimization_recommendations_updated_at
   BEFORE UPDATE ON public.optimization_recommendations
   FOR EACH ROW

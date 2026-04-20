@@ -1,8 +1,9 @@
 -- Migration: Create adset_budget_adjustments table for PBI 25 - Task 25-4
 -- Created: 2025-01-22
 -- Purpose: Store all budget adjustment logs for adsets (20% rule, audit)
+-- Idempotente: remoto pode já ter a tabela sem esta linha em schema_migrations.
 
-CREATE TABLE adset_budget_adjustments (
+CREATE TABLE IF NOT EXISTS public.adset_budget_adjustments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   adset_id VARCHAR NOT NULL,
   timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -16,9 +17,9 @@ CREATE TABLE adset_budget_adjustments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_budget_adjustments_adset_id ON adset_budget_adjustments(adset_id);
-CREATE INDEX idx_budget_adjustments_timestamp ON adset_budget_adjustments(timestamp);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustments_adset_id ON public.adset_budget_adjustments(adset_id);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustments_timestamp ON public.adset_budget_adjustments(timestamp);
 
-COMMENT ON TABLE adset_budget_adjustments IS 'Logs of all budget adjustments for adsets (20% rule, audit)';
-COMMENT ON COLUMN adset_budget_adjustments.reason IS 'atraso_meta, estrategia, correcao_erro, manual';
-COMMENT ON COLUMN adset_budget_adjustments.status IS 'success, blocked, error'; 
+COMMENT ON TABLE public.adset_budget_adjustments IS 'Logs of all budget adjustments for adsets (20% rule, audit)';
+COMMENT ON COLUMN public.adset_budget_adjustments.reason IS 'atraso_meta, estrategia, correcao_erro, manual';
+COMMENT ON COLUMN public.adset_budget_adjustments.status IS 'success, blocked, error';

@@ -1,8 +1,7 @@
 -- Migration: Create lead_quality_logs table for PBI 25 - Task 25-5
--- Created: 2025-01-22
--- Purpose: Store logs of quality score changes and reasons for each lead
+-- Idempotente para remoto com schema já aplicado.
 
-CREATE TABLE lead_quality_logs (
+CREATE TABLE IF NOT EXISTS public.lead_quality_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id VARCHAR NOT NULL,
   adset_id VARCHAR,
@@ -14,9 +13,9 @@ CREATE TABLE lead_quality_logs (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_lead_quality_logs_lead_id ON lead_quality_logs(lead_id);
-CREATE INDEX idx_lead_quality_logs_adset_id ON lead_quality_logs(adset_id);
-CREATE INDEX idx_lead_quality_logs_timestamp ON lead_quality_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_lead_quality_logs_lead_id ON public.lead_quality_logs(lead_id);
+CREATE INDEX IF NOT EXISTS idx_lead_quality_logs_adset_id ON public.lead_quality_logs(adset_id);
+CREATE INDEX IF NOT EXISTS idx_lead_quality_logs_timestamp ON public.lead_quality_logs(timestamp);
 
-COMMENT ON TABLE lead_quality_logs IS 'Logs of quality score changes and reasons for each lead.';
-COMMENT ON COLUMN lead_quality_logs.reason IS 'Reason for score change (conversion, update, penalty, manual, etc)'; 
+COMMENT ON TABLE public.lead_quality_logs IS 'Logs of quality score changes and reasons for each lead.';
+COMMENT ON COLUMN public.lead_quality_logs.reason IS 'Reason for score change (conversion, update, penalty, manual, etc)';
