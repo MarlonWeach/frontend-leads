@@ -77,10 +77,10 @@ const migrationOrder = [
   // 10. Funções (antes de views)
   '20250627_create_exec_sql_function.sql',
   '20250130_fix_function_search_paths.sql',
-  '20240516_clean_duplicate_leads.sql', // Função para limpar duplicados
+  '20240516140500_clean_duplicate_leads.sql', // Função para limpar duplicados
   
   // 11. Views (depois de tabelas e funções)
-  // '20240516_140000_create_leads_analysis_view.sql', // Removida - view depende de dados que não existem ainda
+  // '20240516140000_create_leads_analysis_view.sql', // No-op — view removida
   
   // 12. RLS (Row Level Security) - deve ser o último
   '20250130_enable_rls_on_public_tables.sql',

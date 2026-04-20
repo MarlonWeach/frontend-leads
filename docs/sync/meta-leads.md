@@ -29,7 +29,7 @@
 │   └── sync-meta-leads.ts       # Script de execução
 ├── supabase/
 │   └── migrations/
-│       └── 20240516_clean_duplicate_leads.sql  # Função RPC e tabela de logs
+│       └── 20240516140500_clean_duplicate_leads.sql  # Função RPC e tabela de logs
 └── .github/
     └── workflows/
         └── sync_ads.yml         # Workflow de sincronização automática
