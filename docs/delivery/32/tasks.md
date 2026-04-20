@@ -15,4 +15,4 @@ This document lists all tasks associated with PBI 32.
 | 32-5 | [Definir estratégia de validação offline e piloto](./32-5.md) | Done | Simulação offline, piloto fase 0/1/2, métricas, gates de promoção e rollback |
 | 32-6 | [Implementar coleta/agregação das dimensões do MVP](./32-6.md) | Done | Migration + RLS/grants; agregação 7d tipada e testada; sim offline → 32-7 |
 | 32-7 | [Implementar motor de recomendações assistidas + auditoria](./32-7.md) | Done | APIs + motor stub v1 + UI `/dashboard/recomendacoes`; auditoria em `optimization_recommendation_decisions` |
-| 32-8 | [Validar em ambiente real e fechar rollout controlado](./32-8.md) | InProgress | Controles operacionais para piloto: limpar ativas em lote e gerar sobrescrevendo sugestões anteriores |
+| 32-8 | [Validar em ambiente real e fechar rollout controlado](./32-8.md) | Done | Piloto controlado com controles operacionais concluídos (limpeza em lote e geração com sobrescrita) |

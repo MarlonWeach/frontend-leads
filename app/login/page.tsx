@@ -1,24 +1,30 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const redirectTarget = searchParams.get('redirect') || '/dashboard';
+
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
       try {
-        const response = await fetch('/api/auth/session', { cache: 'no-store' });
+        const response = await fetch('/api/auth/session', {
+          cache: 'no-store',
+          credentials: 'include',
+        });
         if (!active) return;
         const payload = await response.json().catch(() => ({}));
         if (response.ok && payload?.authenticated === true) {
-          router.replace('/dashboard');
+          router.replace(redirectTarget);
         }
       } catch {
         // Mantém tela de login quando não há sessão válida.
@@ -28,7 +34,7 @@ export default function LoginPage() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, redirectTarget]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,6 +44,7 @@ export default function LoginPage() {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -49,7 +56,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace('/dashboard');
+      router.replace(redirectTarget);
     } catch {
       setError('Falha de rede durante autenticação.');
     } finally {

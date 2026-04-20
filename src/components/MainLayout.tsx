@@ -109,6 +109,7 @@ export default function MainLayout({ children, title, breadcrumbs = [] }: MainLa
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
     } finally {

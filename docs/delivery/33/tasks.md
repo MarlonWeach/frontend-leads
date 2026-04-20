@@ -16,3 +16,5 @@ This document lists all tasks associated with PBI 33.
 | 33-6 | [Expor dados de metas para consumo pelo PBI 32](./33-6.md) | Done | Endpoint de contexto de otimização publicado com métricas de elegibilidade dinâmica e fonte de entrega |
 | 33-7 | [Testes de consistência de cálculo e integração](./33-7.md) | Done | Testes de integração adicionados para contrato de otimização cobrindo entrega manual e fallback histórico |
 | 33-8 | [Volume contratado derivado na API e teste unitário](./33-8.md) | Done | `POST`/`PUT` goals normalizam `volume_contracted` a partir de budget e CPL; teste unitário da função pura |
+| 33-9 | [Hardening de sessão e middleware para rotas protegidas](./33-9.md) | Done | Middleware passou a validar token real e fazer refresh server-side (página/API), reduzindo bounce no login e bloqueando bypass por cookie inválido |
+| 33-10 | [Filtros por cards de resumo em `/metas`](./33-10.md) | Done | Cards de resumo (`Total`, `No Prazo`, `Atenção`, `Atrasado`, `Crítico`, `Atingido`) agora são clicáveis e aplicam filtro por status na lista |

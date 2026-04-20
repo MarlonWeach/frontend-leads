@@ -1,21 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-// Page: /dashboard/metas
-// PBI 25 - Task 25-11: Melhorar Interface do Dashboard de Metas
-
-import React from 'react';
-import MainLayout from '../../../src/components/MainLayout';
-import AdsetGoalsOverview from '../../../src/components/metas/AdsetGoalsOverview';
-
-export default function MetasPage() {
-  const breadcrumbs = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Metas', href: '/dashboard/metas' }
-  ];
-
-  return (
-    <MainLayout title="Acompanhamento de Metas" breadcrumbs={breadcrumbs}>
-      <AdsetGoalsOverview />
-    </MainLayout>
-  );
-} 
+// Compatibilidade: links antigos /dashboard/metas → rota canônica /metas
+export default function DashboardMetasRedirectPage() {
+  redirect('/metas');
+}

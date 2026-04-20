@@ -46,17 +46,60 @@ export function useAdsetGoals(filters?: AdsetGoalFilters): UseAdsetGoalsReturn {
     fetch(url)
       .then(res => res.json())
       .then((res) => {
-        setData(res.data || []);
-        // Calcular summary no client
-        const items = res.data || [];
+        const items = Array.isArray(res.data) ? res.data : [];
+
+        const filteredItems = items
+          .filter((item: AdsetGoalDashboardItem) => {
+            if (filters?.campaign_id && item.campaign_id !== filters.campaign_id) {
+              return false;
+            }
+            if (filters?.status?.length && !filters.status.includes(item.status)) {
+              return false;
+            }
+            if (filters?.search) {
+              const searchTerm = filters.search.toLowerCase().trim();
+              const haystack = `${item.adset_name || ''} ${item.campaign_name || ''}`.toLowerCase();
+              if (!haystack.includes(searchTerm)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .sort((left: AdsetGoalDashboardItem, right: AdsetGoalDashboardItem) => {
+            const direction = filters?.sort_order === 'asc' ? 1 : -1;
+            const sortBy = filters?.sort_by || 'progress_percentage';
+
+            if (sortBy === 'adset_name') {
+              return direction * (left.adset_name || '').localeCompare(right.adset_name || '');
+            }
+
+            if (sortBy === 'days_remaining') {
+              const leftValue = left.metrics?.days_remaining ?? Number.MAX_SAFE_INTEGER;
+              const rightValue = right.metrics?.days_remaining ?? Number.MAX_SAFE_INTEGER;
+              return direction * (leftValue - rightValue);
+            }
+
+            if (sortBy === 'current_cpl') {
+              const leftValue = left.metrics?.current_cpl ?? Number.MAX_SAFE_INTEGER;
+              const rightValue = right.metrics?.current_cpl ?? Number.MAX_SAFE_INTEGER;
+              return direction * (leftValue - rightValue);
+            }
+
+            const leftValue = left.metrics?.progress_percentage ?? 0;
+            const rightValue = right.metrics?.progress_percentage ?? 0;
+            return direction * (leftValue - rightValue);
+          });
+
+        setData(filteredItems);
+        // Calcular summary no client com base na lista filtrada atual.
         setSummary({
-          total_adsets: items.length,
-          no_prazo: items.filter((i: any) => i.status === 'no_prazo').length,
-          atencao: items.filter((i: any) => i.status === 'atencao').length,
-          atrasado: items.filter((i: any) => i.status === 'atrasado').length,
-          critico: items.filter((i: any) => i.status === 'critico').length,
-          atingido: items.filter((i: any) => i.status === 'atingido').length,
-          pausado: items.filter((i: any) => i.status === 'pausado').length
+          total_adsets: filteredItems.length,
+          no_prazo: filteredItems.filter((i: any) => i.status === 'no_prazo').length,
+          atencao: filteredItems.filter((i: any) => i.status === 'atencao').length,
+          atrasado: filteredItems.filter((i: any) => i.status === 'atrasado').length,
+          critico: filteredItems.filter((i: any) => i.status === 'critico').length,
+          atingido: filteredItems.filter((i: any) => i.status === 'atingido').length,
+          pausado: filteredItems.filter((i: any) => i.status === 'pausado').length
         });
         setLoading(false);
       })

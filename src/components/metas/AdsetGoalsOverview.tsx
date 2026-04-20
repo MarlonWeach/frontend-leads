@@ -19,6 +19,8 @@ import GoalStatusBadge from './GoalStatusBadge';
 import { formatInTimeZone } from 'date-fns-tz';
 import { AdsetGoalFilters } from '../../types/adsetGoalsDashboard';
 
+type SummaryFilterStatus = Exclude<NonNullable<AdsetGoalFilters['status']>[number], 'pausado'>;
+
 export default function AdsetGoalsOverview() {
   // Presets de data/timeframe
   const datePresets = useMemo(() => [
@@ -208,6 +210,28 @@ export default function AdsetGoalsOverview() {
     setFilters({ status: newStatus.length > 0 ? newStatus : undefined });
   };
 
+  const handleSummaryCardFilter = (status?: SummaryFilterStatus) => {
+    const currentStatus = filters.status || [];
+    if (!status) {
+      setFilters({ status: undefined });
+      return;
+    }
+
+    const isSameSingleStatus = currentStatus.length === 1 && currentStatus[0] === status;
+    if (isSameSingleStatus) {
+      setFilters({ status: undefined });
+      return;
+    }
+
+    setFilters({ status: [status] });
+  };
+
+  const isSummaryCardActive = (status?: SummaryFilterStatus) => {
+    const currentStatus = filters.status || [];
+    if (!status) return currentStatus.length === 0;
+    return currentStatus.length === 1 && currentStatus[0] === status;
+  };
+
   const handleSortChange = (sortBy: string) => {
     const newOrder = filters.sort_by === sortBy && filters.sort_order === 'desc' ? 'asc' : 'desc';
     setFilters({ sort_by: sortBy as any, sort_order: newOrder });
@@ -261,59 +285,74 @@ export default function AdsetGoalsOverview() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            Total
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {summary.total_adsets}
-          </div>
-        </div>
-
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            No Prazo
-          </div>
-          <div className="text-2xl font-bold text-green-400">
-            {summary.no_prazo}
-          </div>
-        </div>
-
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            Atenção
-          </div>
-          <div className="text-2xl font-bold text-yellow-400">
-            {summary.atencao}
-          </div>
-        </div>
-
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            Atrasado
-          </div>
-          <div className="text-2xl font-bold text-orange-400">
-            {summary.atrasado}
-          </div>
-        </div>
-
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            Crítico
-          </div>
-          <div className="text-2xl font-bold text-red-400">
-            {summary.critico}
-          </div>
-        </div>
-
-        <div className="glass-medium rounded-lg p-4">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-            Atingido
-          </div>
-          <div className="text-2xl font-bold text-blue-400">
-            {summary.atingido}
-          </div>
-        </div>
+        {[
+          {
+            key: 'total',
+            label: 'Total',
+            value: summary.total_adsets,
+            numberClass: 'text-white',
+            status: undefined as SummaryFilterStatus | undefined,
+          },
+          {
+            key: 'no_prazo',
+            label: 'No Prazo',
+            value: summary.no_prazo,
+            numberClass: 'text-green-400',
+            status: 'no_prazo' as SummaryFilterStatus,
+          },
+          {
+            key: 'atencao',
+            label: 'Atenção',
+            value: summary.atencao,
+            numberClass: 'text-yellow-400',
+            status: 'atencao' as SummaryFilterStatus,
+          },
+          {
+            key: 'atrasado',
+            label: 'Atrasado',
+            value: summary.atrasado,
+            numberClass: 'text-orange-400',
+            status: 'atrasado' as SummaryFilterStatus,
+          },
+          {
+            key: 'critico',
+            label: 'Crítico',
+            value: summary.critico,
+            numberClass: 'text-red-400',
+            status: 'critico' as SummaryFilterStatus,
+          },
+          {
+            key: 'atingido',
+            label: 'Atingido',
+            value: summary.atingido,
+            numberClass: 'text-blue-400',
+            status: 'atingido' as SummaryFilterStatus,
+          },
+        ].map((card) => {
+          const active = isSummaryCardActive(card.status);
+          return (
+            <button
+              key={card.key}
+              type="button"
+              onClick={() => handleSummaryCardFilter(card.status)}
+              className={`rounded-lg p-4 text-left transition-all border ${
+                active
+                  ? 'glass-light border-primary/60 ring-1 ring-primary/50'
+                  : 'glass-medium border-white/10 hover:glass-light'
+              }`}
+              title={
+                card.status
+                  ? `Filtrar por status: ${card.label}`
+                  : 'Mostrar todos os status'
+              }
+            >
+              <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                {card.label}
+              </div>
+              <div className={`text-2xl font-bold ${card.numberClass}`}>{card.value}</div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}

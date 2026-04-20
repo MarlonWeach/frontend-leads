@@ -48,7 +48,9 @@ export function useMetaActivities(options: UseMetaActivitiesOptions = {}): UseMe
         order,
       });
       if (eventType) params.append('event_type', eventType);
-      const res = await fetch(`/api/meta/activity?${params}`);
+      const res = await fetch(`/api/meta/activity?${params}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Erro ao buscar logs');
       const data = await res.json();
       setActivities(data.activities || []);

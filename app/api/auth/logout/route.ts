@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE_KEYS, AUTH_COOKIE_OPTIONS } from '../../../../src/lib/auth/session';
+import { AUTH_COOKIE_KEYS, getAuthCookieOptions } from '../../../../src/lib/auth/session';
 import { logAuthAudit } from '../../../../src/lib/auth/audit';
 
 export const dynamic = 'force-dynamic';
@@ -19,13 +19,14 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({ success: true });
   response.headers.set('Cache-Control', 'no-store');
+  const cookieOptions = getAuthCookieOptions(request);
 
   response.cookies.set(AUTH_COOKIE_KEYS.accessToken, '', {
-    ...AUTH_COOKIE_OPTIONS,
+    ...cookieOptions,
     maxAge: 0,
   });
   response.cookies.set(AUTH_COOKIE_KEYS.refreshToken, '', {
-    ...AUTH_COOKIE_OPTIONS,
+    ...cookieOptions,
     maxAge: 0,
   });
 

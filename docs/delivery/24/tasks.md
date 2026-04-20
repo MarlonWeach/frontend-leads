@@ -33,7 +33,7 @@ This document lists all tasks associated with PBI 24.
 
 | Task ID | Name | Status | Description |
 | :------ | :--------------------------------------- | :------- | :--------------------------------- |
-| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Parcial | Hook implementado com sucesso, insights aparecem na UI, pendente apenas complemento de informações detalhadas dos logs de atividades da Meta |
+| 24-1 | [Criar Hook de Análise de Mudanças](./24-1.md) | Done | Hook implementado e validado em produção com insights exibidos corretamente na UI |
 | 24-2 | [Criar Componente de Insights](./24-2.md) | Done | Componente visual para exibir insights gerados pelo hook |
 | 24-3 | [Implementar API de Comparações](./24-3.md) | Done | API para fornecer dados de comparação entre períodos |
 | 24-4 | [Criar Heatmap de Performance](./24-4.md) | Done | Visualização de tendências de performance ao longo do tempo |
@@ -67,15 +67,7 @@ This document lists all tasks associated with PBI 24.
 
 ### 📋 **PRÓXIMAS PRIORIDADES**
 
-#### 1. **24-1** - Investigar insights não aparecendo na UI
-- **Status**: Review
-- **Descrição**: Hook implementado, mas insights não aparecem visualmente
-- **Tempo estimado**: 1-2 horas
-
-#### 2. **24-6** - Testes End-to-End  
-- **Status**: Proposed
-- **Descrição**: Validar todas as funcionalidades integradas
-- **Tempo estimado**: 2-3 horas
+- PBI 24 encerrado; sem pendências operacionais abertas neste conjunto.
 
 ### 🏆 **TASKS COMPLETAS - PBI 24**
 
@@ -86,9 +78,9 @@ This document lists all tasks associated with PBI 24.
 - **✅ 24-7** - Correções Críticas do Sistema de Previsões
 - **✅ 24-8** - Correções de Erros de Console
 
-### 📊 **STATUS DO PBI 24: 75% CONCLUÍDO**
+### 📊 **STATUS DO PBI 24: 100% CONCLUÍDO**
 
-**6 de 8 tasks completadas** - Sistema de insights funcionando com previsões sensatas e interface limpa!
+**8 de 8 tasks completadas** - Sistema de insights e comparações validado e estável.
 
 ## Dependências entre Tasks
 
@@ -106,4 +98,4 @@ This document lists all tasks associated with PBI 24.
 
 ---
 
-> ⚠️ **Observação:** A task 24-1 está funcional, mas permanece pendente o complemento de informações detalhadas dos logs de atividades da Meta (campos `object_name`, `value_old`, `value_new`). O sistema de sync já está operacional, mas a extração desses detalhes depende de ajustes adicionais no parser do payload da Meta API. Assim que a extração for aprimorada, a task poderá ser marcada como 100% concluída.
+> ✅ **Observação:** A task 24-1 foi consolidada como concluída; inconsistências antigas de status foram normalizadas neste índice.

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { AUTH_COOKIE_KEYS, AUTH_COOKIE_OPTIONS, AUTH_TTL_SECONDS } from '../../../../src/lib/auth/session';
+import { AUTH_COOKIE_KEYS, AUTH_TTL_SECONDS, getAuthCookieOptions } from '../../../../src/lib/auth/session';
 import { logAuthAudit } from '../../../../src/lib/auth/audit';
 
 export const dynamic = 'force-dynamic';
@@ -63,13 +63,14 @@ export async function POST(request: NextRequest) {
       },
     });
     response.headers.set('Cache-Control', 'no-store');
+    const cookieOptions = getAuthCookieOptions(request);
 
     response.cookies.set(AUTH_COOKIE_KEYS.accessToken, data.session.access_token, {
-      ...AUTH_COOKIE_OPTIONS,
+      ...cookieOptions,
       maxAge: Math.min(data.session.expires_in ?? AUTH_TTL_SECONDS.accessToken, AUTH_TTL_SECONDS.accessToken),
     });
     response.cookies.set(AUTH_COOKIE_KEYS.refreshToken, data.session.refresh_token, {
-      ...AUTH_COOKIE_OPTIONS,
+      ...cookieOptions,
       maxAge: AUTH_TTL_SECONDS.refreshToken,
     });
 

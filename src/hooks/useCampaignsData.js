@@ -31,7 +31,9 @@ export function useCampaignsData(dateFrom, dateTo) {
       const endDate = dateTo.split('T')[0];
 
       const response = await withTimeout(
-        fetch(`/api/performance?startDate=${startDate}&endDate=${endDate}&page=1&limit=500&status=ALL`)
+        fetch(`/api/performance?startDate=${startDate}&endDate=${endDate}&page=1&limit=500&status=ALL`, {
+          credentials: 'include',
+        })
       );
       const payload = await response.json();
 
