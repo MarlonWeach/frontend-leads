@@ -8,7 +8,7 @@ This document lists all tasks associated with PBI 27.
 
 | Task ID | Name | Status | Description |
 | :------ | :--- | :------ | :---------- |
-| 27-1 | [Criar infraestrutura de dados para ML](./27-1.md) | InProgress | Implementar TimescaleDB e pipeline de feature engineering para modelos de ML |
+| 27-1 | [Criar infraestrutura de dados para ML](./27-1.md) | Review | View `v_ml_adset_daily_series` + contrato documentado; smoke SQL em 27-1.md — aguardando execução de smoke em ambiente com migração aplicada |
 | 27-2 | [Desenvolver modelo base de forecasting](./27-2.md) | Proposed | Implementar modelo Prophet para previsões de séries temporais básicas |
 | 27-3 | [Implementar análise de sazonalidade](./27-3.md) | Proposed | Desenvolver sistema para detectar e incorporar padrões sazonais automáticos |
 | 27-4 | [Criar sistema de cenários múltiplos](./27-4.md) | Proposed | Implementar geração de cenários otimista, realista e pessimista |
