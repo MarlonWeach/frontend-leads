@@ -121,7 +121,7 @@ Gestores de marketing enfrentam dificuldades para:
 
 8. **Validação de Accuracy**
    - [ ] Compara previsões vs resultados reais diariamente
-   - [ ] Calcula métricas de erro (MAPE, MAE, RMSE)
+   - [ ] Calcula Erro Percentual Absoluto Médio (MAPE)
    - [ ] Ajusta modelos quando accuracy cai abaixo de 85%
    - [ ] Reporta confidence score das previsões
 

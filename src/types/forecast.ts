@@ -21,6 +21,8 @@ export interface ForecastRequest {
   endDate: string;
   metrics: string[];
   daysToForecast?: number;
+  adsetId?: string;
+  campaignId?: string;
 }
 
 export interface ForecastResponse {
@@ -38,6 +40,11 @@ export interface ForecastResponse {
           min: number;
           max: number;
         };
+        scenarios?: {
+          conservative: number;
+          realistic: number;
+          optimistic: number;
+        };
       };
     };
     metadata: {
@@ -45,6 +52,57 @@ export interface ForecastResponse {
       historicalDays: number;
       forecastDays: number;
       aiUsed: boolean;
+      baselineModel?: string;
+      source?: string;
+      adsetId?: string | null;
+      campaignId?: string | null;
+      scenarioModel?: string;
+      accuracy?: Record<
+        string,
+        {
+          mape: number;
+          sampleSize: number;
+          status: 'healthy' | 'warning' | 'critical';
+        }
+      >;
+      contractConstraint?: {
+        enabled: boolean;
+        remainingLeads: number;
+        scope: 'global' | 'campaign' | 'adset';
+      };
+      segmentationComparison?: Record<
+        string,
+        {
+          segmentedTotal: number;
+          globalTotal: number;
+          deltaPercent: number;
+        }
+      >;
+      predictiveAlerts?: Array<{
+        id: string;
+        severity: 'info' | 'warning' | 'critical';
+        metric: string;
+        title: string;
+        message: string;
+      }>;
+      budgetRecommendations?: Array<{
+        id: string;
+        action: 'increase' | 'decrease' | 'maintain';
+        scope: 'global' | 'campaign' | 'adset';
+        reason: string;
+        expectedImpact: string;
+      }>;
+      seasonality?: Record<
+        string,
+        {
+          enabled: boolean;
+          strength: number;
+          weekdayMultipliers: number[];
+          monthlyMultipliers?: number[];
+          weeklyStrength?: number;
+          monthlyStrength?: number;
+        }
+      >;
     };
   };
   error?: string;
@@ -61,6 +119,10 @@ export interface UseForecastOptions {
   dateRange: {
     start: Date;
     end: Date;
+  };
+  filters?: {
+    campaignId?: string;
+    adsetId?: string;
   };
   config?: Partial<ForecastConfig>;
   enabled?: boolean;

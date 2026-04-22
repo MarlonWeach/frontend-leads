@@ -35,6 +35,11 @@ interface ForecastCardProps {
       min: number;
       max: number;
     };
+    scenarios?: {
+      conservative: number;
+      realistic: number;
+      optimistic: number;
+    };
   };
 }
 
@@ -157,6 +162,26 @@ const ForecastCard: React.FC<ForecastCardProps> = ({ metric, data }) => {
             {getConfidenceText(data.confidence)}
           </div>
         </div>
+
+        {data.scenarios && (
+          <div className="pt-2 border-t border-white/10">
+            <div className="text-[11px] text-gray-400 mb-1">Cenarios</div>
+            <div className="grid grid-cols-3 gap-2 text-[11px]">
+              <div>
+                <div className="text-gray-500">Conserv.</div>
+                <div className="text-white font-medium">{metricConfig.format(data.scenarios.conservative)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Realista</div>
+                <div className="text-white font-medium">{metricConfig.format(data.scenarios.realistic)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Otimista</div>
+                <div className="text-white font-medium">{metricConfig.format(data.scenarios.optimistic)}</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -374,9 +399,15 @@ export const PerformanceForecast: React.FC<PerformanceForecastProps> = ({
   className = ''
 }) => {
   const [selectedMetric, setSelectedMetric] = useState('leads');
+  const [campaignIdFilter, setCampaignIdFilter] = useState('');
+  const [adsetIdFilter, setAdsetIdFilter] = useState('');
   
   const { data, loading, error, refetch, metrics } = usePerformanceForecast({
     dateRange,
+    filters: {
+      campaignId: campaignIdFilter || undefined,
+      adsetId: adsetIdFilter || undefined
+    },
     config: {
       historicalDays: 30,
       forecastDays: 7,
@@ -384,6 +415,52 @@ export const PerformanceForecast: React.FC<PerformanceForecastProps> = ({
       enableAI: false
     }
   });
+
+  const handleExportCsv = () => {
+    if (!data) return;
+
+    const rows: string[] = [];
+    rows.push(`generated_at,${data.metadata.generatedAt}`);
+    rows.push(`campaign_filter,${campaignIdFilter || 'all'}`);
+    rows.push(`adset_filter,${adsetIdFilter || 'all'}`);
+    rows.push('');
+    rows.push([
+      'metric',
+      'trend',
+      'confidence',
+      'next7_total',
+      'next7_average',
+      'scenario_conservative',
+      'scenario_realistic',
+      'scenario_optimistic',
+      'accuracy_erro_percentual_absoluto_medio'
+    ].join(','));
+
+    Object.entries(data.metrics).forEach(([metric, metricData]) => {
+      const accuracy = data.metadata.accuracy?.[metric];
+      rows.push([
+        metric,
+        metricData.trend,
+        metricData.confidence,
+        metricData.next7Days.total,
+        metricData.next7Days.average,
+        metricData.scenarios?.conservative ?? '',
+        metricData.scenarios?.realistic ?? '',
+        metricData.scenarios?.optimistic ?? '',
+        accuracy?.mape ?? ''
+      ].join(','));
+    });
+
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `forecast-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   // Renderizar estado de loading
   if (loading) {
@@ -445,13 +522,45 @@ export const PerformanceForecast: React.FC<PerformanceForecastProps> = ({
           <Calendar className="w-5 h-5 text-blue-400" />
           <h2 className="text-lg font-semibold text-white">Previsões de Performance</h2>
         </div>
-        <div className="text-xs text-gray-400">
-          Gerado em {format(new Date(data.metadata.generatedAt), 'dd/MM/yyyy HH:mm')}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCsv}
+            className="px-3 py-1 rounded-md border border-white/20 bg-white/10 text-xs text-white hover:bg-white/20 transition-colors"
+          >
+            Exportar CSV
+          </button>
+          <div className="text-xs text-gray-400">
+            Gerado em {format(new Date(data.metadata.generatedAt), 'dd/MM/yyyy HH:mm')}
+          </div>
         </div>
       </div>
 
       {/* Seletor de métrica */}
       <div className="mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-300 mb-1">
+              Filtro de Campanha (ID)
+            </label>
+            <input
+              value={campaignIdFilter}
+              onChange={(event) => setCampaignIdFilter(event.target.value)}
+              placeholder="Ex.: 120222915231610641"
+              className="w-full rounded-md bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-300 mb-1">
+              Filtro de Adset (ID)
+            </label>
+            <input
+              value={adsetIdFilter}
+              onChange={(event) => setAdsetIdFilter(event.target.value)}
+              placeholder="Ex.: 52519109008092"
+              className="w-full rounded-md bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
+        </div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Métrica para Visualização
         </label>
@@ -542,6 +651,93 @@ export const PerformanceForecast: React.FC<PerformanceForecastProps> = ({
           </div>
         </div>
       </div>
+
+      {data.metadata.accuracy && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <h4 className="text-sm font-medium text-gray-300 mb-2">
+            Qualidade do Forecast (Erro Percentual Absoluto Medio)
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(data.metadata.accuracy).map(([metric, accuracy]) => {
+              const statusColor =
+                accuracy.status === 'healthy'
+                  ? 'text-green-300 border-green-500/30 bg-green-500/10'
+                  : accuracy.status === 'warning'
+                    ? 'text-yellow-300 border-yellow-500/30 bg-yellow-500/10'
+                    : 'text-red-300 border-red-500/30 bg-red-500/10';
+
+              return (
+                <div key={metric} className={`rounded-md border p-2 ${statusColor}`}>
+                  <div className="text-xs font-medium">{FORECAST_METRICS[metric]?.label || metric}</div>
+                  <div className="text-xs mt-1">
+                    Erro Percentual Absoluto Medio: {(accuracy.mape * 100).toFixed(2)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 rounded-md border border-white/20 bg-white/5 p-3 text-xs text-gray-300">
+            <div className="font-medium mb-1">Como interpretar o Erro Percentual Absoluto Medio</div>
+            <div>
+              Este indicador mostra, em percentual, o quanto a previsao se afasta do valor real em media.
+              Exemplo: 18% significa que, em media, o forecast erra 18% para cima ou para baixo.
+            </div>
+            <div className="mt-1">
+              Valores menores indicam previsoes mais confiaveis.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {data.metadata.predictiveAlerts && data.metadata.predictiveAlerts.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <h4 className="text-sm font-medium text-gray-300 mb-2">Alertas Preditivos</h4>
+          <div className="space-y-2">
+            {data.metadata.predictiveAlerts.map((alert) => {
+              const alertStyle =
+                alert.severity === 'critical'
+                  ? 'border-red-500/40 bg-red-500/10 text-red-200'
+                  : alert.severity === 'warning'
+                    ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-200'
+                    : 'border-blue-500/40 bg-blue-500/10 text-blue-200';
+
+              return (
+                <div key={alert.id} className={`rounded-md border px-3 py-2 ${alertStyle}`}>
+                  <div className="text-xs font-semibold">{alert.title}</div>
+                  <div className="text-xs opacity-90">{alert.message}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {data.metadata.budgetRecommendations && data.metadata.budgetRecommendations.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <h4 className="text-sm font-medium text-gray-300 mb-2">Recomendações de Orçamento</h4>
+          <div className="space-y-2">
+            {data.metadata.budgetRecommendations.map((recommendation) => {
+              const style =
+                recommendation.action === 'increase'
+                  ? 'border-green-500/40 bg-green-500/10 text-green-200'
+                  : recommendation.action === 'decrease'
+                    ? 'border-red-500/40 bg-red-500/10 text-red-200'
+                    : 'border-blue-500/40 bg-blue-500/10 text-blue-200';
+
+              return (
+                <div key={recommendation.id} className={`rounded-md border px-3 py-2 ${style}`}>
+                  <div className="text-xs font-semibold">
+                    {recommendation.action.toUpperCase()} ({recommendation.scope})
+                  </div>
+                  <div className="text-xs opacity-90">{recommendation.reason}</div>
+                  <div className="text-xs opacity-80">{recommendation.expectedImpact}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

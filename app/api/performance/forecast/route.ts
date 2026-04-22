@@ -24,6 +24,19 @@ import { serverCache } from '../../../../src/utils/server-cache';
 
 // Cache TTL
 const CACHE_TTL = 60; // CORREÇÃO: 1 minuto para atualizações mais frequentes
+const HISTORICAL_WINDOW_DAYS = 30;
+const MIN_SEASONALITY_DAYS = 21;
+const MIN_SEASONALITY_STRENGTH = 0.08;
+const SCENARIO_FACTORS = {
+  conservative: 0.9,
+  realistic: 1,
+  optimistic: 1.1
+};
+const ACCURACY_VALIDATION_DAYS = 7;
+const ACCURACY_THRESHOLD = {
+  healthy: 0.2,
+  warning: 0.35
+};
 
 // Bounds realistas para cada métrica de marketing digital
 const METRIC_BOUNDS = {
@@ -103,6 +116,388 @@ const calculateLinearTrend = (data: number[]): { slope: number; intercept: numbe
   return { slope, intercept };
 };
 
+type WeeklySeasonality = {
+  enabled: boolean;
+  strength: number;
+  weekdayMultipliers: number[];
+  monthlyMultipliers: number[];
+  weeklyStrength: number;
+  monthlyStrength: number;
+};
+
+type AccuracyMetrics = {
+  mape: number;
+  sampleSize: number;
+  status: 'healthy' | 'warning' | 'critical';
+};
+
+type PredictiveAlert = {
+  id: string;
+  severity: 'info' | 'warning' | 'critical';
+  metric: string;
+  title: string;
+  message: string;
+};
+
+type BudgetRecommendation = {
+  id: string;
+  action: 'increase' | 'decrease' | 'maintain';
+  scope: 'global' | 'campaign' | 'adset';
+  reason: string;
+  expectedImpact: string;
+};
+
+const calculateAccuracyMetrics = (actual: number[], predicted: number[]): AccuracyMetrics => {
+  const sampleSize = Math.min(actual.length, predicted.length);
+  if (sampleSize === 0) {
+    return {
+      mape: 0,
+      sampleSize: 0,
+      status: 'critical'
+    };
+  }
+
+  const safePairs = Array.from({ length: sampleSize }, (_, index) => ({
+    actual: actual[index] ?? 0,
+    predicted: predicted[index] ?? 0
+  }));
+
+  const mapeValues = safePairs
+    .filter(pair => pair.actual !== 0)
+    .map(pair => Math.abs((pair.actual - pair.predicted) / pair.actual));
+  const mape =
+    mapeValues.length > 0
+      ? mapeValues.reduce((sum, value) => sum + value, 0) / mapeValues.length
+      : 0;
+
+  let status: 'healthy' | 'warning' | 'critical' = 'critical';
+  if (mape <= ACCURACY_THRESHOLD.healthy) status = 'healthy';
+  else if (mape <= ACCURACY_THRESHOLD.warning) status = 'warning';
+
+  return {
+    mape: Number(mape.toFixed(4)),
+    sampleSize,
+    status
+  };
+};
+
+const roundByMetric = (value: number, metricName: string): number => {
+  if (!isFinite(value)) return 0;
+  switch (metricName) {
+    case 'leads':
+    case 'impressions':
+    case 'clicks':
+      return Math.round(value);
+    case 'spend':
+    case 'cpl':
+    case 'ctr':
+      return Math.round(value * 100) / 100;
+    default:
+      return value;
+  }
+};
+
+const fetchContractRemainingLeads = async (params: {
+  referenceDate: string;
+  adsetId?: string;
+  campaignId?: string;
+}): Promise<{ remainingLeads: number; scope: 'global' | 'campaign' | 'adset' } | null> => {
+  const supabase = createSupabaseClient();
+  if (!supabase) return null;
+
+  let targetAdsetIds: string[] | null = null;
+  let scope: 'global' | 'campaign' | 'adset' = 'global';
+
+  if (params.adsetId) {
+    targetAdsetIds = [params.adsetId];
+    scope = 'adset';
+  } else if (params.campaignId) {
+    scope = 'campaign';
+    const { data: campaignRows } = await supabase
+      .from('v_ml_adset_daily_series')
+      .select('adset_id')
+      .eq('campaign_id', params.campaignId)
+      .limit(5000);
+
+    const ids = Array.from(new Set((campaignRows || []).map(row => row.adset_id).filter(Boolean)));
+    targetAdsetIds = ids;
+  }
+
+  let goalsQuery = supabase
+    .from('adset_goals')
+    .select('adset_id, volume_contracted, volume_captured, contract_start_date, contract_end_date')
+    .lte('contract_start_date', params.referenceDate)
+    .gte('contract_end_date', params.referenceDate);
+
+  if (targetAdsetIds && targetAdsetIds.length > 0) {
+    goalsQuery = goalsQuery.in('adset_id', targetAdsetIds);
+  } else if (targetAdsetIds && targetAdsetIds.length === 0) {
+    return { remainingLeads: 0, scope };
+  }
+
+  const { data: goals } = await goalsQuery;
+  if (!goals || goals.length === 0) return null;
+
+  const remainingLeads = goals.reduce((sum, goal) => {
+    const contracted = Number(goal.volume_contracted) || 0;
+    const captured = Number(goal.volume_captured) || 0;
+    return sum + Math.max(0, contracted - captured);
+  }, 0);
+
+  return { remainingLeads, scope };
+};
+
+const applyLeadContractConstraint = (
+  forecast: { [key: string]: ForecastData[] },
+  remainingLeads: number
+) => {
+  const leadsForecast = forecast.leads;
+  if (!leadsForecast || leadsForecast.length === 0) return;
+
+  let remaining = Math.max(0, remainingLeads);
+  const dayScaleFactors: number[] = [];
+
+  leadsForecast.forEach((point, index) => {
+    const original = Math.max(0, Number(point.predicted) || 0);
+    const capped = Math.min(original, remaining);
+    const factor = original > 0 ? capped / original : 0;
+    dayScaleFactors[index] = factor;
+
+    point.predicted = roundByMetric(capped, 'leads');
+    point.min = roundByMetric(Math.min(point.min * factor, point.predicted), 'leads');
+    point.max = roundByMetric(Math.min(point.max * factor, point.predicted), 'leads');
+
+    remaining -= capped;
+  });
+
+  (['spend', 'impressions', 'clicks'] as const).forEach(metricName => {
+    const metricForecast = forecast[metricName];
+    if (!metricForecast) return;
+
+    metricForecast.forEach((point, index) => {
+      const factor = dayScaleFactors[index] ?? 1;
+      point.predicted = roundByMetric(point.predicted * factor, metricName);
+      point.min = roundByMetric(point.min * factor, metricName);
+      point.max = roundByMetric(point.max * factor, metricName);
+    });
+  });
+
+  if (forecast.cpl && forecast.spend) {
+    forecast.cpl.forEach((point, index) => {
+      const leads = forecast.leads[index]?.predicted || 0;
+      const spend = forecast.spend[index]?.predicted || 0;
+      if (leads > 0) {
+        const recomputedCpl = spend / leads;
+        point.predicted = roundByMetric(recomputedCpl, 'cpl');
+      }
+    });
+  }
+};
+
+const calculateRelativeDeltaPercent = (globalValue: number, segmentedValue: number): number => {
+  if (!isFinite(globalValue) || globalValue === 0) return 0;
+  return Number((((segmentedValue - globalValue) / globalValue) * 100).toFixed(2));
+};
+
+const buildPredictiveAlerts = (
+  metricsSummary: Record<string, any>,
+  accuracyByMetric: Record<string, AccuracyMetrics>
+): PredictiveAlert[] => {
+  const alerts: PredictiveAlert[] = [];
+
+  Object.entries(metricsSummary).forEach(([metric, summary]) => {
+    const trend = summary?.trend;
+    const accuracy = accuracyByMetric[metric];
+
+    if (trend === 'down' && (metric === 'leads' || metric === 'clicks')) {
+      alerts.push({
+        id: `trend-down-${metric}`,
+        severity: 'warning',
+        metric,
+        title: `Queda projetada em ${metric}`,
+        message: `A tendência prevista para ${metric} está em queda no horizonte atual.`
+      });
+    }
+
+    if (metric === 'cpl' && trend === 'up') {
+      alerts.push({
+        id: `trend-up-cpl`,
+        severity: 'critical',
+        metric,
+        title: 'CPL em alta',
+        message: 'A previsão indica aumento de CPL; considere revisar segmentação e orçamento.'
+      });
+    }
+
+    if (accuracy?.status === 'critical') {
+      alerts.push({
+        id: `accuracy-critical-${metric}`,
+        severity: 'critical',
+        metric,
+        title: `Baixa confiabilidade em ${metric}`,
+        message: `Erro percentual absoluto medio acima do limite critico para ${metric}. Recomenda-se retreino e revisao de premissas.`
+      });
+    } else if (accuracy?.status === 'warning') {
+      alerts.push({
+        id: `accuracy-warning-${metric}`,
+        severity: 'warning',
+        metric,
+        title: `Atenção na acurácia de ${metric}`,
+        message: `A acurácia de ${metric} está em faixa de alerta.`
+      });
+    }
+  });
+
+  if (alerts.length === 0) {
+    alerts.push({
+      id: 'forecast-stable',
+      severity: 'info',
+      metric: 'global',
+      title: 'Forecast estável',
+      message: 'Nenhum alerta crítico identificado no horizonte atual.'
+    });
+  }
+
+  return alerts;
+};
+
+const buildBudgetRecommendations = (
+  metricsSummary: Record<string, any>,
+  adsetId?: string | null,
+  campaignId?: string | null
+): BudgetRecommendation[] => {
+  const recommendations: BudgetRecommendation[] = [];
+  const scope: 'global' | 'campaign' | 'adset' = adsetId
+    ? 'adset'
+    : campaignId
+      ? 'campaign'
+      : 'global';
+
+  const leads = metricsSummary.leads;
+  const cpl = metricsSummary.cpl;
+  const spend = metricsSummary.spend;
+
+  if (leads?.trend === 'up' && cpl?.trend !== 'up') {
+    recommendations.push({
+      id: 'budget-increase-opportunity',
+      action: 'increase',
+      scope,
+      reason: 'Tendência favorável de leads com eficiência estável.',
+      expectedImpact: 'Possível ganho de volume mantendo custo por lead em faixa controlada.'
+    });
+  }
+
+  if (cpl?.trend === 'up' && spend?.trend !== 'up') {
+    recommendations.push({
+      id: 'budget-decrease-risk',
+      action: 'decrease',
+      scope,
+      reason: 'CPL em deterioração sem melhora proporcional de volume.',
+      expectedImpact: 'Redução de desperdício enquanto ajustes de segmentação/criativo são aplicados.'
+    });
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push({
+      id: 'budget-maintain-stable',
+      action: 'maintain',
+      scope,
+      reason: 'Cenário sem sinais fortes de ganho ou risco no horizonte atual.',
+      expectedImpact: 'Manutenção de estabilidade operacional com monitoramento contínuo.'
+    });
+  }
+
+  return recommendations;
+};
+
+const calculateWeeklySeasonality = (
+  data: number[],
+  baseDate: Date
+): WeeklySeasonality => {
+  if (data.length < MIN_SEASONALITY_DAYS) {
+    return {
+      enabled: false,
+      strength: 0,
+      weekdayMultipliers: Array(7).fill(1),
+      monthlyMultipliers: Array(31).fill(1),
+      weeklyStrength: 0,
+      monthlyStrength: 0
+    };
+  }
+
+  const weekdayBuckets: number[][] = Array.from({ length: 7 }, () => []);
+  const historyLength = data.length;
+
+  data.forEach((value, index) => {
+    const pointDate = addDays(baseDate, index - historyLength);
+    const weekday = pointDate.getDay();
+    weekdayBuckets[weekday].push(value);
+  });
+
+  const weekdayMeans = weekdayBuckets.map(bucket => {
+    if (bucket.length === 0) return 0;
+    return bucket.reduce((sum, value) => sum + value, 0) / bucket.length;
+  });
+
+  const globalMean = weekdayMeans.reduce((sum, value) => sum + value, 0) / 7;
+  if (!isFinite(globalMean) || globalMean <= 0) {
+    return {
+      enabled: false,
+      strength: 0,
+      weekdayMultipliers: Array(7).fill(1),
+      monthlyMultipliers: Array(31).fill(1),
+      weeklyStrength: 0,
+      monthlyStrength: 0
+    };
+  }
+
+  const multipliers = weekdayMeans.map(value => {
+    if (!isFinite(value) || value <= 0) return 1;
+    return value / globalMean;
+  });
+
+  const variance =
+    multipliers.reduce((sum, value) => sum + Math.pow(value - 1, 2), 0) / multipliers.length;
+  const weeklyStrength = Math.sqrt(variance);
+
+  const monthlyBuckets: number[][] = Array.from({ length: 31 }, () => []);
+  data.forEach((value, index) => {
+    const pointDate = addDays(baseDate, index - historyLength);
+    const dayOfMonth = pointDate.getDate() - 1;
+    monthlyBuckets[dayOfMonth].push(value);
+  });
+
+  const monthlyMeans = monthlyBuckets.map((bucket, index) => {
+    if (bucket.length === 0) {
+      return weekdayMeans[index % 7] || globalMean;
+    }
+    return bucket.reduce((sum, value) => sum + value, 0) / bucket.length;
+  });
+
+  const monthlyMultipliers = monthlyMeans.map(value => {
+    if (!isFinite(value) || value <= 0) return 1;
+    return value / globalMean;
+  });
+
+  const monthlyVariance =
+    monthlyMultipliers.reduce((sum, value) => sum + Math.pow(value - 1, 2), 0) /
+    monthlyMultipliers.length;
+  const monthlyStrength = Math.sqrt(monthlyVariance);
+
+  const enabled =
+    weeklyStrength >= MIN_SEASONALITY_STRENGTH || monthlyStrength >= MIN_SEASONALITY_STRENGTH;
+  const strength = Math.max(weeklyStrength, monthlyStrength);
+
+  return {
+    enabled,
+    strength,
+    weekdayMultipliers: enabled ? multipliers : Array(7).fill(1),
+    monthlyMultipliers: enabled ? monthlyMultipliers : Array(31).fill(1),
+    weeklyStrength,
+    monthlyStrength
+  };
+};
+
 /**
  * Calcular intervalo de confiança estatisticamente correto
  */
@@ -145,36 +540,53 @@ const calculateConfidenceInterval = (
 /**
  * Buscar dados históricos do Supabase com período focado na tendência recente
  */
+const buildDailyRange = (start: Date, end: Date): string[] => {
+  const currentDate = new Date(start);
+  const dates: string[] = [];
+  while (currentDate <= end) {
+    dates.push(format(currentDate, 'yyyy-MM-dd'));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return dates;
+};
+
 const fetchHistoricalData = async (
-  startDate: string,
+  _startDate: string,
   endDate: string,
-  metrics: string[]
+  metrics: string[],
+  adsetId?: string,
+  campaignId?: string
 ): Promise<{ [key: string]: number[] }> => {
-  // CORREÇÃO CRÍTICA: Excluir o dia atual da análise por estar incompleto
-  // Usar apenas dias completos para análise de tendências precisas
-  const endDateTime = new Date(endDate);
-  const yesterday = new Date(endDateTime);
-  yesterday.setDate(endDateTime.getDate() - 1); // Último dia completo
-  
-  const recentStartDate = new Date(yesterday);
-  recentStartDate.setDate(yesterday.getDate() - 6); // 7 dias completos (excluindo hoje)
-  
-  const historicalStartDate = recentStartDate.toISOString().split('T')[0];
-  const finalEndDate = yesterday.toISOString().split('T')[0];
-  
-  console.log(`🔍 Buscando dados completos: ${historicalStartDate} até ${finalEndDate} (7 dias completos, excluindo hoje que está incompleto)`);
-  
+  // Série base para forecasting: últimos 30 dias completos da view canônica da 27-1.
+  const requestedEndDate = new Date(`${endDate}T00:00:00`);
+  const yesterday = subDays(requestedEndDate, 1);
+  const historicalStartDate = format(subDays(yesterday, HISTORICAL_WINDOW_DAYS - 1), 'yyyy-MM-dd');
+  const finalEndDate = format(yesterday, 'yyyy-MM-dd');
+
+  console.log(
+    `🔍 Baseline 27-2: ${historicalStartDate} até ${finalEndDate} | adset=${adsetId || 'ALL'} | campaign=${campaignId || 'ALL'}`
+  );
+
   const supabase = createSupabaseClient();
   if (!supabase) {
     throw new Error('Erro ao buscar dados históricos: Supabase indisponível');
   }
 
-  const { data, error } = await supabase
-    .from('adset_insights')
-    .select('date, leads, spend, impressions, clicks')
-    .gte('date', historicalStartDate)
-    .lte('date', finalEndDate) // Excluir hoje
-    .order('date', { ascending: true });
+  let query = supabase
+    .from('v_ml_adset_daily_series')
+    .select('metric_date, adset_id, leads, spend, impressions, clicks')
+    .gte('metric_date', historicalStartDate)
+    .lte('metric_date', finalEndDate)
+    .order('metric_date', { ascending: true });
+
+  if (adsetId) {
+    query = query.eq('adset_id', adsetId);
+  }
+  if (campaignId) {
+    query = query.eq('campaign_id', campaignId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     if (error.message?.includes('fetch failed')) {
@@ -183,13 +595,13 @@ const fetchHistoricalData = async (
     throw new Error(`Erro ao buscar dados históricos: ${error.message}`);
   }
 
-  console.log(`📊 Dados históricos encontrados: ${data?.length || 0} registros da tabela adset_insights`);
+  console.log(`📊 Dados históricos encontrados: ${data?.length || 0} registros da view v_ml_adset_daily_series`);
 
   // Agrupar dados por data
-  const dailyData: { [date: string]: any } = {};
+  const dailyData: { [date: string]: { leads: number; spend: number; impressions: number; clicks: number } } = {};
   
   data?.forEach(row => {
-    const date = row.date;
+    const date = row.metric_date;
     if (!dailyData[date]) {
       dailyData[date] = {
         leads: 0,
@@ -207,18 +619,22 @@ const fetchHistoricalData = async (
 
   console.log(`📊 Dados agregados por data: ${Object.keys(dailyData).length} dias únicos (dias completos)`);
 
-  // Calcular métricas derivadas e organizar em arrays ordenados por data
+  // Calcular métricas derivadas com imputação de dias ausentes (série esparsa -> contínua).
+  const allDates = buildDailyRange(new Date(`${historicalStartDate}T00:00:00`), new Date(`${finalEndDate}T00:00:00`));
   const result: { [key: string]: number[] } = {};
   metrics.forEach(metric => {
     result[metric] = [];
   });
 
-  // Ordenar datas e processar
-  const sortedDates = Object.keys(dailyData).sort();
-  console.log(`📅 Período de análise: ${sortedDates[0]} até ${sortedDates[sortedDates.length - 1]}`);
+  console.log(`📅 Série contínua do baseline: ${allDates[0]} até ${allDates[allDates.length - 1]} (${allDates.length} dias)`);
   
-  sortedDates.forEach(date => {
-    const dayData = dailyData[date];
+  allDates.forEach(date => {
+    const dayData = dailyData[date] ?? {
+      leads: 0,
+      spend: 0,
+      impressions: 0,
+      clicks: 0
+    };
     
     if (metrics.includes('leads')) {
       result.leads.push(dayData.leads);
@@ -348,6 +764,95 @@ const fetchHistoricalDataFromMeta = async (
   return result;
 };
 
+const persistAccuracySnapshot = async (payload: {
+  adsetId: string | null;
+  campaignId: string | null;
+  metrics: string[];
+  accuracy: Record<string, AccuracyMetrics>;
+  segmentationComparison?: Record<
+    string,
+    {
+      segmentedTotal: number;
+      globalTotal: number;
+      deltaPercent: number;
+    }
+  >;
+}) => {
+  const supabase = createSupabaseClient();
+  if (!supabase) return;
+
+  const averageMapeValues = Object.values(payload.accuracy).map(metric => metric.mape);
+  const averageMape =
+    averageMapeValues.length > 0
+      ? averageMapeValues.reduce((sum, value) => sum + value, 0) / averageMapeValues.length
+      : 0;
+
+  const status =
+    averageMape <= ACCURACY_THRESHOLD.healthy
+      ? 'healthy'
+      : averageMape <= ACCURACY_THRESHOLD.warning
+        ? 'warning'
+        : 'critical';
+
+  // Persistência leve de histórico de accuracy para evolução da 27-6.
+  await supabase.from('ai_analysis_logs').insert({
+    analysis_type: 'forecast_accuracy',
+    status,
+    metadata: {
+      adsetId: payload.adsetId,
+      campaignId: payload.campaignId,
+      metrics: payload.metrics,
+      accuracy: payload.accuracy,
+      segmentationComparison: payload.segmentationComparison,
+      averageMape: Number(averageMape.toFixed(4)),
+      createdAt: new Date().toISOString()
+    }
+  });
+};
+
+const persistPredictiveAlerts = async (payload: {
+  alerts: PredictiveAlert[];
+  adsetId: string | null;
+  campaignId: string | null;
+}) => {
+  const supabase = createSupabaseClient();
+  if (!supabase || payload.alerts.length === 0) return;
+
+  const targetAdsetId = payload.adsetId || 'global';
+  const cooldownThreshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+  for (const alert of payload.alerts) {
+    const { data: existingAlerts } = await supabase
+      .from('alerts')
+      .select('id')
+      .eq('adset_id', targetAdsetId)
+      .eq('title', alert.title)
+      .eq('alert_type', 'performance_anomaly')
+      .in('status', ['active', 'acknowledged'])
+      .gte('created_at', cooldownThreshold)
+      .limit(1);
+
+    if (existingAlerts && existingAlerts.length > 0) {
+      continue;
+    }
+
+    await supabase.from('alerts').insert({
+      alert_type: 'performance_anomaly',
+      severity: alert.severity,
+      title: alert.title,
+      message: alert.message,
+      adset_id: targetAdsetId,
+      campaign_id: payload.campaignId,
+      context: {
+        source: 'forecast_predictive_alerts',
+        metric: alert.metric,
+        generatedAt: new Date().toISOString()
+      },
+      status: 'active'
+    });
+  }
+};
+
 /**
  * Calcular tendência com peso ponderado (dias recentes têm peso maior)
  */
@@ -416,7 +921,7 @@ const generateIntelligentForecast = (
   daysToForecast: number,
   metricName: string,
   baseDate?: Date // Adicionar parâmetro para data base
-): ForecastData[] => {
+): { points: ForecastData[]; seasonality: WeeklySeasonality } => {
   const historicalData = validateAndCleanData(rawHistoricalData, metricName);
   
   console.log(`📊 Forecast ${metricName}: ${rawHistoricalData.length} dados brutos → ${historicalData.length} dados limpos`);
@@ -436,7 +941,7 @@ const generateIntelligentForecast = (
     
     console.log(`⚠️ Poucos dados para ${metricName}. Usando último valor: ${lastValue} ou fallback: ${fallbackValue}`);
     
-    return Array.from({ length: daysToForecast }, (_, i) => {
+    const points = Array.from({ length: daysToForecast }, (_, i) => {
       const date = format(addDays(forecastBaseDate, i + 1), 'yyyy-MM-dd');
       const prediction = applyBusinessConstraints(fallbackValue, metricName);
       
@@ -448,11 +953,23 @@ const generateIntelligentForecast = (
         max: prediction * 1.2
       };
     });
+    return {
+      points,
+      seasonality: {
+        enabled: false,
+        strength: 0,
+        weekdayMultipliers: Array(7).fill(1),
+        monthlyMultipliers: Array(31).fill(1),
+        weeklyStrength: 0,
+        monthlyStrength: 0
+      }
+    };
   }
 
   // ANÁLISE INTELIGENTE COM PESO PONDERADO
   const analysis = calculateWeightedTrend(historicalData);
   const { slope, intercept, acceleration, weightedAverage, recentTrend } = analysis;
+  const weeklySeasonality = calculateWeeklySeasonality(historicalData, forecastBaseDate);
   
   console.log(`🎯 Análise ${metricName}:`);
   console.log(`   • Slope: ${slope.toFixed(4)}`);
@@ -488,6 +1005,14 @@ const generateIntelligentForecast = (
       const recentWeight = Math.max(0.3, 0.8 - i * 0.1); // 80%, 70%, 60% de peso dos dados recentes
       basePrediction = basePrediction * (1 - recentWeight) + weightedAverage * recentWeight;
       console.log(`🎯 Dia ${i}: Aplicando peso recente ${(recentWeight*100).toFixed(0)}%, previsão: ${basePrediction.toFixed(2)}`);
+    }
+
+    if (weeklySeasonality.enabled) {
+      const forecastDate = addDays(forecastBaseDate, i);
+      const weekday = forecastDate.getDay();
+      const weekdayFactor = weeklySeasonality.weekdayMultipliers[weekday] || 1;
+      const monthDayFactor = weeklySeasonality.monthlyMultipliers[forecastDate.getDate() - 1] || 1;
+      basePrediction *= weekdayFactor * monthDayFactor;
     }
     
     // Aplicar constraints de negócio
@@ -531,7 +1056,10 @@ const generateIntelligentForecast = (
     });
   }
   
-  return forecast;
+  return {
+    points: forecast,
+    seasonality: weeklySeasonality
+  };
 };
 
 /**
@@ -540,7 +1068,7 @@ const generateIntelligentForecast = (
 export async function POST(request: NextRequest) {
   try {
     const body: ForecastRequest = await request.json();
-    const { startDate, endDate, metrics, daysToForecast = 7 } = body;
+    const { startDate, endDate, metrics, daysToForecast = 7, adsetId, campaignId } = body;
 
     // Validar parâmetros
     if (!startDate || !endDate || !metrics || metrics.length === 0) {
@@ -551,7 +1079,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar cache
-    const cacheKey = `forecast:${startDate}:${endDate}:${metrics.join(',')}:${daysToForecast}`;
+    const cacheKey = `forecast:${startDate}:${endDate}:${metrics.join(',')}:${daysToForecast}:${adsetId || 'all'}:${campaignId || 'all'}`;
     const cached = await serverCache.get(cacheKey);
     
     if (cached) {
@@ -564,7 +1092,7 @@ export async function POST(request: NextRequest) {
     // Buscar dados históricos
     let historicalData: { [key: string]: number[] };
     try {
-      historicalData = await fetchHistoricalData(startDate, endDate, metrics);
+      historicalData = await fetchHistoricalData(startDate, endDate, metrics, adsetId, campaignId);
     } catch (fetchError) {
       const message = fetchError instanceof Error ? fetchError.message : '';
       if (message.includes('SUPABASE_FETCH_FAILED')) {
@@ -574,9 +1102,24 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    let globalHistoricalData: { [key: string]: number[] } | null = null;
+    if (adsetId || campaignId) {
+      globalHistoricalData = await fetchHistoricalData(startDate, endDate, metrics);
+    }
+
     // Gerar previsões para cada métrica
     const forecast: { [key: string]: ForecastData[] } = {};
     const historical: { [key: string]: ForecastData[] } = {};
+    const seasonalityByMetric: Record<string, WeeklySeasonality> = {};
+    const accuracyByMetric: Record<string, AccuracyMetrics> = {};
+    const segmentationComparison: Record<
+      string,
+      {
+        segmentedTotal: number;
+        globalTotal: number;
+        deltaPercent: number;
+      }
+    > = {};
     
     metrics.forEach(metric => {
       const data = historicalData[metric] || [];
@@ -603,8 +1146,31 @@ export async function POST(request: NextRequest) {
         };
       });
       // Previsão: começa no dia seguinte ao período selecionado
-      forecast[metric] = generateIntelligentForecast(data, daysToForecast, metric, baseDate);
+      const forecastResult = generateIntelligentForecast(data, daysToForecast, metric, baseDate);
+      forecast[metric] = forecastResult.points;
+      seasonalityByMetric[metric] = forecastResult.seasonality;
+
+      const validationHistory = data.slice(0, Math.max(0, data.length - ACCURACY_VALIDATION_DAYS));
+      const validationActual = data.slice(-ACCURACY_VALIDATION_DAYS);
+      const validationBaseDate = addDays(baseDate, -ACCURACY_VALIDATION_DAYS);
+      const validationForecast = generateIntelligentForecast(
+        validationHistory,
+        validationActual.length,
+        metric,
+        validationBaseDate
+      );
+      const validationPredicted = validationForecast.points.map(point => point.predicted);
+      accuracyByMetric[metric] = calculateAccuracyMetrics(validationActual, validationPredicted);
     });
+
+    const contractConstraint = await fetchContractRemainingLeads({
+      referenceDate: endDate,
+      adsetId,
+      campaignId
+    });
+    if (contractConstraint && contractConstraint.remainingLeads >= 0) {
+      applyLeadContractConstraint(forecast, contractConstraint.remainingLeads);
+    }
 
     // Calcular métricas agregadas com análise de tendência melhorada
     const metricsSummary: any = {};
@@ -652,6 +1218,9 @@ export async function POST(request: NextRequest) {
       
       // CORREÇÃO CRÍTICA: Para CTR e CPL, usar AVERAGE como métrica principal
       if (metric === 'ctr' || metric === 'cpl') {
+        const conservative = average * SCENARIO_FACTORS.conservative;
+        const realistic = average * SCENARIO_FACTORS.realistic;
+        const optimistic = average * SCENARIO_FACTORS.optimistic;
         metricsSummary[metric] = {
           trend,
           confidence,
@@ -660,10 +1229,18 @@ export async function POST(request: NextRequest) {
             total: Number(total.toFixed(2)),     // Manter para compatibilidade
             min: Number(min.toFixed(2)),
             max: Number(max.toFixed(2))
+          },
+          scenarios: {
+            conservative: Number(conservative.toFixed(2)),
+            realistic: Number(realistic.toFixed(2)),
+            optimistic: Number(optimistic.toFixed(2))
           }
         };
       } else {
         // Para leads, spend, impressions, clicks: manter total como principal
+        const conservative = total * SCENARIO_FACTORS.conservative;
+        const realistic = total * SCENARIO_FACTORS.realistic;
+        const optimistic = total * SCENARIO_FACTORS.optimistic;
         metricsSummary[metric] = {
           trend,
           confidence,
@@ -672,10 +1249,38 @@ export async function POST(request: NextRequest) {
             average: Number(average.toFixed(2)),
             min: Math.round(min),
             max: Math.round(max)
+          },
+          scenarios: {
+            conservative: Math.round(conservative),
+            realistic: Math.round(realistic),
+            optimistic: Math.round(optimistic)
           }
         };
       }
+
+      if (globalHistoricalData) {
+        const globalMetricData = globalHistoricalData[metric] || [];
+        const globalForecastResult = generateIntelligentForecast(
+          globalMetricData,
+          daysToForecast,
+          metric,
+          new Date(endDate + 'T00:00:00')
+        );
+        const globalTotal = globalForecastResult.points.reduce((sum, day) => sum + day.predicted, 0);
+        segmentationComparison[metric] = {
+          segmentedTotal: Number(total.toFixed(2)),
+          globalTotal: Number(globalTotal.toFixed(2)),
+          deltaPercent: calculateRelativeDeltaPercent(globalTotal, total)
+        };
+      }
     });
+
+    const predictiveAlerts = buildPredictiveAlerts(metricsSummary, accuracyByMetric);
+    const budgetRecommendations = buildBudgetRecommendations(
+      metricsSummary,
+      adsetId || null,
+      campaignId || null
+    );
 
     const response: ForecastResponse = {
       success: true,
@@ -687,13 +1292,57 @@ export async function POST(request: NextRequest) {
           generatedAt: new Date().toISOString(),
           historicalDays: Object.values(historicalData)[0]?.length || 0,
           forecastDays: daysToForecast,
-          aiUsed: true // Agora usando algoritmo de análise inteligente
+          aiUsed: true,
+          baselineModel: 'forecast_baseline_v1',
+          source: 'v_ml_adset_daily_series',
+          adsetId: adsetId || null,
+          campaignId: campaignId || null,
+          seasonality: seasonalityByMetric,
+          scenarioModel: 'forecast_scenarios_v1',
+          accuracy: accuracyByMetric,
+          contractConstraint: contractConstraint
+            ? {
+                enabled: true,
+                remainingLeads: contractConstraint.remainingLeads,
+                scope: contractConstraint.scope
+              }
+            : {
+                enabled: false,
+                remainingLeads: 0,
+                scope: adsetId ? 'adset' : campaignId ? 'campaign' : 'global'
+              },
+          predictiveAlerts,
+          budgetRecommendations,
+          segmentationComparison: Object.keys(segmentationComparison).length > 0 ? segmentationComparison : undefined
         }
       }
     };
 
     // Salvar no cache
     await serverCache.set(cacheKey, response, CACHE_TTL);
+
+    try {
+      await persistAccuracySnapshot({
+        adsetId: adsetId || null,
+        campaignId: campaignId || null,
+        metrics,
+        accuracy: accuracyByMetric,
+        segmentationComparison:
+          Object.keys(segmentationComparison).length > 0 ? segmentationComparison : undefined
+      });
+    } catch (persistError) {
+      console.warn('⚠️ Falha ao persistir histórico de accuracy:', persistError);
+    }
+
+    try {
+      await persistPredictiveAlerts({
+        alerts: predictiveAlerts,
+        adsetId: adsetId || null,
+        campaignId: campaignId || null
+      });
+    } catch (alertPersistError) {
+      console.warn('⚠️ Falha ao persistir alertas preditivos:', alertPersistError);
+    }
 
     console.log(`✅ Forecast gerado com sucesso para ${metrics.length} métricas`);
 
