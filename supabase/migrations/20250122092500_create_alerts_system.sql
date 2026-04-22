@@ -144,22 +144,22 @@ CREATE TABLE IF NOT EXISTS alert_stats (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_alert_rules_adset_id ON alert_rules(adset_id);
-CREATE INDEX idx_alert_rules_campaign_id ON alert_rules(campaign_id);
-CREATE INDEX idx_alert_rules_type_active ON alert_rules(alert_type, is_active);
+CREATE INDEX IF NOT EXISTS idx_alert_rules_adset_id ON alert_rules(adset_id);
+CREATE INDEX IF NOT EXISTS idx_alert_rules_campaign_id ON alert_rules(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_alert_rules_type_active ON alert_rules(alert_type, is_active);
 
-CREATE INDEX idx_alerts_adset_id ON alerts(adset_id);
-CREATE INDEX idx_alerts_campaign_id ON alerts(campaign_id);
-CREATE INDEX idx_alerts_type_severity ON alerts(alert_type, severity);
-CREATE INDEX idx_alerts_status_created ON alerts(status, created_at);
-CREATE INDEX idx_alerts_rule_id ON alerts(rule_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_adset_id ON alerts(adset_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_campaign_id ON alerts(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_type_severity ON alerts(alert_type, severity);
+CREATE INDEX IF NOT EXISTS idx_alerts_status_created ON alerts(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_alerts_rule_id ON alerts(rule_id);
 
-CREATE INDEX idx_alert_notifications_alert_id ON alert_notifications(alert_id);
-CREATE INDEX idx_alert_notifications_channel_status ON alert_notifications(channel, status);
-CREATE INDEX idx_alert_notifications_created_at ON alert_notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_alert_notifications_alert_id ON alert_notifications(alert_id);
+CREATE INDEX IF NOT EXISTS idx_alert_notifications_channel_status ON alert_notifications(channel, status);
+CREATE INDEX IF NOT EXISTS idx_alert_notifications_created_at ON alert_notifications(created_at);
 
-CREATE INDEX idx_alert_stats_period ON alert_stats(date_period, hour_period);
-CREATE INDEX idx_alert_stats_adset ON alert_stats(adset_id, date_period);
+CREATE INDEX IF NOT EXISTS idx_alert_stats_period ON alert_stats(date_period, hour_period);
+CREATE INDEX IF NOT EXISTS idx_alert_stats_adset ON alert_stats(adset_id, date_period);
 
 -- Create functions for alert management
 
@@ -304,6 +304,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_alerts_update_stats ON alerts;
 CREATE TRIGGER trigger_alerts_update_stats
     AFTER INSERT ON alerts
     FOR EACH ROW

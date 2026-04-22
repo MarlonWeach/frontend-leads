@@ -30,60 +30,60 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // IMPORTANTE: Migrations vazias ou apenas com comentários serão filtradas automaticamente
 const migrationOrder = [
   // 1. Tabelas base (devem ser criadas primeiro)
-  '20250625_create_campaigns_table.sql',
-  '20250627_add_ads_creative_fields.sql', // Cria ads se não existir
+  '20250625090000_create_campaigns_table.sql',
+  '20250627092000_add_ads_creative_fields.sql', // Cria ads se não existir
   '20250624_alter_adsets_add_insights.sql', // Assume que adsets já existe, mas adiciona colunas
   
   // 2. Tabelas de insights (dependem de campaigns, adsets, ads)
-  '20250626_create_adset_insights_table.sql',
-  '20250627_create_ad_insights_table.sql',
+  '20250626090000_create_adset_insights_table.sql',
+  '20250627090000_create_ad_insights_table.sql',
   
   // 3. Tabelas de sistema
   '20250621_create_sync_status_table.sql',
   '20240618_create_audit_logs_table.sql',
-  '20250626_create_cache_stats_table.sql',
+  '20250626092000_create_cache_stats_table.sql',
   
   // 4. Tabelas de IA
-  '20250627_create_ai_analysis_logs_table.sql',
-  '20250627_create_ai_anomalies_table.sql',
+  '20250627090500_create_ai_analysis_logs_table.sql',
+  '20250627091000_create_ai_anomalies_table.sql',
   
   // 5. Tabelas de metas e objetivos
-  '20250122_create_adset_goals_table.sql',
-  '20250122_create_adset_progress_tracking.sql',
-  '20250122_create_adset_progress_alerts.sql',
-  '20250122_create_adset_budget_adjustments.sql',
+  '20250122091000_create_adset_goals_table.sql',
+  '20250122092000_create_adset_progress_tracking.sql',
+  '20250122091500_create_adset_progress_alerts.sql',
+  '20250122090500_create_adset_budget_adjustments.sql',
   
   // 6. Tabelas de alertas
-  '20250122_create_alerts_system.sql',
+  '20250122092500_create_alerts_system.sql',
   
   // 7. Tabelas de logs
-  '20250122_create_audience_suggestions_logs.sql',
-  '20250122_create_budget_adjustment_logs.sql',
-  '20250122_create_lead_quality_logs.sql',
+  '20250122093000_create_audience_suggestions_logs.sql',
+  '20250122093500_create_budget_adjustment_logs.sql',
+  '20250122094000_create_lead_quality_logs.sql',
   '20250718_create_meta_activity_logs_table.sql',
   
   // 8. Tabelas auxiliares
   '20250129_create_ad_creatives_table.sql',
   
   // 9. Alterações e ajustes
-  '20250625_add_campaigns_columns.sql',
-  '20250626_add_account_id_to_adset_insights.sql',
-  '20250626_add_adset_name_to_insights.sql',
-  '20250626_recreate_adset_insights_columns.sql',
+  '20250625090500_add_campaigns_columns.sql',
+  '20250626090500_add_account_id_to_adset_insights.sql',
+  '20250626091000_add_adset_name_to_insights.sql',
+  '20250626091500_recreate_adset_insights_columns.sql',
   '20250629_add_cpl_to_adset_insights.sql',
   // '20240515_add_meta_leads_columns.sql', // Removida - apenas comentário
-  '20250122_add_quality_score_to_leads.sql',
+  '20250122090000_add_quality_score_to_leads.sql',
   
   // 10. Funções (antes de views)
-  '20250627_create_exec_sql_function.sql',
-  '20250130_fix_function_search_paths.sql',
+  '20250627091500_create_exec_sql_function.sql',
+  '20250130100500_fix_function_search_paths.sql',
   '20240516140500_clean_duplicate_leads.sql', // Função para limpar duplicados
   
   // 11. Views (depois de tabelas e funções)
   // '20240516140000_create_leads_analysis_view.sql', // No-op — view removida
   
   // 12. RLS (Row Level Security) - deve ser o último
-  '20250130_enable_rls_on_public_tables.sql',
+  '20250130100000_enable_rls_on_public_tables.sql',
 ];
 
 // Tabelas base que precisam ser criadas manualmente se não existirem

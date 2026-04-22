@@ -1,2 +1,2 @@
-ALTER TABLE adset_insights ADD COLUMN account_id text;
+ALTER TABLE adset_insights ADD COLUMN IF NOT EXISTS account_id text;
 -- Permitir nulo para compatibilidade retroativa 

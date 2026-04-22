@@ -18,7 +18,7 @@ interface UsePerformanceForecastReturn {
  * Hook para buscar previsões de performance
  */
 export const usePerformanceForecast = (options: UseForecastOptions): UsePerformanceForecastReturn => {
-  const { dateRange, config, enabled = true } = options;
+  const { dateRange, filters, config, enabled = true } = options;
   
   // Configuração padrão
   const defaultConfig = {
@@ -39,9 +39,11 @@ export const usePerformanceForecast = (options: UseForecastOptions): UsePerforma
       startDate,
       endDate,
       metrics: Object.keys(FORECAST_METRICS), // Todas as métricas disponíveis
-      daysToForecast: finalConfig.forecastDays
+      daysToForecast: finalConfig.forecastDays,
+      campaignId: filters?.campaignId?.trim() || undefined,
+      adsetId: filters?.adsetId?.trim() || undefined
     };
-  }, [dateRange.start, dateRange.end, finalConfig.forecastDays]);
+  }, [dateRange.start, dateRange.end, finalConfig.forecastDays, filters?.campaignId, filters?.adsetId]);
 
   // Query para buscar previsões
   const {

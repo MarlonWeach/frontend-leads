@@ -2,7 +2,8 @@
 -- Decisão: fonte canônica = public.adset_insights (UNIQUE adset_id + date).
 -- View estável para consumo pela 27-2; security_invoker = respeita RLS das tabelas base.
 
-CREATE OR REPLACE VIEW public.v_ml_adset_daily_series AS
+CREATE OR REPLACE VIEW public.v_ml_adset_daily_series
+WITH (security_invoker = true) AS
 SELECT
   ai.adset_id,
   ai.date AS metric_date,
@@ -22,8 +23,7 @@ SELECT
   ai.status,
   ai.created_at,
   ai.updated_at
-FROM public.adset_insights ai
-WITH (security_invoker = true);
+FROM public.adset_insights ai;
 
 COMMENT ON VIEW public.v_ml_adset_daily_series IS
   'PBI 27 / 27-1: série diária por adset para treino/inferência (27-2). '

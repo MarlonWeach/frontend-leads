@@ -28,6 +28,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_ai_analysis_logs_updated_at ON ai_analysis_logs;
 CREATE TRIGGER update_ai_analysis_logs_updated_at 
   BEFORE UPDATE ON ai_analysis_logs 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

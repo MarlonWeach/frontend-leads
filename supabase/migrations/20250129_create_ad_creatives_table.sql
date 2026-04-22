@@ -39,6 +39,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para atualizar updated_at automaticamente
+DROP TRIGGER IF EXISTS trigger_update_ad_creatives_updated_at ON ad_creatives;
 CREATE TRIGGER trigger_update_ad_creatives_updated_at
     BEFORE UPDATE ON ad_creatives
     FOR EACH ROW

@@ -46,20 +46,20 @@ CREATE TABLE IF NOT EXISTS budget_adjustment_logs (
 );
 
 -- Create indexes for fast queries
-CREATE INDEX idx_budget_adjustment_logs_adset_id ON budget_adjustment_logs(adset_id);
-CREATE INDEX idx_budget_adjustment_logs_campaign_id ON budget_adjustment_logs(campaign_id);
-CREATE INDEX idx_budget_adjustment_logs_created_at ON budget_adjustment_logs(created_at);
-CREATE INDEX idx_budget_adjustment_logs_applied_at ON budget_adjustment_logs(applied_at);
-CREATE INDEX idx_budget_adjustment_logs_status ON budget_adjustment_logs(status);
-CREATE INDEX idx_budget_adjustment_logs_trigger_type ON budget_adjustment_logs(trigger_type);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_adset_id ON budget_adjustment_logs(adset_id);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_campaign_id ON budget_adjustment_logs(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_created_at ON budget_adjustment_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_applied_at ON budget_adjustment_logs(applied_at);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_status ON budget_adjustment_logs(status);
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_trigger_type ON budget_adjustment_logs(trigger_type);
 
 -- Composite index for frequency control (adset + last hour)
-CREATE INDEX idx_budget_adjustment_logs_frequency_control 
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_frequency_control 
 ON budget_adjustment_logs(adset_id, created_at) 
 WHERE status = 'applied';
 
 -- Index for user audit queries
-CREATE INDEX idx_budget_adjustment_logs_user_audit 
+CREATE INDEX IF NOT EXISTS idx_budget_adjustment_logs_user_audit 
 ON budget_adjustment_logs(user_id, created_at);
 
 -- Add comments

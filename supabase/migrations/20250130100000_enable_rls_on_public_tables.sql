@@ -2,38 +2,44 @@
 -- Data: 2025-01-30
 
 -- Habilitar RLS na tabela ad_creatives
-ALTER TABLE public.ad_creatives ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ad_creatives ENABLE ROW LEVEL SECURITY;
 
 -- Habilitar RLS na tabela meta_activity_logs
-ALTER TABLE public.meta_activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.meta_activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- Habilitar RLS na tabela adset_goals
-ALTER TABLE public.adset_goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.adset_goals ENABLE ROW LEVEL SECURITY;
 
 -- Criar políticas de acesso para ad_creatives
 -- Permitir leitura para todos os usuários autenticados
+DROP POLICY IF EXISTS "Allow read access to ad_creatives" ON public.ad_creatives;
 CREATE POLICY "Allow read access to ad_creatives" ON public.ad_creatives
     FOR SELECT USING (true);
 
 -- Permitir inserção/atualização apenas para usuários autenticados
+DROP POLICY IF EXISTS "Allow insert/update access to ad_creatives" ON public.ad_creatives;
 CREATE POLICY "Allow insert/update access to ad_creatives" ON public.ad_creatives
     FOR ALL USING (auth.role() = 'authenticated');
 
 -- Criar políticas de acesso para meta_activity_logs
 -- Permitir leitura para todos os usuários autenticados
+DROP POLICY IF EXISTS "Allow read access to meta_activity_logs" ON public.meta_activity_logs;
 CREATE POLICY "Allow read access to meta_activity_logs" ON public.meta_activity_logs
     FOR SELECT USING (true);
 
 -- Permitir inserção apenas para usuários autenticados
+DROP POLICY IF EXISTS "Allow insert access to meta_activity_logs" ON public.meta_activity_logs;
 CREATE POLICY "Allow insert access to meta_activity_logs" ON public.meta_activity_logs
     FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- Criar políticas de acesso para adset_goals
 -- Permitir leitura para todos os usuários autenticados
+DROP POLICY IF EXISTS "Allow read access to adset_goals" ON public.adset_goals;
 CREATE POLICY "Allow read access to adset_goals" ON public.adset_goals
     FOR SELECT USING (true);
 
 -- Permitir inserção/atualização apenas para usuários autenticados
+DROP POLICY IF EXISTS "Allow insert/update access to adset_goals" ON public.adset_goals;
 CREATE POLICY "Allow insert/update access to adset_goals" ON public.adset_goals
     FOR ALL USING (auth.role() = 'authenticated');
 

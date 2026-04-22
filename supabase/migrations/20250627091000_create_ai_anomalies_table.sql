@@ -32,6 +32,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_ai_anomalies_updated_at ON ai_anomalies;
 CREATE TRIGGER update_ai_anomalies_updated_at
     BEFORE UPDATE ON ai_anomalies
     FOR EACH ROW
