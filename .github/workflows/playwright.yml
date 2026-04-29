@@ -1,5 +1,7 @@
 name: Playwright Tests
 on:
+  pull_request:
+    branches: [ main ]
   schedule:
     - cron: '0 5 * * *' # 2h da manhã no Brasil (UTC-3)
   workflow_dispatch:
@@ -16,7 +18,31 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-    - name: Create .env.local for web server
+    - name: Check Supabase env availability
+      id: envcheck
+      run: |
+        if [ -n "${{ secrets.SUPABASE_URL }}" ] && [ -n "${{ secrets.SUPABASE_ANON_KEY }}" ] && [ -n "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+          echo "has_supabase_env=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_supabase_env=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Create .env.local for smoke web server
+      run: |
+        cat > .env.local << EOF
+        NEXT_PUBLIC_SUPABASE_URL=
+        NEXT_PUBLIC_SUPABASE_ANON_KEY=
+        SUPABASE_URL=
+        SUPABASE_SERVICE_ROLE_KEY=
+        META_ACCESS_TOKEN=
+        META_ACCOUNT_ID=
+        EOF
+    - name: Run Playwright smoke tests (always)
+      env:
+        PLAYWRIGHT_BASE_URL: http://localhost:3000
+        PLAYWRIGHT_USE_DEV_SERVER: 1
+      run: npx playwright test e2e/tests/auth.spec.ts --project=chromium --grep="@smoke"
+    - name: Create .env.local for auth-real
+      if: steps.envcheck.outputs.has_supabase_env == 'true'
       run: |
         cat > .env.local << EOF
         NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
@@ -26,12 +52,14 @@ jobs:
         META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }}
         META_ACCOUNT_ID=${{ secrets.META_ACCOUNT_ID }}
         EOF
-    - name: Build app for deterministic E2E runtime
+    - name: Build app for deterministic auth-real runtime
+      if: steps.envcheck.outputs.has_supabase_env == 'true'
       run: npm run build
-    - name: Run Playwright tests
+    - name: Run Playwright auth-real tests
+      if: steps.envcheck.outputs.has_supabase_env == 'true'
       env:
         PLAYWRIGHT_BASE_URL: http://localhost:3000
-      run: npx playwright test
+      run: npx playwright test e2e/tests/auth.spec.ts --project=chromium --grep="@auth-real"
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

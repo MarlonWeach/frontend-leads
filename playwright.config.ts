@@ -80,9 +80,12 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: process.env.CI
-      ? 'PLAYWRIGHT_AUTH_E2E=1 npm run start'
-      : 'PLAYWRIGHT_AUTH_E2E=1 npm run dev',
+    command:
+      process.env.PLAYWRIGHT_USE_DEV_SERVER === '1'
+        ? 'PLAYWRIGHT_AUTH_E2E=1 npm run dev'
+        : process.env.CI
+          ? 'PLAYWRIGHT_AUTH_E2E=1 npm run start'
+          : 'PLAYWRIGHT_AUTH_E2E=1 npm run dev',
     url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

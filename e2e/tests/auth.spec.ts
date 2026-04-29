@@ -1,12 +1,12 @@
 import { test, expect } from '../fixtures';
 
 test.describe('Auth - CoS E2E', () => {
-  test('deve redirecionar para /login sem sessão ao acessar /dashboard', async ({ page }) => {
+  test('[@smoke] deve redirecionar para /login sem sessão ao acessar /dashboard', async ({ page }) => {
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/login\?redirect=%2Fdashboard/);
   });
 
-  test('deve redirecionar para /dashboard ao acessar /login com sessão ativa', async ({ page, mockSupabase }) => {
+  test('[@auth-real] deve redirecionar para /dashboard ao acessar /login com sessão ativa', async ({ page, mockSupabase }) => {
     void mockSupabase;
 
     const seedSessionResponse = await page.request.post('/api/auth/test/session');
@@ -16,7 +16,7 @@ test.describe('Auth - CoS E2E', () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test('login CoS: com sessão válida, dashboard privado fica acessível', async ({ page, mockSupabase, mockMetaApi }) => {
+  test('[@auth-real] login CoS: com sessão válida, dashboard privado fica acessível', async ({ page, mockSupabase, mockMetaApi }) => {
     void mockSupabase;
     void mockMetaApi;
 
@@ -27,7 +27,7 @@ test.describe('Auth - CoS E2E', () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test('logout: deve limpar cookies e redirecionar para /login', async ({
+  test('[@auth-real] logout: deve limpar cookies e redirecionar para /login', async ({
     page,
     mockSupabase,
   }) => {

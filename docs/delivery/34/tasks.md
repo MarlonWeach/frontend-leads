@@ -14,3 +14,4 @@ This document lists all tasks associated with PBI 34.
 | 34-4 | [Aplicar políticas RLS por grupo de tabelas](./34-4.md) | Done | Migration criou policies explícitas deny-by-default para tabelas com RLS habilitado e sem policy |
 | 34-5 | [Validação final e evidências de segurança](./34-5.md) | Done | Review concluído com pendência residual formalizada: `34-3` bloqueada por limitação de plano (Supabase Pro) |
 | 34-6 | [Corrigir build do deploy Vercel em `/login`](./34-6.md) | Done | `app/login/page.tsx` refatorado com `Suspense` boundary para `useSearchParams()`, com build local validado sem erro de prerender |
+| 34-7 | [Hardening CI Playwright para PR sem secrets](./34-7.md) | Done | Workflow com gatilho de PR, guard de env, smoke sempre e auth-real condicionado por secrets para evitar falhas por ambiente |
