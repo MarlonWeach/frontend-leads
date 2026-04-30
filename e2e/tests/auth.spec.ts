@@ -16,6 +16,16 @@ test.describe('Auth - CoS E2E', () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
+  test('[@auth-real] não deve redirecionar sessão ativa para URL externa', async ({ page, mockSupabase }) => {
+    void mockSupabase;
+
+    const seedSessionResponse = await page.request.post('/api/auth/test/session');
+    expect(seedSessionResponse.ok()).toBeTruthy();
+
+    await page.goto('/login?redirect=https%3A%2F%2Fevil.example%2Fcapture');
+    await expect(page).toHaveURL(/\/dashboard/);
+  });
+
   test('[@auth-real] login CoS: com sessão válida, dashboard privado fica acessível', async ({ page, mockSupabase, mockMetaApi }) => {
     void mockSupabase;
     void mockMetaApi;
