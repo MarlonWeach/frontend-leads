@@ -3,6 +3,38 @@
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+const DEFAULT_LOGIN_REDIRECT = '/dashboard';
+const INTERNAL_URL_BASE = 'https://app.local';
+
+function hasControlCharacter(value: string): boolean {
+  return Array.from(value).some(character => {
+    const charCode = character.charCodeAt(0);
+    return charCode <= 31 || charCode === 127;
+  });
+}
+
+function getSafeRedirectTarget(redirectParam: string | null): string {
+  if (!redirectParam) return DEFAULT_LOGIN_REDIRECT;
+
+  const candidate = redirectParam.trim();
+  if (
+    !candidate.startsWith('/') ||
+    candidate.startsWith('//') ||
+    candidate.includes('\\') ||
+    hasControlCharacter(candidate)
+  ) {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+
+  try {
+    const parsedUrl = new URL(candidate, INTERNAL_URL_BASE);
+    if (parsedUrl.origin !== INTERNAL_URL_BASE) return DEFAULT_LOGIN_REDIRECT;
+    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}` || DEFAULT_LOGIN_REDIRECT;
+  } catch {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -11,7 +43,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectTarget = searchParams.get('redirect') || '/dashboard';
+  const redirectTarget = getSafeRedirectTarget(searchParams.get('redirect'));
 
   useEffect(() => {
     let active = true;
