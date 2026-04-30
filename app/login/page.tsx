@@ -4,8 +4,14 @@ import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const DEFAULT_LOGIN_REDIRECT = '/dashboard';
-const CONTROL_CHARACTERS_PATTERN = /[\u0000-\u001F\u007F]/;
 const INTERNAL_URL_BASE = 'https://app.local';
+
+function hasControlCharacter(value: string): boolean {
+  return Array.from(value).some(character => {
+    const charCode = character.charCodeAt(0);
+    return charCode <= 31 || charCode === 127;
+  });
+}
 
 function getSafeRedirectTarget(redirectParam: string | null): string {
   if (!redirectParam) return DEFAULT_LOGIN_REDIRECT;
@@ -15,7 +21,7 @@ function getSafeRedirectTarget(redirectParam: string | null): string {
     !candidate.startsWith('/') ||
     candidate.startsWith('//') ||
     candidate.includes('\\') ||
-    CONTROL_CHARACTERS_PATTERN.test(candidate)
+    hasControlCharacter(candidate)
   ) {
     return DEFAULT_LOGIN_REDIRECT;
   }
