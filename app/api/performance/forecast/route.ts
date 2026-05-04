@@ -139,6 +139,11 @@ type PredictiveAlert = {
   message: string;
 };
 
+type HistoricalDataResult = {
+  dates: string[];
+  metrics: { [key: string]: number[] };
+};
+
 type BudgetRecommendation = {
   id: string;
   action: 'increase' | 'decrease' | 'maintain';
@@ -556,7 +561,7 @@ const fetchHistoricalData = async (
   metrics: string[],
   adsetId?: string,
   campaignId?: string
-): Promise<{ [key: string]: number[] }> => {
+): Promise<HistoricalDataResult> => {
   // Série base para forecasting: últimos 30 dias completos da view canônica da 27-1.
   const requestedEndDate = new Date(`${endDate}T00:00:00`);
   const yesterday = subDays(requestedEndDate, 1);
@@ -666,13 +671,16 @@ const fetchHistoricalData = async (
     console.log(`  ${metric}: ${values.length} valores, total: ${total}`);
   });
 
-  return result;
+  return {
+    dates: allDates,
+    metrics: result
+  };
 };
 
 const fetchHistoricalDataFromMeta = async (
   endDate: string,
   metrics: string[]
-): Promise<{ [key: string]: number[] }> => {
+): Promise<HistoricalDataResult> => {
   const metaAccessToken =
     process.env.NEXT_PUBLIC_META_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || '';
   const metaAccountId =
@@ -684,7 +692,10 @@ const fetchHistoricalDataFromMeta = async (
   });
 
   if (!metaAccessToken || !metaAccountId) {
-    return result;
+    return {
+      dates: [],
+      metrics: result
+    };
   }
 
   const endDateTime = new Date(endDate);
@@ -761,7 +772,10 @@ const fetchHistoricalDataFromMeta = async (
     }
   });
 
-  return result;
+  return {
+    dates: sortedDates,
+    metrics: result
+  };
 };
 
 const persistAccuracySnapshot = async (payload: {
@@ -1090,7 +1104,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔮 Forecast API: Gerando previsões para ${metrics.join(', ')}`);
 
     // Buscar dados históricos
-    let historicalData: { [key: string]: number[] };
+    let historicalData: HistoricalDataResult;
     try {
       historicalData = await fetchHistoricalData(startDate, endDate, metrics, adsetId, campaignId);
     } catch (fetchError) {
@@ -1102,7 +1116,7 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    let globalHistoricalData: { [key: string]: number[] } | null = null;
+    let globalHistoricalData: HistoricalDataResult | null = null;
     if (adsetId || campaignId) {
       globalHistoricalData = await fetchHistoricalData(startDate, endDate, metrics);
     }
@@ -1122,20 +1136,13 @@ export async function POST(request: NextRequest) {
     > = {};
     
     metrics.forEach(metric => {
-      const data = historicalData[metric] || [];
-      // Definir ontem e amanhã
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      
+      const data = historicalData.metrics[metric] || [];
       // CORREÇÃO: Usar a data do período selecionado como base para previsões
       const baseDate = new Date(endDate + 'T00:00:00');
       
-      // Histórico: do (yesterday - (data.length - 1)) até ontem
+      // Histórico: usar as datas consultadas para manter valores e labels alinhados.
       historical[metric] = data.map((value, index) => {
-        const dateObj = new Date(yesterday);
-        dateObj.setDate(yesterday.getDate() - (data.length - 1 - index));
-        const dateStr = dateObj.toISOString().split('T')[0];
+        const dateStr = historicalData.dates[index] ?? format(addDays(baseDate, -(data.length - index)), 'yyyy-MM-dd');
         return {
           date: dateStr,
           predicted: value,
@@ -1183,7 +1190,7 @@ export async function POST(request: NextRequest) {
       const max = Math.max(...forecastData.map(d => d.predicted));
       
       // Determinar tendência usando slope estatístico
-      const metricHistoricalData = historicalData[metric] || [];
+      const metricHistoricalData = historicalData.metrics[metric] || [];
       const cleanedData = validateAndCleanData(metricHistoricalData, metric);
       
       let trend: 'up' | 'down' | 'stable';
@@ -1259,7 +1266,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (globalHistoricalData) {
-        const globalMetricData = globalHistoricalData[metric] || [];
+        const globalMetricData = globalHistoricalData.metrics[metric] || [];
         const globalForecastResult = generateIntelligentForecast(
           globalMetricData,
           daysToForecast,
@@ -1290,7 +1297,7 @@ export async function POST(request: NextRequest) {
         metrics: metricsSummary,
         metadata: {
           generatedAt: new Date().toISOString(),
-          historicalDays: Object.values(historicalData)[0]?.length || 0,
+          historicalDays: Object.values(historicalData.metrics)[0]?.length || 0,
           forecastDays: daysToForecast,
           aiUsed: true,
           baselineModel: 'forecast_baseline_v1',
