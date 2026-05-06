@@ -550,6 +550,26 @@ const buildDailyRange = (start: Date, end: Date): string[] => {
   return dates;
 };
 
+export const buildHistoricalForecastSeries = (
+  data: number[],
+  requestedEndDate: string
+): ForecastData[] => {
+  const baselineEndDate = subDays(new Date(`${requestedEndDate}T00:00:00`), 1);
+
+  return data.map((value, index) => {
+    const date = format(subDays(baselineEndDate, data.length - 1 - index), 'yyyy-MM-dd');
+
+    return {
+      date,
+      predicted: value,
+      confidence: 'high' as const,
+      min: value,
+      max: value,
+      actual: value
+    };
+  });
+};
+
 const fetchHistoricalData = async (
   _startDate: string,
   endDate: string,
@@ -1123,28 +1143,11 @@ export async function POST(request: NextRequest) {
     
     metrics.forEach(metric => {
       const data = historicalData[metric] || [];
-      // Definir ontem e amanhã
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      
       // CORREÇÃO: Usar a data do período selecionado como base para previsões
       const baseDate = new Date(endDate + 'T00:00:00');
       
-      // Histórico: do (yesterday - (data.length - 1)) até ontem
-      historical[metric] = data.map((value, index) => {
-        const dateObj = new Date(yesterday);
-        dateObj.setDate(yesterday.getDate() - (data.length - 1 - index));
-        const dateStr = dateObj.toISOString().split('T')[0];
-        return {
-          date: dateStr,
-          predicted: value,
-          confidence: 'high' as const,
-          min: value,
-          max: value,
-          actual: value
-        };
-      });
+      // Histórico: mesma janela contínua usada em fetchHistoricalData (endDate - 30 até endDate - 1).
+      historical[metric] = buildHistoricalForecastSeries(data, endDate);
       // Previsão: começa no dia seguinte ao período selecionado
       const forecastResult = generateIntelligentForecast(data, daysToForecast, metric, baseDate);
       forecast[metric] = forecastResult.points;
