@@ -4,10 +4,17 @@ import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const DEFAULT_REDIRECT_TARGET = '/dashboard';
-const CONTROL_CHAR_PATTERN = /[\u0000-\u001F\u007F]/;
+
+function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const charCode = value.charCodeAt(index);
+    if (charCode <= 31 || charCode === 127) return true;
+  }
+  return false;
+}
 
 function getSafeRedirectTarget(rawRedirect: string | null): string {
-  if (!rawRedirect || CONTROL_CHAR_PATTERN.test(rawRedirect)) {
+  if (!rawRedirect || hasControlCharacter(rawRedirect)) {
     return DEFAULT_REDIRECT_TARGET;
   }
 
