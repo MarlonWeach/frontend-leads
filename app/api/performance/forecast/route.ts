@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { addDays, format, subDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
+import { buildHistoricalDateRange } from '@/utils/forecastDateRanges';
 
 // Forçar rota dinâmica para evitar erro de renderização estática
 export const dynamic = 'force-dynamic';
@@ -540,16 +541,6 @@ const calculateConfidenceInterval = (
 /**
  * Buscar dados históricos do Supabase com período focado na tendência recente
  */
-const buildDailyRange = (start: Date, end: Date): string[] => {
-  const currentDate = new Date(start);
-  const dates: string[] = [];
-  while (currentDate <= end) {
-    dates.push(format(currentDate, 'yyyy-MM-dd'));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  return dates;
-};
-
 const fetchHistoricalData = async (
   _startDate: string,
   endDate: string,
@@ -558,10 +549,9 @@ const fetchHistoricalData = async (
   campaignId?: string
 ): Promise<{ [key: string]: number[] }> => {
   // Série base para forecasting: últimos 30 dias completos da view canônica da 27-1.
-  const requestedEndDate = new Date(`${endDate}T00:00:00`);
-  const yesterday = subDays(requestedEndDate, 1);
-  const historicalStartDate = format(subDays(yesterday, HISTORICAL_WINDOW_DAYS - 1), 'yyyy-MM-dd');
-  const finalEndDate = format(yesterday, 'yyyy-MM-dd');
+  const historicalDates = buildHistoricalDateRange(endDate, HISTORICAL_WINDOW_DAYS);
+  const historicalStartDate = historicalDates[0];
+  const finalEndDate = historicalDates[historicalDates.length - 1];
 
   console.log(
     `🔍 Baseline 27-2: ${historicalStartDate} até ${finalEndDate} | adset=${adsetId || 'ALL'} | campaign=${campaignId || 'ALL'}`
@@ -620,7 +610,7 @@ const fetchHistoricalData = async (
   console.log(`📊 Dados agregados por data: ${Object.keys(dailyData).length} dias únicos (dias completos)`);
 
   // Calcular métricas derivadas com imputação de dias ausentes (série esparsa -> contínua).
-  const allDates = buildDailyRange(new Date(`${historicalStartDate}T00:00:00`), new Date(`${finalEndDate}T00:00:00`));
+  const allDates = historicalDates;
   const result: { [key: string]: number[] } = {};
   metrics.forEach(metric => {
     result[metric] = [];
@@ -687,13 +677,9 @@ const fetchHistoricalDataFromMeta = async (
     return result;
   }
 
-  const endDateTime = new Date(endDate);
-  const yesterday = new Date(endDateTime);
-  yesterday.setDate(endDateTime.getDate() - 1);
-  const recentStartDate = new Date(yesterday);
-  recentStartDate.setDate(yesterday.getDate() - 6);
-  const historicalStartDate = recentStartDate.toISOString().split('T')[0];
-  const finalEndDate = yesterday.toISOString().split('T')[0];
+  const metaHistoricalDates = buildHistoricalDateRange(endDate, 7);
+  const historicalStartDate = metaHistoricalDates[0];
+  const finalEndDate = metaHistoricalDates[metaHistoricalDates.length - 1];
 
   const normalizedAccountId = metaAccountId.startsWith('act_')
     ? metaAccountId
@@ -1121,21 +1107,19 @@ export async function POST(request: NextRequest) {
       }
     > = {};
     
+    const historicalDates = buildHistoricalDateRange(endDate, HISTORICAL_WINDOW_DAYS);
+
     metrics.forEach(metric => {
       const data = historicalData[metric] || [];
-      // Definir ontem e amanhã
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
       
       // CORREÇÃO: Usar a data do período selecionado como base para previsões
       const baseDate = new Date(endDate + 'T00:00:00');
       
-      // Histórico: do (yesterday - (data.length - 1)) até ontem
+      const metricHistoricalDates = historicalDates.slice(-data.length);
+
+      // Histórico: usa o mesmo período consultado para evitar deslocar labels por data do servidor.
       historical[metric] = data.map((value, index) => {
-        const dateObj = new Date(yesterday);
-        dateObj.setDate(yesterday.getDate() - (data.length - 1 - index));
-        const dateStr = dateObj.toISOString().split('T')[0];
+        const dateStr = metricHistoricalDates[index];
         return {
           date: dateStr,
           predicted: value,

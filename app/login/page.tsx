@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { sanitizeLoginRedirect } from '@/lib/auth/redirect';
 
 function LoginForm() {
   const router = useRouter();
@@ -11,7 +12,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectTarget = searchParams.get('redirect') || '/dashboard';
+  const redirectTarget = sanitizeLoginRedirect(searchParams.get('redirect'));
 
   useEffect(() => {
     let active = true;
