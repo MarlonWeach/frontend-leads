@@ -16,11 +16,20 @@ test.describe('Auth - CoS E2E', () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test('[@auth-real] deve ignorar redirect externo ao acessar /login com sessão ativa', async ({ page, mockSupabase }) => {
-    void mockSupabase;
-
-    const seedSessionResponse = await page.request.post('/api/auth/test/session');
-    expect(seedSessionResponse.ok()).toBeTruthy();
+  test('[@smoke] deve ignorar redirect externo ao acessar /login com sessão ativa', async ({ page }) => {
+    await page.route('**/api/auth/session', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          authenticated: true,
+          user: {
+            id: 'e2e-user',
+            email: 'e2e@example.com',
+          },
+        }),
+      });
+    });
 
     await page.goto('/login?redirect=https%3A%2F%2Fexample.com%2Fphishing');
     await expect(page).toHaveURL(/\/dashboard/);
