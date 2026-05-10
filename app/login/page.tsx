@@ -3,6 +3,28 @@
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+const DEFAULT_REDIRECT_TARGET = '/dashboard';
+
+function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const charCode = value.charCodeAt(index);
+    if (charCode <= 31 || charCode === 127) return true;
+  }
+  return false;
+}
+
+function getSafeRedirectTarget(rawRedirect: string | null): string {
+  if (!rawRedirect || hasControlCharacter(rawRedirect)) {
+    return DEFAULT_REDIRECT_TARGET;
+  }
+
+  if (!rawRedirect.startsWith('/') || rawRedirect.startsWith('//') || rawRedirect.includes('\\')) {
+    return DEFAULT_REDIRECT_TARGET;
+  }
+
+  return rawRedirect;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -11,7 +33,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectTarget = searchParams.get('redirect') || '/dashboard';
+  const redirectTarget = getSafeRedirectTarget(searchParams.get('redirect'));
 
   useEffect(() => {
     let active = true;
