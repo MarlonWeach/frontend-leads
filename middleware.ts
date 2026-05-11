@@ -1,4 +1,9 @@
-export { middleware } from './src/middleware';
+import type { NextRequest } from 'next/server';
+import { middleware as runMiddleware } from './src/middleware';
+
+export function middleware(request: NextRequest) {
+  return runMiddleware(request);
+}
 
 export const config = {
   matcher: [
