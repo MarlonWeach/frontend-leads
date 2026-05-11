@@ -6,6 +6,20 @@ test.describe('Auth - CoS E2E', () => {
     await expect(page).toHaveURL(/\/login\?redirect=%2Fdashboard/);
   });
 
+  test('[@smoke] deve bloquear APIs de metas e alertas sem sessão', async ({ page }) => {
+    const protectedApiRequests = [
+      page.request.get('/api/goals'),
+      page.request.post('/api/goals/progress/trigger'),
+      page.request.get('/api/alerts'),
+    ];
+
+    const responses = await Promise.all(protectedApiRequests);
+
+    for (const response of responses) {
+      expect(response.status()).toBe(401);
+    }
+  });
+
   test('[@auth-real] deve redirecionar para /dashboard ao acessar /login com sessão ativa', async ({ page, mockSupabase }) => {
     void mockSupabase;
 
